@@ -993,6 +993,7 @@ export type ChannelFollowersArgs = {
 
 /** A channel manages medias and collections. */
 export type ChannelFollowingsArgs = {
+  filter?: InputMaybe<FollowingFilter>;
   first?: InputMaybe<Scalars['Int']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -2726,13 +2727,18 @@ export type FollowerEngagementNotifications = Node & {
 /** Information about a user, who the requested user is following. */
 export type Following = Node & {
   __typename?: 'Following';
-  /** The Channel information of the user the requested user follows. */
+  /**
+   * The Channel information of the user the requested user follows.
+   * @deprecated Use `story` field.
+   */
   creator?: Maybe<Channel>;
   /** The ID of the object. */
   id: Scalars['ID']['output'];
+  /** Information about the story the creator is following. */
+  story?: Maybe<Story>;
   /**
    * The information of the user the requested user follows.
-   * @deprecated Use `creator` field.
+   * @deprecated Use `story` field.
    */
   user?: Maybe<User>;
 };
@@ -2773,6 +2779,12 @@ export type FollowingEdge = {
   __typename?: 'FollowingEdge';
   /** The item at the end of the edge. */
   node?: Maybe<Following>;
+};
+
+/** The available input fields of a Following filter. */
+export type FollowingFilter = {
+  /** Filter followings by story. Defaults to `channel`. */
+  story?: InputMaybe<StoryOperator>;
 };
 
 /** The input fields to follow/unfollow a story for the connected creator. */
@@ -2871,6 +2883,8 @@ export type GeoblockingEdge = {
 /** Information of a Hashtag. */
 export type Hashtag = Node & {
   __typename?: 'Hashtag';
+  /** The follower engagement information of the hashtag. */
+  followerEngagement?: Maybe<FollowerEngagement>;
   /** The ID of the object. */
   id: Scalars['ID']['output'];
   /** The metrics of the hashtag. */
@@ -5917,7 +5931,10 @@ export type Reaction = Content & Node & Recording & Thread & {
   metrics?: Maybe<ReactionMetrics>;
   /** The story that elicited the reaction to be created. */
   opener?: Maybe<Story>;
-  /** The reactions created on the reaction. */
+  /**
+   * The reactions created on the reaction.
+   * @deprecated No longer supported.
+   */
   reactions?: Maybe<ReactionConnection>;
   /** The share urls of the reaction. */
   shareUrls?: Maybe<ReactionShareUrls>;
@@ -6932,7 +6949,10 @@ export type Search = Node & {
   lives?: Maybe<LiveConnection>;
   /** The stories that matched against the search query. */
   stories?: Maybe<StoryConnection>;
-  /** The topics that matched against the search query. */
+  /**
+   * The topics that matched against the search query.
+   * @deprecated No longer supported.
+   */
   topics?: Maybe<TopicConnection>;
   /** The videos that matched against the search query. */
   videos?: Maybe<VideoConnection>;
@@ -6985,6 +7005,7 @@ export type SearchLivesArgs = {
 export type SearchStoriesArgs = {
   filter?: InputMaybe<StoryFilter>;
   first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<StorySort>;
   page?: InputMaybe<Scalars['Int']['input']>;
   query: Scalars['String']['input'];
 };
@@ -7208,6 +7229,16 @@ export type StoryOperator = {
   eq?: InputMaybe<StoryTypename>;
   /** Short for in array, must NOT be an element of the array. */
   in?: InputMaybe<Array<StoryTypename>>;
+};
+
+/** Sort stories by the available values. */
+export type StorySort = {
+  /** Sort stories by when they were created. */
+  createDate?: InputMaybe<OrderDirection>;
+  /** Sort stories by its relevance to the search query. */
+  relevance?: InputMaybe<OrderDirection>;
+  /** Sort stories by number of views. */
+  views?: InputMaybe<OrderDirection>;
 };
 
 /** The possible types for a story. */
@@ -9713,7 +9744,7 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> = 
   Content: ( Collection ) | ( Omit<Comment, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( Live ) | ( Omit<Reaction, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( Video );
   History: ( Omit<Favorite, 'post'> & { post: _RefType['Post'] } ) | ( Omit<Like, 'post'> & { post: _RefType['Post'] } ) | ( Omit<Watch, 'post'> & { post: _RefType['Post'] } );
   Metric: ( BookmarkMetric ) | ( ChannelMetric ) | ( CollectionMetric ) | ( CommentMetric ) | ( LikeMetric ) | ( LiveMetric ) | ( ReactionMetric ) | ( VideoMetric );
-  Node: ( Omit<Analytics, 'timeSeries' | 'topValues'> & { timeSeries: _RefType['AnalyticsPayload'], topValues: _RefType['AnalyticsPayload'] } ) | ( AnalyticsGroupedPayloadItem ) | ( AnalyticsReport ) | ( Attribute ) | ( Behavior ) | ( BehaviorRuleTag ) | ( BookmarkMetric ) | ( Caption ) | ( Channel ) | ( ChannelEngagementMetrics ) | ( ChannelExternalLinks ) | ( ChannelMetric ) | ( ChannelMetrics ) | ( ChannelShareUrls ) | ( ChannelStats ) | ( ChannelStatsFollowers ) | ( ChannelStatsReactions ) | ( ChannelStatsVideos ) | ( ChannelStatsViews ) | ( ChannelUpdateRequired ) | ( Collection ) | ( CollectionEngagementMetrics ) | ( CollectionMetric ) | ( CollectionMetrics ) | ( CollectionStats ) | ( CollectionStatsVideos ) | ( Omit<Comment, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( CommentEngagementMetrics ) | ( CommentMetrics ) | ( CommentViewerEngagement ) | ( ContentCategory ) | ( Omit<Conversation, 'story'> & { story?: Maybe<_RefType['Story']> } ) | ( Country ) | ( CuratedCategory ) | ( DailymotionAd ) | ( EmailChangeRequest ) | ( ExperimentMatch ) | ( FallbackCountry ) | ( Omit<Favorite, 'post'> & { post: _RefType['Post'] } ) | ( FeatureMatch ) | ( FeaturedContent ) | ( FileUpload ) | ( FollowedChannel ) | ( FollowedTopic ) | ( Follower ) | ( FollowerEngagement ) | ( FollowerEngagementNotifications ) | ( Following ) | ( FollowingChannelStartsLive ) | ( FollowingChannelUploadsVideo ) | ( FollowingStartsLive ) | ( GeoblockedCountries ) | ( Geoblocking ) | ( Hashtag ) | ( HashtagEngagementMetrics ) | ( HashtagMetrics ) | ( Image ) | ( Interest ) | ( Language ) | ( Omit<Like, 'post'> & { post: _RefType['Post'] } ) | ( Live ) | ( LiveEngagementMetrics ) | ( LiveMetric ) | ( LiveMetrics ) | ( LiveShareUrls ) | ( LiveStats ) | ( LiveStatsViews ) | ( LiveStreamUrls ) | ( LiveStreams ) | ( LiveViewerEngagement ) | ( Localization ) | ( LocalizationMe ) | ( MediaModeration ) | ( MediaTag ) | ( MediaUploadInfo ) | ( Metadata ) | ( MonetizationInsights ) | ( Neon ) | ( NotificationSettings ) | ( Organization ) | ( OrganizationAnalysis ) | ( OrganizationStats ) | ( OrganizationStatsChannels ) | ( Partner ) | ( PartnerReportFile ) | ( PartnerSpace ) | ( Player ) | ( PlayerQueue ) | ( Omit<Poll, 'component' | 'opener' | 'post'> & { component?: Maybe<_RefType['Component']>, opener?: Maybe<_RefType['Story']>, post?: Maybe<_RefType['Post']> } ) | ( PollOption ) | ( PollShareUrls ) | ( ProductUpdates ) | ( Quality ) | ( Omit<Reaction, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( ReactionEngagementMetrics ) | ( ReactionMetric ) | ( ReactionMetrics ) | ( ReactionShareUrls ) | ( ReactionStreamUrls ) | ( ReactionVideo ) | ( ReactionVideoStats ) | ( ReactionVideoStatsBookmarks ) | ( ReactionVideoStatsFavorites ) | ( ReactionVideoStatsLikes ) | ( ReactionVideoStatsReactionVideos ) | ( ReactionVideoStatsSaves ) | ( ReactionViewerEngagement ) | ( Omit<RecommendedRecording, 'recording'> & { recording?: Maybe<_RefType['Recording']> } ) | ( RemindUnwatchedVideos ) | ( ReportFileDownloadLink ) | ( Restriction ) | ( Rule ) | ( Search ) | ( Omit<Section, 'relatedComponent'> & { relatedComponent?: Maybe<_RefType['Component']> } ) | ( SharingUrl ) | ( Subdivision ) | ( Subtitle ) | ( Suggestion ) | ( SupportedCountry ) | ( SupportedLanguage ) | ( Thumbnails ) | ( Tips ) | ( Topic ) | ( TopicLabel ) | ( TopicShareUrls ) | ( TopicStats ) | ( TopicStatsFollowers ) | ( TopicStatsVideos ) | ( TopicWhitelistStatus ) | ( User ) | ( UserInterest ) | ( UserPollAnswer ) | ( UserStats ) | ( UserStatsCollections ) | ( UserStatsFollowers ) | ( UserStatsFollowingChannels ) | ( UserStatsFollowingTopics ) | ( UserStatsLikedVideos ) | ( UserStatsReactionVideos ) | ( UserStatsUploadedVideos ) | ( UserStatsVideos ) | ( UserStatsWatchLater ) | ( UserStatsWatchedVideos ) | ( Video ) | ( VideoDigest ) | ( VideoEngagementMetrics ) | ( VideoMetric ) | ( VideoMetrics ) | ( VideoShareUrls ) | ( VideoStats ) | ( VideoStatsBookmarks ) | ( VideoStatsFavorites ) | ( VideoStatsLikes ) | ( VideoStatsReactionVideos ) | ( VideoStatsSaves ) | ( VideoStatsViews ) | ( VideoStreamUrls ) | ( VideoStreams ) | ( VideoViewMetrics ) | ( VideoViewerEngagement ) | ( Views ) | ( Omit<Watch, 'post'> & { post: _RefType['Post'] } ) | ( Web ) | ( WebMetadata ) | ( WebMetadataConnection );
+  Node: ( Omit<Analytics, 'timeSeries' | 'topValues'> & { timeSeries: _RefType['AnalyticsPayload'], topValues: _RefType['AnalyticsPayload'] } ) | ( AnalyticsGroupedPayloadItem ) | ( AnalyticsReport ) | ( Attribute ) | ( Behavior ) | ( BehaviorRuleTag ) | ( BookmarkMetric ) | ( Caption ) | ( Channel ) | ( ChannelEngagementMetrics ) | ( ChannelExternalLinks ) | ( ChannelMetric ) | ( ChannelMetrics ) | ( ChannelShareUrls ) | ( ChannelStats ) | ( ChannelStatsFollowers ) | ( ChannelStatsReactions ) | ( ChannelStatsVideos ) | ( ChannelStatsViews ) | ( ChannelUpdateRequired ) | ( Collection ) | ( CollectionEngagementMetrics ) | ( CollectionMetric ) | ( CollectionMetrics ) | ( CollectionStats ) | ( CollectionStatsVideos ) | ( Omit<Comment, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( CommentEngagementMetrics ) | ( CommentMetrics ) | ( CommentViewerEngagement ) | ( ContentCategory ) | ( Omit<Conversation, 'story'> & { story?: Maybe<_RefType['Story']> } ) | ( Country ) | ( CuratedCategory ) | ( DailymotionAd ) | ( EmailChangeRequest ) | ( ExperimentMatch ) | ( FallbackCountry ) | ( Omit<Favorite, 'post'> & { post: _RefType['Post'] } ) | ( FeatureMatch ) | ( FeaturedContent ) | ( FileUpload ) | ( FollowedChannel ) | ( FollowedTopic ) | ( Follower ) | ( FollowerEngagement ) | ( FollowerEngagementNotifications ) | ( Omit<Following, 'story'> & { story?: Maybe<_RefType['Story']> } ) | ( FollowingChannelStartsLive ) | ( FollowingChannelUploadsVideo ) | ( FollowingStartsLive ) | ( GeoblockedCountries ) | ( Geoblocking ) | ( Hashtag ) | ( HashtagEngagementMetrics ) | ( HashtagMetrics ) | ( Image ) | ( Interest ) | ( Language ) | ( Omit<Like, 'post'> & { post: _RefType['Post'] } ) | ( Live ) | ( LiveEngagementMetrics ) | ( LiveMetric ) | ( LiveMetrics ) | ( LiveShareUrls ) | ( LiveStats ) | ( LiveStatsViews ) | ( LiveStreamUrls ) | ( LiveStreams ) | ( LiveViewerEngagement ) | ( Localization ) | ( LocalizationMe ) | ( MediaModeration ) | ( MediaTag ) | ( MediaUploadInfo ) | ( Metadata ) | ( MonetizationInsights ) | ( Neon ) | ( NotificationSettings ) | ( Organization ) | ( OrganizationAnalysis ) | ( OrganizationStats ) | ( OrganizationStatsChannels ) | ( Partner ) | ( PartnerReportFile ) | ( PartnerSpace ) | ( Player ) | ( PlayerQueue ) | ( Omit<Poll, 'component' | 'opener' | 'post'> & { component?: Maybe<_RefType['Component']>, opener?: Maybe<_RefType['Story']>, post?: Maybe<_RefType['Post']> } ) | ( PollOption ) | ( PollShareUrls ) | ( ProductUpdates ) | ( Quality ) | ( Omit<Reaction, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( ReactionEngagementMetrics ) | ( ReactionMetric ) | ( ReactionMetrics ) | ( ReactionShareUrls ) | ( ReactionStreamUrls ) | ( ReactionVideo ) | ( ReactionVideoStats ) | ( ReactionVideoStatsBookmarks ) | ( ReactionVideoStatsFavorites ) | ( ReactionVideoStatsLikes ) | ( ReactionVideoStatsReactionVideos ) | ( ReactionVideoStatsSaves ) | ( ReactionViewerEngagement ) | ( Omit<RecommendedRecording, 'recording'> & { recording?: Maybe<_RefType['Recording']> } ) | ( RemindUnwatchedVideos ) | ( ReportFileDownloadLink ) | ( Restriction ) | ( Rule ) | ( Search ) | ( Omit<Section, 'relatedComponent'> & { relatedComponent?: Maybe<_RefType['Component']> } ) | ( SharingUrl ) | ( Subdivision ) | ( Subtitle ) | ( Suggestion ) | ( SupportedCountry ) | ( SupportedLanguage ) | ( Thumbnails ) | ( Tips ) | ( Topic ) | ( TopicLabel ) | ( TopicShareUrls ) | ( TopicStats ) | ( TopicStatsFollowers ) | ( TopicStatsVideos ) | ( TopicWhitelistStatus ) | ( User ) | ( UserInterest ) | ( UserPollAnswer ) | ( UserStats ) | ( UserStatsCollections ) | ( UserStatsFollowers ) | ( UserStatsFollowingChannels ) | ( UserStatsFollowingTopics ) | ( UserStatsLikedVideos ) | ( UserStatsReactionVideos ) | ( UserStatsUploadedVideos ) | ( UserStatsVideos ) | ( UserStatsWatchLater ) | ( UserStatsWatchedVideos ) | ( Video ) | ( VideoDigest ) | ( VideoEngagementMetrics ) | ( VideoMetric ) | ( VideoMetrics ) | ( VideoShareUrls ) | ( VideoStats ) | ( VideoStatsBookmarks ) | ( VideoStatsFavorites ) | ( VideoStatsLikes ) | ( VideoStatsReactionVideos ) | ( VideoStatsSaves ) | ( VideoStatsViews ) | ( VideoStreamUrls ) | ( VideoStreams ) | ( VideoViewMetrics ) | ( VideoViewerEngagement ) | ( Views ) | ( Omit<Watch, 'post'> & { post: _RefType['Post'] } ) | ( Web ) | ( WebMetadata ) | ( WebMetadataConnection );
   PostEngagementMetrics: ( LiveEngagementMetrics ) | ( ReactionEngagementMetrics ) | ( VideoEngagementMetrics );
   PostMetrics: ( LiveMetrics ) | ( ReactionMetrics ) | ( VideoMetrics );
   Recording: ( Live ) | ( Omit<Reaction, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( Video );
@@ -9936,11 +9967,12 @@ export type ResolversTypes = {
   FollowerEdge: ResolverTypeWrapper<FollowerEdge>;
   FollowerEngagement: ResolverTypeWrapper<FollowerEngagement>;
   FollowerEngagementNotifications: ResolverTypeWrapper<FollowerEngagementNotifications>;
-  Following: ResolverTypeWrapper<Following>;
+  Following: ResolverTypeWrapper<Omit<Following, 'story'> & { story?: Maybe<ResolversTypes['Story']> }>;
   FollowingChannelStartsLive: ResolverTypeWrapper<FollowingChannelStartsLive>;
   FollowingChannelUploadsVideo: ResolverTypeWrapper<FollowingChannelUploadsVideo>;
   FollowingConnection: ResolverTypeWrapper<FollowingConnection>;
   FollowingEdge: ResolverTypeWrapper<FollowingEdge>;
+  FollowingFilter: FollowingFilter;
   FollowingInput: FollowingInput;
   FollowingPayload: ResolverTypeWrapper<FollowingPayload>;
   FollowingStartsLive: ResolverTypeWrapper<FollowingStartsLive>;
@@ -10172,6 +10204,7 @@ export type ResolversTypes = {
   StoryEdge: ResolverTypeWrapper<Omit<StoryEdge, 'node'> & { node?: Maybe<ResolversTypes['Story']> }>;
   StoryFilter: StoryFilter;
   StoryOperator: StoryOperator;
+  StorySort: StorySort;
   StoryTypename: StoryTypename;
   StreamUrls: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['StreamUrls']>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
@@ -10505,11 +10538,12 @@ export type ResolversParentTypes = {
   FollowerEdge: FollowerEdge;
   FollowerEngagement: FollowerEngagement;
   FollowerEngagementNotifications: FollowerEngagementNotifications;
-  Following: Following;
+  Following: Omit<Following, 'story'> & { story?: Maybe<ResolversParentTypes['Story']> };
   FollowingChannelStartsLive: FollowingChannelStartsLive;
   FollowingChannelUploadsVideo: FollowingChannelUploadsVideo;
   FollowingConnection: FollowingConnection;
   FollowingEdge: FollowingEdge;
+  FollowingFilter: FollowingFilter;
   FollowingInput: FollowingInput;
   FollowingPayload: FollowingPayload;
   FollowingStartsLive: FollowingStartsLive;
@@ -10710,6 +10744,7 @@ export type ResolversParentTypes = {
   StoryEdge: Omit<StoryEdge, 'node'> & { node?: Maybe<ResolversParentTypes['Story']> };
   StoryFilter: StoryFilter;
   StoryOperator: StoryOperator;
+  StorySort: StorySort;
   StreamUrls: ResolversInterfaceTypes<ResolversParentTypes>['StreamUrls'];
   String: Scalars['String']['output'];
   StringOperator: StringOperator;
@@ -11901,6 +11936,7 @@ export type FollowerEngagementNotificationsResolvers<ContextType = any, ParentTy
 export type FollowingResolvers<ContextType = any, ParentType extends ResolversParentTypes['Following'] = ResolversParentTypes['Following']> = {
   creator?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  story?: Resolver<Maybe<ResolversTypes['Story']>, ParentType, ContextType>;
   user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -11976,6 +12012,7 @@ export type GeoblockingEdgeResolvers<ContextType = any, ParentType extends Resol
 };
 
 export type HashtagResolvers<ContextType = any, ParentType extends ResolversParentTypes['Hashtag'] = ResolversParentTypes['Hashtag']> = {
+  followerEngagement?: Resolver<Maybe<ResolversTypes['FollowerEngagement']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   metrics?: Resolver<Maybe<ResolversTypes['HashtagMetrics']>, ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -13136,7 +13173,7 @@ export type SearchResolvers<ContextType = any, ParentType extends ResolversParen
   hashtags?: Resolver<Maybe<ResolversTypes['HashtagConnection']>, ParentType, ContextType, RequireFields<SearchHashtagsArgs, 'first' | 'page' | 'query'>>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   lives?: Resolver<Maybe<ResolversTypes['LiveConnection']>, ParentType, ContextType, RequireFields<SearchLivesArgs, 'first' | 'page' | 'query'>>;
-  stories?: Resolver<Maybe<ResolversTypes['StoryConnection']>, ParentType, ContextType, RequireFields<SearchStoriesArgs, 'first' | 'page' | 'query'>>;
+  stories?: Resolver<Maybe<ResolversTypes['StoryConnection']>, ParentType, ContextType, RequireFields<SearchStoriesArgs, 'first' | 'orderBy' | 'page' | 'query'>>;
   topics?: Resolver<Maybe<ResolversTypes['TopicConnection']>, ParentType, ContextType, RequireFields<SearchTopicsArgs, 'first' | 'page' | 'query'>>;
   videos?: Resolver<Maybe<ResolversTypes['VideoConnection']>, ParentType, ContextType, RequireFields<SearchVideosArgs, 'first' | 'page' | 'query' | 'sort'>>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
