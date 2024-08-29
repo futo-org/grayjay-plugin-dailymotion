@@ -7,7 +7,7 @@
   "sourceUrl": "https://plugins.grayjay.app/Dailymotion/DailymotionConfig.json",
   "scriptUrl": "./DailymotionScript.js",
   "repositoryUrl": "https://futo.org",
-  "version": 21,
+  "version": 22,
   "iconUrl": "./DailymotionIcon.png",
   "id": "9c87e8db-e75d-48f4-afe5-2d203d4b95c5",
   "scriptSignature": "",
