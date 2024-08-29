@@ -3,8 +3,6 @@ import {
   BASE_URL,
   BASE_URL_API_AUTH,
   createAuthRegexByTextLength,
-  FALLBACK_CLIENT_ID,
-  FALLBACK_CLIENT_SECRET,
   REGEX_INITIAL_DATA_API_AUTH_1,
   USER_AGENT,
 } from './constants';
@@ -65,12 +63,7 @@ export function extractClientCredentials(httpClient: IHttp) {
     throw new ScriptException('Failed to fetch page to extract auth details');
   }
 
-  const result = [
-    {
-      clientId: FALLBACK_CLIENT_ID,
-      secret: FALLBACK_CLIENT_SECRET,
-    },
-  ];
+  const result = [];
 
   const match = detailsRequestHtml.body.match(REGEX_INITIAL_DATA_API_AUTH_1);
 
