@@ -17,9 +17,6 @@ const REGEX_VIDEO_PLAYLIST_URL = /^https:\/\/(?:www\.)?dailymotion\.com\/playlis
 const REGEX_INITIAL_DATA_API_AUTH_1 = /(?<=window\.__LOADABLE_LOADED_CHUNKS__=.*)\b[a-f0-9]{20}\b|\b[a-f0-9]{40}\b/g;
 const createAuthRegexByTextLength = (length) => new RegExp(`\\b\\w+\\s*=\\s*"([a-zA-Z0-9]{${length}})"`);
 const USER_AGENT = 'Mozilla/5.0 (Linux; Android 12) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.230 Mobile Safari/537.36';
-// Those are used even for not logged users to make requests on the graphql api.
-const FALLBACK_CLIENT_ID = 'f1a362d288c1b98099c7';
-const FALLBACK_CLIENT_SECRET = 'eea605b96e01c796ff369935357eca920c5da4c5';
 const FALLBACK_SPOT_ID = 'sp_vWPN1lBu';
 const PLATFORM = 'Dailymotion';
 const PLATFORM_CLAIMTYPE = 27;
@@ -1396,12 +1393,7 @@ function extractClientCredentials(httpClient) {
     if (!detailsRequestHtml.isOk) {
         throw new ScriptException('Failed to fetch page to extract auth details');
     }
-    const result = [
-        {
-            clientId: FALLBACK_CLIENT_ID,
-            secret: FALLBACK_CLIENT_SECRET,
-        },
-    ];
+    const result = [];
     const match = detailsRequestHtml.body.match(REGEX_INITIAL_DATA_API_AUTH_1);
     if (match?.length === 2 && match[0] && match[1]) {
         result.unshift({
