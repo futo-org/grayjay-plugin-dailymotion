@@ -1,6 +1,6 @@
-# Dailymotion plugin for Grayjay - work in progress
+# Dailymotion plugin for Grayjay
 
-Click [here](https://stefancruz.github.io/GrayjayDailymotion/index.html) to install into Grayjay
+Click [here](https://plugins.grayjay.app/) to install into Grayjay
 
 ## Features
 - [x] - Home
