@@ -881,3 +881,88 @@ export const USER_WATCHED_VIDEOS_QUERY = `
 		}
 	}
 }`;
+
+export const DISCOVERY_QUEUE_QUERY = `
+query DISCOVERY_QUEUE_QUERY($videoXid: String!, $videoCountPerSection: Int) {
+  views {
+    neon {
+      sections(
+        space: "watching"
+        context: {mediaXid: $videoXid}
+        first: 20
+      ) {
+        edges {
+          node {
+            name
+            components(first: $videoCountPerSection) {
+              edges {
+                node {
+                  ... on Video {
+                    xid
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+`
+
+export const playerVideosDataQuery = `
+query playerVideosDataQuery(
+	$videoXids: [String!], 
+	$first: Int, 
+	$avatar_size: AvatarHeight!, 
+	$thumbnail_resolution: ThumbnailHeight!
+) {
+  videos(videoXids: $videoXids, first: $first) {
+    edges {
+      node {
+        ...VideoFields
+      }
+    }
+  }
+}
+fragment VideoFields on Video {
+  	id
+	xid
+	title
+	createdAt
+	metrics {
+		engagement {
+			likes {
+				edges {
+					node {
+						rating
+						total
+					}
+				}
+			}
+		}
+	}
+	stats {
+		views {
+			total
+		}
+	}
+	creator {
+		id
+		xid
+		name
+		displayName
+		description
+		avatar(height:$avatar_size) {
+			url
+		}
+	}
+	duration
+	thumbnail(height:$thumbnail_resolution) {
+		url
+	}
+}
+
+`

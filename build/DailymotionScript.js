@@ -977,6 +977,89 @@ const USER_WATCHED_VIDEOS_QUERY = `
 		}
 	}
 }`;
+const DISCOVERY_QUEUE_QUERY = `
+query DISCOVERY_QUEUE_QUERY($videoXid: String!, $videoCountPerSection: Int) {
+  views {
+    neon {
+      sections(
+        space: "watching"
+        context: {mediaXid: $videoXid}
+        first: 20
+      ) {
+        edges {
+          node {
+            name
+            components(first: $videoCountPerSection) {
+              edges {
+                node {
+                  ... on Video {
+                    xid
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+`;
+const playerVideosDataQuery = `
+query playerVideosDataQuery(
+	$videoXids: [String!], 
+	$first: Int, 
+	$avatar_size: AvatarHeight!, 
+	$thumbnail_resolution: ThumbnailHeight!
+) {
+  videos(videoXids: $videoXids, first: $first) {
+    edges {
+      node {
+        ...VideoFields
+      }
+    }
+  }
+}
+fragment VideoFields on Video {
+  	id
+	xid
+	title
+	createdAt
+	metrics {
+		engagement {
+			likes {
+				edges {
+					node {
+						rating
+						total
+					}
+				}
+			}
+		}
+	}
+	stats {
+		views {
+			total
+		}
+	}
+	creator {
+		id
+		xid
+		name
+		displayName
+		description
+		avatar(height:$avatar_size) {
+			url
+		}
+	}
+	duration
+	thumbnail(height:$thumbnail_resolution) {
+		url
+	}
+}
+
+`;
 
 const objectToUrlEncodedString = (obj) => {
     const encodedParams = [];
@@ -1830,6 +1913,41 @@ source.getChannelTemplateByClaimMap = () => {
         },
     };
 };
+source.getContentRecommendations = (url, initialData) => {
+    try {
+        const videoXid = url.split('/').pop();
+        const gqlResponse = executeGqlQuery(http, {
+            operationName: 'DISCOVERY_QUEUE_QUERY',
+            variables: {
+                videoXid,
+                videoCountPerSection: 25
+            },
+            query: DISCOVERY_QUEUE_QUERY,
+            usePlatformAuth: false,
+        });
+        const videoXids = gqlResponse?.data?.views?.neon?.sections?.edges?.[0]?.node?.components?.edges?.map(e => e.node.xid) ?? [];
+        const gqlResponse1 = executeGqlQuery(http, {
+            operationName: 'playerVideosDataQuery',
+            variables: {
+                first: 30,
+                avatar_size: CREATOR_AVATAR_HEIGHT[_settings.avatarSizeOptionIndex],
+                thumbnail_resolution: THUMBNAIL_HEIGHT[_settings.thumbnailResolutionOptionIndex],
+                videoXids
+            },
+            query: playerVideosDataQuery,
+            usePlatformAuth: false,
+        });
+        const results = gqlResponse1.data.videos.edges
+            ?.map((edge) => {
+            return SourceVideoToGrayjayVideo(config.id, edge.node);
+        });
+        return new VideoPager(results, false);
+    }
+    catch (error) {
+        log('Failed to get recommendations:' + error);
+        return new VideoPager([], false);
+    }
+};
 function getPlaylistsByUsername(userName, headers, usePlatformAuth = false) {
     const collections = executeGqlQuery(http, {
         operationName: 'CHANNEL_PLAYLISTS_QUERY',
@@ -2044,13 +2162,11 @@ function getSavedVideo(url, usePlatformAuth = false) {
     if (!usePlatformAuth) {
         videoDetailsRequestHeaders.Authorization = state.anonymousUserAuthorizationToken;
     }
-    const responses = http
+    const [player_metadataResponse, video_details_response] = http
         .batch()
         .GET(player_metadata_url, headers1, usePlatformAuth)
         .POST(BASE_URL_API, videoDetailsRequestBody, videoDetailsRequestHeaders, usePlatformAuth)
         .execute();
-    const player_metadataResponse = responses[0];
-    const video_details_response = responses[1];
     if (!player_metadataResponse.isOk) {
         throw new UnavailableException('Unable to get player metadata');
     }
@@ -2068,7 +2184,11 @@ function getSavedVideo(url, usePlatformAuth = false) {
     const video_details = JSON.parse(video_details_response.body);
     const video = video_details?.data?.video;
     const platformVideoDetails = SourceVideoToPlatformVideoDetailsDef(config.id, video, player_metadata);
-    return new PlatformVideoDetails(platformVideoDetails);
+    const videoDetails = new PlatformVideoDetails(platformVideoDetails);
+    videoDetails.getContentRecommendations = function () {
+        return source.getContentRecommendations(url, videoDetails);
+    };
+    return videoDetails;
 }
 function getSearchChannelPager(context) {
     const searchResponse = executeGqlQuery(http, {
