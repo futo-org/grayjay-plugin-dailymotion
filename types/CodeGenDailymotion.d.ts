@@ -50,7 +50,7 @@ export enum AccountType {
 export type ActivateUserInput = {
   /** The activation key received in the email. */
   activationKey: Scalars['String']['input'];
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The email of the user to activate. */
   email: Scalars['String']['input'];
@@ -59,7 +59,7 @@ export type ActivateUserInput = {
 /** The return fields from activating a user. */
 export type ActivateUserPayload = {
   __typename?: 'ActivateUserPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -85,7 +85,7 @@ export type ActivityOperator = {
 
 /** The input fields to add a video to a collection. */
 export type AddCollectionVideoInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The Dailymotion ID of the collection. */
   collectionXid: Scalars['String']['input'];
@@ -96,7 +96,7 @@ export type AddCollectionVideoInput = {
 /** The return fields from adding a video to a collection. */
 export type AddCollectionVideoPayload = {
   __typename?: 'AddCollectionVideoPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -104,7 +104,7 @@ export type AddCollectionVideoPayload = {
 
 /** The input fields to add a video to the `WatchLater` list of the connected user. */
 export type AddWatchLaterVideoInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The Dailymotion ID of the video. */
   videoXid: Scalars['String']['input'];
@@ -113,7 +113,7 @@ export type AddWatchLaterVideoInput = {
 /** The return fields from adding a video to the `WatchLater` list of the connected user. */
 export type AddWatchLaterVideoPayload = {
   __typename?: 'AddWatchLaterVideoPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -350,7 +350,7 @@ export type AnalyticsReportConnection = {
 export type AnalyticsReportCreateInput = {
   /** The Dailymotion ID of the channel for the report. */
   channelXid: Scalars['String']['input'];
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /**
    * The dimensions used to aggregate data.
@@ -380,7 +380,7 @@ export type AnalyticsReportCreateInput = {
 /** The return fields from creating a custom report. */
 export type AnalyticsReportCreatePayload = {
   __typename?: 'AnalyticsReportCreatePayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The analytics report that is being created. */
   report?: Maybe<AnalyticsReport>;
@@ -476,7 +476,7 @@ export enum AppealReason {
 
 /** The input fields to ask a partner report file. */
 export type AskPartnerReportFileInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /**
    * The dimensions used to aggregate data.
@@ -498,7 +498,7 @@ export type AskPartnerReportFileInput = {
 /** The return fields from asking a partner report file. */
 export type AskPartnerReportFilePayload = {
   __typename?: 'AskPartnerReportFilePayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** Custom report in progress of generation. */
   reportFile?: Maybe<PartnerReportFile>;
@@ -791,6 +791,8 @@ export type Category = {
   id: Scalars['ID']['output'];
   /** The name of the category. */
   name: Scalars['String']['output'];
+  /** The human-readable unique ID of the category. */
+  slug: Scalars['String']['output'];
 };
 
 /** The connection type for Category. */
@@ -837,7 +839,12 @@ export enum CategoryTypename {
 /** A channel manages medias and collections. */
 export type Channel = Node & {
   __typename?: 'Channel';
-  /** The account type of the channel. Its value is one of the following: verified-partner, partner or viewer. */
+  /** The account of the channel. */
+  account?: Maybe<Account>;
+  /**
+   * The account type of the channel. Its value is one of the following: verified-partner, partner or viewer.
+   * @deprecated Use `account`.
+   */
   accountType?: Maybe<Scalars['String']['output']>;
   /** The URL of the avatar image. */
   avatar?: Maybe<Image>;
@@ -849,6 +856,8 @@ export type Channel = Node & {
   canChangeName?: Maybe<Scalars['Boolean']['output']>;
   /** The collections of the channel. */
   collections?: Maybe<CollectionConnection>;
+  /** The comments created by the channel. */
+  comments?: Maybe<CommentConnection>;
   /** The country of the channel. */
   country?: Maybe<Country>;
   /**
@@ -856,6 +865,8 @@ export type Channel = Node & {
    * @deprecated Use `banner` field.
    */
   coverURL?: Maybe<Scalars['String']['output']>;
+  /** The date and time (ISO 8601 format) when the channel was created. */
+  createDate?: Maybe<Scalars['DateTime']['output']>;
   /** The description of the channel. */
   description?: Maybe<Scalars['String']['output']>;
   /** The display name of the channel. */
@@ -890,6 +901,8 @@ export type Channel = Node & {
   language?: Maybe<Language>;
   /** The lives of the channel. */
   lives?: Maybe<LiveConnection>;
+  /** The date and time (ISO 8601 format) when the channel last logged in. */
+  loginDate?: Maybe<Scalars['DateTime']['output']>;
   /**
    * The URL of the logo image.
    * @deprecated Use `avatar` field.
@@ -975,6 +988,14 @@ export type ChannelCollectionsArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   sort?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+/** A channel manages medias and collections. */
+export type ChannelCommentsArgs = {
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<CommentSort>;
+  page?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -1094,7 +1115,7 @@ export type ChannelCreateInput = {
   avatarUrl?: InputMaybe<Scalars['String']['input']>;
   /** The URL of the banner image of the channel. */
   bannerURL?: InputMaybe<Scalars['String']['input']>;
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The country of the channel. */
   country: Scalars['String']['input'];
@@ -1117,7 +1138,7 @@ export type ChannelCreatePayload = {
   __typename?: 'ChannelCreatePayload';
   /** The new channel. */
   channel?: Maybe<Channel>;
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -1140,9 +1161,9 @@ export type ChannelEngagementMetrics = Node & {
   /** The collection metrics of the channel. */
   collections?: Maybe<CollectionMetricConnection>;
   /** The follower metrics of the channel. */
-  followers?: Maybe<ChannelMetricConnection>;
+  followers?: Maybe<FollowerMetricConnection>;
   /** The following metrics of the channel. */
-  followings?: Maybe<ChannelMetricConnection>;
+  followings?: Maybe<FollowingMetricConnection>;
   /** The history metrics of the channel. */
   history?: Maybe<PostMetricConnection>;
   /** The ID of the object. */
@@ -1165,6 +1186,12 @@ export type ChannelEngagementMetricsBookmarksArgs = {
 /** The engagement metrics of a Channel. */
 export type ChannelEngagementMetricsCollectionsArgs = {
   filter?: InputMaybe<CollectionFilter>;
+};
+
+
+/** The engagement metrics of a Channel. */
+export type ChannelEngagementMetricsFollowingsArgs = {
+  filter?: InputMaybe<FollowingFilter>;
 };
 
 
@@ -1361,7 +1388,7 @@ export type ChannelUpdateRequired = Node & {
 };
 
 /** The views metrics of a Channel. */
-export type ChannelViewMetrics = {
+export type ChannelViewMetrics = Node & {
   __typename?: 'ChannelViewMetrics';
   /** The ID of the object. */
   id: Scalars['ID']['output'];
@@ -1379,7 +1406,7 @@ export enum ChannelsSort {
 
 /** The input fields to clear the medias of a collection. */
 export type ClearCollectionMediasInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The Dailymotion ID of the collection. */
   collectionXid: Scalars['String']['input'];
@@ -1388,7 +1415,7 @@ export type ClearCollectionMediasInput = {
 /** The return fields from clearing all medias from a collection. */
 export type ClearCollectionMediasPayload = {
   __typename?: 'ClearCollectionMediasPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -1396,14 +1423,14 @@ export type ClearCollectionMediasPayload = {
 
 /** The input fields to clear the liked videos of the connected user. */
 export type ClearLikedVideosInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** The return fields from clearing the liked videos of the connected user. */
 export type ClearLikedVideosPayload = {
   __typename?: 'ClearLikedVideosPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -1411,14 +1438,14 @@ export type ClearLikedVideosPayload = {
 
 /** The input fields to clear the `WatchLater` list of the connected user. */
 export type ClearWatchLaterVideosInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** The return fields from clearing the `WatchLater` list of the connected user. */
 export type ClearWatchLaterVideosPayload = {
   __typename?: 'ClearWatchLaterVideosPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -1426,14 +1453,14 @@ export type ClearWatchLaterVideosPayload = {
 
 /** The input fields to clear the `Watched` list of the connected user. */
 export type ClearWatchedVideosInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** The return fields from clearing the `Watched` list of the connected user. */
 export type ClearWatchedVideosPayload = {
   __typename?: 'ClearWatchedVideosPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -1642,7 +1669,7 @@ export type Comment = Content & Node & Thread & {
   /** The creation date (DateTime ISO8601) of the comment. */
   createDate: Scalars['DateTime']['output'];
   /** The creator of the comment. */
-  creator: Channel;
+  creator?: Maybe<Channel>;
   /** The ID of the object. */
   id: Scalars['ID']['output'];
   /** The metrics of the comment. */
@@ -1687,7 +1714,7 @@ export type CommentEngagementMetrics = Node & {
 };
 
 /** The node at the end of a CommentMetricEdge. */
-export type CommentMetric = Metric & {
+export type CommentMetric = Metric & Node & {
   __typename?: 'CommentMetric';
   /** The ID of the object. */
   id: Scalars['ID']['output'];
@@ -1809,6 +1836,8 @@ export type ContentCategory = Category & Node & {
   id: Scalars['ID']['output'];
   /** The name of the content category. */
   name: Scalars['String']['output'];
+  /** The human-readable unique ID of the content category. */
+  slug: Scalars['String']['output'];
 };
 
 /** Information about a conversation. */
@@ -1904,7 +1933,7 @@ export type CountryEdge = {
 
 /** The input fields to create a behavior rule. */
 export type CreateBehaviorRuleInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** Condition to apply the feature or experiment segmentation (contains JSON). */
   condition: Scalars['String']['input'];
@@ -1931,7 +1960,7 @@ export type CreateBehaviorRuleInput = {
 /** The return fields from creating a rule for feature flipping or AB experiments. */
 export type CreateBehaviorRulePayload = {
   __typename?: 'CreateBehaviorRulePayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The new rule. */
   rule?: Maybe<Rule>;
@@ -1939,7 +1968,7 @@ export type CreateBehaviorRulePayload = {
 
 /** The input fields to create a collection. */
 export type CreateCollectionInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The description of the collection. */
   description?: InputMaybe<Scalars['String']['input']>;
@@ -1952,7 +1981,7 @@ export type CreateCollectionInput = {
 /** The return fields from creating a collection. */
 export type CreateCollectionPayload = {
   __typename?: 'CreateCollectionPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The new collection. */
   collection?: Maybe<Collection>;
@@ -1962,7 +1991,7 @@ export type CreateCollectionPayload = {
 
 /** The input fields to create a comment. */
 export type CreateCommentInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The ID of the post that the comment is created for. */
   postId?: InputMaybe<Scalars['ID']['input']>;
@@ -1975,7 +2004,7 @@ export type CreateCommentInput = {
 /** The return fields from creating a comment. */
 export type CreateCommentPayload = {
   __typename?: 'CreateCommentPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The new comment. */
   comment?: Maybe<Comment>;
@@ -1985,7 +2014,7 @@ export type CreateCommentPayload = {
 
 /** The input fields to create a reaction. */
 export type CreateReactionInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The ID of the opener that the reaction is created for. */
   openerId: Scalars['ID']['input'];
@@ -2003,7 +2032,7 @@ export type CreateUserInput = {
   avatarURL?: InputMaybe<Scalars['String']['input']>;
   /** The birthday (DateTime ISO8601) of the user. */
   birthday?: InputMaybe<Scalars['DateTime']['input']>;
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** Indicate whether or not to test the creation workflow without actually creating the user. */
   dryRun?: InputMaybe<Scalars['Boolean']['input']>;
@@ -2031,7 +2060,7 @@ export type CreateUserInput = {
 /** The return fields from creating a user. */
 export type CreateUserPayload = {
   __typename?: 'CreateUserPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -2043,7 +2072,7 @@ export type CreateUserPayload = {
 export type CreateVideoInput = {
   /** The category of the video. */
   category?: InputMaybe<MediaCategory>;
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The description of the video. */
   description?: InputMaybe<Scalars['String']['input']>;
@@ -2072,7 +2101,7 @@ export type CreateVideoInput = {
 /** The return fields from creating a new Video. */
 export type CreateVideoPayload = {
   __typename?: 'CreateVideoPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -2093,8 +2122,10 @@ export type CuratedCategory = Category & Node & {
   categoryId: Scalars['Int']['output'];
   /** The ID of the object. */
   id: Scalars['ID']['output'];
-  /** The name of the category. */
+  /** The name of the curated category. */
   name: Scalars['String']['output'];
+  /** The human-readable unique ID of the curated category. */
+  slug: Scalars['String']['output'];
 };
 
 /** The connection type for CuratedCategory. */
@@ -2138,7 +2169,7 @@ export type DateTimeOperator = {
 
 /** The input fields to delete a behavior rule. */
 export type DeleteBehaviorRuleInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The name of the rule to delete. */
   name: Scalars['String']['input'];
@@ -2147,7 +2178,7 @@ export type DeleteBehaviorRuleInput = {
 /** The return fields from deleting a rule used for feature flipping or AB experiments. */
 export type DeleteBehaviorRulePayload = {
   __typename?: 'DeleteBehaviorRulePayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** Indicates whether the mutation was successful. */
   success?: Maybe<Scalars['Boolean']['output']>;
@@ -2155,7 +2186,7 @@ export type DeleteBehaviorRulePayload = {
 
 /** The input fields to delete a comment. */
 export type DeleteCommentInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The ID of the comment to delete. */
   id: Scalars['ID']['input'];
@@ -2164,7 +2195,7 @@ export type DeleteCommentInput = {
 /** The return fields from deleting a comment. */
 export type DeleteCommentPayload = {
   __typename?: 'DeleteCommentPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -2172,7 +2203,7 @@ export type DeleteCommentPayload = {
 
 /** The input fields to delete a reaction. */
 export type DeleteReactionInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The ID of the reaction to delete. */
   id: Scalars['ID']['input'];
@@ -2181,7 +2212,7 @@ export type DeleteReactionInput = {
 /** The return fields from deleting a reaction. */
 export type DeleteReactionPayload = {
   __typename?: 'DeleteReactionPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -2189,7 +2220,7 @@ export type DeleteReactionPayload = {
 
 /** The input fields to delete a user. */
 export type DeleteUserInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The password of the user. */
   password?: InputMaybe<Scalars['String']['input']>;
@@ -2198,7 +2229,7 @@ export type DeleteUserInput = {
 /** The return fields from deleting a user. */
 export type DeleteUserPayload = {
   __typename?: 'DeleteUserPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -2206,7 +2237,7 @@ export type DeleteUserPayload = {
 
 /** The input fields to delete a video. */
 export type DeleteVideoInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The Dailymotion of the video. */
   xid: Scalars['String']['input'];
@@ -2215,7 +2246,7 @@ export type DeleteVideoInput = {
 /** The return fields from deleting a video. */
 export type DeleteVideoPayload = {
   __typename?: 'DeleteVideoPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -2228,6 +2259,17 @@ export type EmailChangeRequest = Node & {
   id: Scalars['ID']['output'];
   /** The new email the user has requested to change to. */
   newEmail: Scalars['String']['output'];
+};
+
+/** Represents the details of an embed. */
+export type Embed = Node & {
+  __typename?: 'Embed';
+  /** The html of the embed for the video. */
+  html?: Maybe<Scalars['String']['output']>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The url of the embed for the video. */
+  url?: Maybe<Scalars['String']['output']>;
 };
 
 /** The different types of embeds. */
@@ -2500,14 +2542,14 @@ export type FileUpload = Node & {
 export type FollowChannelInput = {
   /** The Dailymotion ID of the channel. */
   channelXid: Scalars['String']['input'];
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** The return fields from following a channel for the connected user. */
 export type FollowChannelPayload = {
   __typename?: 'FollowChannelPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -2517,14 +2559,14 @@ export type FollowChannelPayload = {
 export type FollowChannelsInput = {
   /** The Dailymotion IDs of the channels to follow. */
   channelXids: Array<Scalars['String']['input']>;
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** The return fields from following channels for the connected user. */
 export type FollowChannelsPayload = {
   __typename?: 'FollowChannelsPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -2532,7 +2574,7 @@ export type FollowChannelsPayload = {
 
 /** The input fields to follow a channel for the connected user. */
 export type FollowTopicInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The Dailymotion ID of the topic to follow. */
   topicXid: Scalars['String']['input'];
@@ -2541,7 +2583,7 @@ export type FollowTopicInput = {
 /** The return fields from following a topic for the connected user. */
 export type FollowTopicPayload = {
   __typename?: 'FollowTopicPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -2549,7 +2591,7 @@ export type FollowTopicPayload = {
 
 /** The input fields to follow topics for the connected user. */
 export type FollowTopicsInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The Dailymotion IDs of the topics to follow. */
   topicXids: Array<Scalars['String']['input']>;
@@ -2558,7 +2600,7 @@ export type FollowTopicsInput = {
 /** The return fields from follow topics for the connected user. */
 export type FollowTopicsPayload = {
   __typename?: 'FollowTopicsPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -2566,7 +2608,7 @@ export type FollowTopicsPayload = {
 
 /** The input fields to follow a user for the connected user. */
 export type FollowUserInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The Dailymotion ID of the user. */
   xid: Scalars['String']['input'];
@@ -2575,7 +2617,7 @@ export type FollowUserInput = {
 /** The return fields from following a user for the connected user. */
 export type FollowUserPayload = {
   __typename?: 'FollowUserPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -2724,6 +2766,35 @@ export type FollowerEngagementNotifications = Node & {
   uploads: Scalars['Boolean']['output'];
 };
 
+/** The node at the end of a FollowerMetricEdge. */
+export type FollowerMetric = Metric & Node & {
+  __typename?: 'FollowerMetric';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The total count of the channel metric. A null value indicates that it is hidden or not available. */
+  total?: Maybe<Scalars['Int']['output']>;
+};
+
+/** The connection type for a FollowerMetric. */
+export type FollowerMetricConnection = {
+  __typename?: 'FollowerMetricConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<FollowerMetricEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type FollowerMetricEdge = {
+  __typename?: 'FollowerMetricEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<FollowerMetric>;
+};
+
 /** Information about a user, who the requested user is following. */
 export type Following = Node & {
   __typename?: 'Following';
@@ -2793,6 +2864,35 @@ export type FollowingInput = {
   storyId: Scalars['ID']['input'];
 };
 
+/** The node at the end of a FollowingMetricEdge. */
+export type FollowingMetric = Metric & Node & {
+  __typename?: 'FollowingMetric';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The total count of the following metric. A null value indicates that it is hidden or not available. */
+  total?: Maybe<Scalars['Int']['output']>;
+};
+
+/** The connection type for a FollowingMetric. */
+export type FollowingMetricConnection = {
+  __typename?: 'FollowingMetricConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<FollowingMetricEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type FollowingMetricEdge = {
+  __typename?: 'FollowingMetricEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<FollowingMetric>;
+};
+
 /** The return fields from following/unfollowing a story for the connected creator. */
 export type FollowingPayload = {
   __typename?: 'FollowingPayload';
@@ -2823,19 +2923,34 @@ export enum Gender {
 
 /** The input fields to generate a file upload url. */
 export type GenerateFileUploadUrlInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** The return fields from generating a file url upload. */
 export type GenerateFileUploadUrlPayload = {
   __typename?: 'GenerateFileUploadUrlPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** Information about the file upload. */
   fileUpload?: Maybe<FileUpload>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
+};
+
+/** The input fields to generate a token to verify the email. */
+export type GenerateVerifyEmailTokenInput = {
+  /** The email address of the user. */
+  email: Scalars['String']['input'];
+};
+
+/** The return fields to generate a token to verify the email. */
+export type GenerateVerifyEmailTokenPayload = {
+  __typename?: 'GenerateVerifyEmailTokenPayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+  /** The token generated to send a code to verify the email. */
+  token: Scalars['String']['output'];
 };
 
 /** The geoblocked countries of a media. */
@@ -2918,6 +3033,8 @@ export type HashtagEdge = {
 /** The engagement metrics of a Hashtag. */
 export type HashtagEngagementMetrics = Node & {
   __typename?: 'HashtagEngagementMetrics';
+  /** The follower metrics of the hashtag. */
+  followers?: Maybe<ChannelMetricConnection>;
   /** The ID of the object. */
   id: Scalars['ID']['output'];
   /** The video metrics of the hashtag. */
@@ -3042,7 +3159,7 @@ export type InteractionEdge = {
 };
 
 /** Information of an interest. */
-export type Interest = Node & {
+export type Interest = Category & Node & {
   __typename?: 'Interest';
   /** The ID of the object. */
   id: Scalars['ID']['output'];
@@ -3052,6 +3169,8 @@ export type Interest = Node & {
   isEnabled?: Maybe<Scalars['Boolean']['output']>;
   /** The name of the interest. */
   name: Scalars['String']['output'];
+  /** The human-readable unique ID of the interest category. */
+  slug: Scalars['String']['output'];
 };
 
 /** The connection type for Interest. */
@@ -3107,7 +3226,7 @@ export type Like = Bookmark & History & Node & {
 };
 
 /** The node at the end of a LikesMetricEdge. */
-export type LikeMetric = Metric & {
+export type LikeMetric = Metric & Node & {
   __typename?: 'LikeMetric';
   /** The ID of the object. */
   id: Scalars['ID']['output'];
@@ -3146,7 +3265,7 @@ export type LikeMetricFilter = {
 /** The return fields from adding/removing a like to/from the likes list of the connected user. */
 export type LikePayload = {
   __typename?: 'LikePayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -3174,7 +3293,7 @@ export type LikeRatingOperator = {
 
 /** The input fields to like a video for the connected user. */
 export type LikeVideoInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The Dailymotion ID of the video to like. */
   videoXid: Scalars['String']['input'];
@@ -3183,7 +3302,7 @@ export type LikeVideoInput = {
 /** The return fields from liking a video for the connected user. */
 export type LikeVideoPayload = {
   __typename?: 'LikeVideoPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -3200,7 +3319,10 @@ export enum LikedMediaSort {
 /** A live represents a media that is streamed. */
 export type Live = Content & Node & Recording & {
   __typename?: 'Live';
-  /** Indicates whether the live can be embedded outside of Dailymotion. */
+  /**
+   * Indicates whether the live can be embedded outside of Dailymotion.
+   * @deprecated Use `settings.embeddable` field.
+   */
   allowEmbed?: Maybe<Scalars['Boolean']['output']>;
   /** The aspect ratio of the media (e.g. 1.33333 for 4/3, 1.77777 for 16/9). */
   aspectRatio?: Maybe<Scalars['Float']['output']>;
@@ -3255,9 +3377,17 @@ export type Live = Content & Node & Recording & {
    *   No other HTML tag should be present.
    */
   description?: Maybe<Scalars['String']['output']>;
-  /** The HTML embedding code to embed the live outside of Dailymotion. */
+  /** The embed details of the live. */
+  embed?: Maybe<Embed>;
+  /**
+   * The HTML embedding code to embed the live outside of Dailymotion.
+   * @deprecated Use `embed.html` field.
+   */
   embedHtml?: Maybe<Scalars['String']['output']>;
-  /** The URL to embed the live outside of Dailymotion. */
+  /**
+   * The URL to embed the live outside of Dailymotion.
+   * @deprecated Use `embed.url` field.
+   */
   embedURL?: Maybe<Scalars['String']['output']>;
   /**
    * The date (DateTime ISO8601) the live ends.
@@ -3343,6 +3473,8 @@ export type Live = Content & Node & Recording & {
   reactions?: Maybe<ReactionConnection>;
   /** The restriction information of the live. */
   restriction?: Maybe<Restriction>;
+  /** The settings of the live. */
+  settings?: Maybe<LiveSettings>;
   /** The share urls of the live. */
   shareUrls?: Maybe<LiveShareUrls>;
   /**
@@ -3590,6 +3722,14 @@ export type LiveMetrics = Node & PostMetrics & {
   id: Scalars['ID']['output'];
 };
 
+export type LiveSettings = {
+  __typename?: 'LiveSettings';
+  /** Indicates whether the video can be embedded. */
+  embeddable?: Maybe<Scalars['Boolean']['output']>;
+  /** Id of the LiveSettings. */
+  id?: Maybe<Scalars['ID']['output']>;
+};
+
 /** Information about the share urls of a Live. */
 export type LiveShareUrls = Node & ShareUrls & {
   __typename?: 'LiveShareUrls';
@@ -3829,8 +3969,10 @@ export type MediaModeration = Node & {
 };
 
 /** Information about the media publishing. */
-export type MediaPublishingInfo = {
+export type MediaPublishingInfo = Node & {
   __typename?: 'MediaPublishingInfo';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
   /** The percentage of media publishing progress. */
   percentage?: Maybe<Scalars['Int']['output']>;
 };
@@ -3962,7 +4104,7 @@ export type ModerationAction = {
 
 /** Input for < Mutation.moderationActionAppeal > */
 export type ModerationActionAppealInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** Extra user comments (limited to 1024 chars). */
   comment?: InputMaybe<Scalars['String']['input']>;
@@ -3975,7 +4117,7 @@ export type ModerationActionAppealInput = {
 /** Response of < Mutation.moderationActionAppeal > */
 export type ModerationActionAppealPayload = {
   __typename?: 'ModerationActionAppealPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status: Status;
@@ -4047,7 +4189,10 @@ export type Mutation = {
    * @deprecated Use mutation `addFollowing`.
    */
   followChannel?: Maybe<FollowChannelPayload>;
-  /** Follow multiple channels for the connected user. */
+  /**
+   * Follow multiple channels for the connected user.
+   * @deprecated No longer supported.
+   */
   followChannels?: Maybe<FollowChannelsPayload>;
   /** The topic the user wants to follow. */
   followTopic?: Maybe<FollowTopicPayload>;
@@ -4065,6 +4210,8 @@ export type Mutation = {
   followedUserRemove?: Maybe<UnfollowUserPayload>;
   /** Generate a URL to upload a file. */
   generateFileUploadUrl?: Maybe<GenerateFileUploadUrlPayload>;
+  /** Generate a token to request a code to verify the email. */
+  generateVerifyEmailToken?: Maybe<GenerateVerifyEmailTokenPayload>;
   /**
    * Like a video for the connected user.
    * @deprecated Use mutation `addLike`.
@@ -4121,21 +4268,26 @@ export type Mutation = {
   reportComment: ReportCommentPayload;
   /** Report a creator for violating the community guidelines. */
   reportCreator: ReportCreatorPayload;
-  /** Report an inappropriate video. */
+  /** Report a Recording (a Video, a Live, or a Reaction) that is violating the community guidelines. */
+  reportRecording?: Maybe<ReportRecordingPayload>;
+  /**
+   * Report an inappropriate video.
+   * @deprecated Use mutation `reportRecording`.
+   */
   reportVideo?: Maybe<ReportVideoPayload>;
   /** Verify the email of the reporter, if the reporter is not connected. */
   reporterEmailVerify: ReporterEmailVerifyPayload;
-  /** Generate an activation code by a validation token. */
+  /**
+   * Generate an activation code by a validation token.
+   * @deprecated Use `sendVerifyEmailCode`.
+   */
   requestActivationCode?: Maybe<RequestActivationCodePayload>;
   /** Change the password of the user after requesting recover password. */
   resetPassword?: Maybe<ResetPasswordPayload>;
   /** Send a transactional email using an email provider. */
   sendTransactionalEmail?: Maybe<SendTransactionalEmailPayload>;
-  /**
-   * Request a validation email to confirm the account.
-   * @deprecated Use mutation `requestActivationCode`.
-   */
-  sendValidationEmail?: Maybe<SendValidationEmailPayload>;
+  /** Request a code to be sent to verify the email. */
+  sendVerifyEmailCode?: Maybe<SendVerifyEmailCodePayload>;
   /**
    * Unfollow a channel for the connected user.
    * @deprecated Use mutation `removeFollowing`.
@@ -4170,7 +4322,10 @@ export type Mutation = {
   userEmailChangeRequest?: Maybe<UserEmailChangeRequestPayload>;
   /** Request a new email confirmation code. */
   userEmailConfirmationCodeReset?: Maybe<UserEmailConfirmationCodeResetPayload>;
-  /** Generate an email validation token to request an activation code. */
+  /**
+   * Generate an email validation token to request an activation code.
+   * @deprecated Use `generateVerifyEmailToken`.
+   */
   userEmailValidationTokenRequest?: Maybe<UserEmailValidationTokenPayload>;
   /** Add an interest to user. */
   userInterestAdd?: Maybe<UserInterestAddPayload>;
@@ -4366,6 +4521,12 @@ export type MutationGenerateFileUploadUrlArgs = {
 
 
 /** The mutation root of Dailymotion's GraphQL API. */
+export type MutationGenerateVerifyEmailTokenArgs = {
+  input: GenerateVerifyEmailTokenInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
 export type MutationLikeVideoArgs = {
   input: LikeVideoInput;
 };
@@ -4468,6 +4629,12 @@ export type MutationReportCreatorArgs = {
 
 
 /** The mutation root of Dailymotion's GraphQL API. */
+export type MutationReportRecordingArgs = {
+  input: ReportRecordingInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
 export type MutationReportVideoArgs = {
   input: ReportVideoInput;
 };
@@ -4498,8 +4665,8 @@ export type MutationSendTransactionalEmailArgs = {
 
 
 /** The mutation root of Dailymotion's GraphQL API. */
-export type MutationSendValidationEmailArgs = {
-  input: SendValidationEmailInput;
+export type MutationSendVerifyEmailCodeArgs = {
+  input: SendVerifyEmailCodeInput;
 };
 
 
@@ -4670,7 +4837,7 @@ export type Node = {
 export type NotificationFollowedChannelUpdateInput = {
   /** The Dailymotion ID of the channel. */
   channelXid: Scalars['String']['input'];
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** Indicate whether to enable the notification of the channel. */
   isEnabled: Scalars['Boolean']['input'];
@@ -4679,7 +4846,7 @@ export type NotificationFollowedChannelUpdateInput = {
 /** The return fields from updating the push notification settings on a followed channel of the connected user. */
 export type NotificationFollowedChannelUpdatePayload = {
   __typename?: 'NotificationFollowedChannelUpdatePayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -5301,7 +5468,7 @@ export enum PollAnswerAction {
 export type PollAnswerInput = {
   /** The action to perform on the poll answer. */
   action: PollAnswerAction;
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The ID of the poll option. */
   optionId: Scalars['ID']['input'];
@@ -5312,7 +5479,7 @@ export type PollAnswerInput = {
 /** The return fields from a poll answer. */
 export type PollAnswerPayload = {
   __typename?: 'PollAnswerPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -5823,6 +5990,7 @@ export type QueryRecordingArgs = {
 /** The query root of Dailymotion's GraphQL API. */
 export type QueryThreadsArgs = {
   filter?: InputMaybe<ThreadFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -5988,6 +6156,13 @@ export type ReactionThumbnailArgs = {
   height: ThumbnailHeight;
 };
 
+
+/** Represents a Reaction in a recording format. */
+export type ReactionTranscriptArgs = {
+  first?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+};
+
 /** The connection type for ReactionVideo. */
 export type ReactionConnection = {
   __typename?: 'ReactionConnection';
@@ -6074,7 +6249,7 @@ export type ReactionMetrics = Node & PostMetrics & {
 /** The return fields from creating/updating a reaction. */
 export type ReactionPayload = {
   __typename?: 'ReactionPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The created/updated reaction. */
   reaction?: Maybe<Reaction>;
@@ -6217,7 +6392,7 @@ export type ReactionVideoConnection = {
 
 /** The input fields to create a reaction video. */
 export type ReactionVideoCreateInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The URL of the thumbnail image. */
   thumbnailURL?: InputMaybe<Scalars['String']['input']>;
@@ -6231,7 +6406,7 @@ export type ReactionVideoCreateInput = {
 
 /** The input fields to delete a reaction video. */
 export type ReactionVideoDeleteInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The xid of the reaction video to delete. */
   xid: Scalars['String']['input'];
@@ -6240,7 +6415,7 @@ export type ReactionVideoDeleteInput = {
 /** The return fields from deleting a reaction video. */
 export type ReactionVideoDeletePayload = {
   __typename?: 'ReactionVideoDeletePayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -6256,7 +6431,7 @@ export type ReactionVideoEdge = {
 /** The return fields from creating/updating a reaction video. */
 export type ReactionVideoPayload = {
   __typename?: 'ReactionVideoPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The new/updated reaction video. */
   reactionVideo?: Maybe<ReactionVideo>;
@@ -6328,7 +6503,7 @@ export type ReactionVideoStatsSaves = Node & {
 
 /** The input fields to update a reaction video. */
 export type ReactionVideoUpdateInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** the hashtags of the reaction video */
   hashtags?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -6480,7 +6655,7 @@ export enum RecordingViolation {
 
 /** The input fields to recover a password. */
 export type RecoverPasswordInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The email address of the user who wants to recover its password. */
   email: Scalars['String']['input'];
@@ -6489,7 +6664,7 @@ export type RecoverPasswordInput = {
 /** The return fields from recovering a password. */
 export type RecoverPasswordPayload = {
   __typename?: 'RecoverPasswordPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -6514,7 +6689,7 @@ export type RemindUnwatchedVideos = Node & {
 
 /** The input fields to remove a collection. */
 export type RemoveCollectionInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The Dailymotion ID of the collection. */
   collectionXid: Scalars['String']['input'];
@@ -6523,7 +6698,7 @@ export type RemoveCollectionInput = {
 /** The return fields from deleting a collection. */
 export type RemoveCollectionPayload = {
   __typename?: 'RemoveCollectionPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -6531,7 +6706,7 @@ export type RemoveCollectionPayload = {
 
 /** The input fields to remove a video from a collection. */
 export type RemoveCollectionVideoInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The Dailymotion ID of the collection. */
   collectionXid: Scalars['String']['input'];
@@ -6542,7 +6717,7 @@ export type RemoveCollectionVideoInput = {
 /** The return fields from removing a video from a collection. */
 export type RemoveCollectionVideoPayload = {
   __typename?: 'RemoveCollectionVideoPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -6550,7 +6725,7 @@ export type RemoveCollectionVideoPayload = {
 
 /** The input fields to remove a video from the `WatchLater` list of the connected user. */
 export type RemoveWatchLaterVideoInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The Dailymotion ID of the video. */
   videoXid: Scalars['String']['input'];
@@ -6559,7 +6734,7 @@ export type RemoveWatchLaterVideoInput = {
 /** The return fields from removing a video from the `WatchLater` list of the connected user. */
 export type RemoveWatchLaterVideoPayload = {
   __typename?: 'RemoveWatchLaterVideoPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -6567,7 +6742,7 @@ export type RemoveWatchLaterVideoPayload = {
 
 /** The input fields to remove a video from the `Watched` list of the connected user. */
 export type RemoveWatchedVideoInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The Dailymotion ID of the video. */
   videoXid: Scalars['String']['input'];
@@ -6576,7 +6751,7 @@ export type RemoveWatchedVideoInput = {
 /** The return fields from removing a video from the `Watched` list of the connected user. */
 export type RemoveWatchedVideoPayload = {
   __typename?: 'RemoveWatchedVideoPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -6584,7 +6759,7 @@ export type RemoveWatchedVideoPayload = {
 
 /** The input fields to reorder a media in a collection. */
 export type ReorderCollectionMediaInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The Dailymotion ID of the collection. */
   collectionXid: Scalars['String']['input'];
@@ -6597,7 +6772,7 @@ export type ReorderCollectionMediaInput = {
 /** The return fields from reordering a media in a collection. */
 export type ReorderCollectionMediaPayload = {
   __typename?: 'ReorderCollectionMediaPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -6605,14 +6780,16 @@ export type ReorderCollectionMediaPayload = {
 
 /** The available input fields to report a `Comment`. */
 export type ReportCommentInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
-  /** The ID of the comment to report. */
-  commentId: Scalars['ID']['input'];
+  /** @deprecated(reason: "Use `id` input arg.") - The ID of the comment to report. */
+  commentId?: InputMaybe<Scalars['ID']['input']>;
   /** The email address of the user making the report. Required when the user is not connected. */
   email?: InputMaybe<Scalars['String']['input']>;
   /** The first name of the user making the report. */
   firstName?: InputMaybe<Scalars['String']['input']>;
+  /** The ID of the comment to report. */
+  id?: InputMaybe<Scalars['ID']['input']>;
   /** Language code used to communicate with the reporter. if null will guess from request header */
   languageCode?: InputMaybe<Scalars['String']['input']>;
   /** The last name of the user making the report. */
@@ -6626,7 +6803,7 @@ export type ReportCommentInput = {
 /** The return fields from reporting a comment. */
 export type ReportCommentPayload = {
   __typename?: 'ReportCommentPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -6634,7 +6811,7 @@ export type ReportCommentPayload = {
 
 /** The available input fields to report a `Creator`. */
 export type ReportCreatorInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The Dailymotion ID of the creator to report. */
   creatorXid: Scalars['String']['input'];
@@ -6645,7 +6822,7 @@ export type ReportCreatorInput = {
 /** The return fields from reporting a creator. */
 export type ReportCreatorPayload = {
   __typename?: 'ReportCreatorPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -6680,9 +6857,39 @@ export type ReportFileDownloadLinkEdge = {
   node?: Maybe<ReportFileDownloadLink>;
 };
 
+/** The input fields to report a Recording. */
+export type ReportRecordingInput = {
+  /** The email address of the user making the report. Required when the user is not connected. */
+  email?: InputMaybe<Scalars['String']['input']>;
+  /** The first name of the user making the report. */
+  firstName?: InputMaybe<Scalars['String']['input']>;
+  /** The Dailymotion ID of the recording to report. */
+  id: Scalars['ID']['input'];
+  /** The language code to communicate with the reporter. */
+  languageCode?: InputMaybe<Scalars['String']['input']>;
+  /** The last name of the user making the report. */
+  lastName?: InputMaybe<Scalars['String']['input']>;
+  /** The message body of the report. */
+  message?: InputMaybe<Scalars['String']['input']>;
+  /**
+   * The timecode where the violation of the recording happens in format "hh:mm:ss" or "mm:ss".
+   *   If omitted, indicates whole recording is reported.
+   */
+  timecode?: InputMaybe<Scalars['String']['input']>;
+  /** The violation the recording is violating. */
+  violation: RecordingViolation;
+};
+
+/** The return fields from reporting a recording. */
+export type ReportRecordingPayload = {
+  __typename?: 'ReportRecordingPayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
 /** The input fields to report a video. */
 export type ReportVideoInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The email address of the user making the report. Required when the user is not connected. */
   email?: InputMaybe<Scalars['String']['input']>;
@@ -6710,7 +6917,7 @@ export type ReportVideoInput = {
 /** The return fields from reporting a video. */
 export type ReportVideoPayload = {
   __typename?: 'ReportVideoPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -6718,7 +6925,7 @@ export type ReportVideoPayload = {
 
 /** The input to verify user report reporter email */
 export type ReporterEmailVerifyInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** Id of the abuse report */
   reportId: Scalars['ID']['input'];
@@ -6733,7 +6940,7 @@ export type ReporterEmailVerifyInput = {
  */
 export type ReporterEmailVerifyPayload = {
   __typename?: 'ReporterEmailVerifyPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /**
    *
@@ -6745,9 +6952,9 @@ export type ReporterEmailVerifyPayload = {
 
 /** The input fields to request an activation code. */
 export type RequestActivationCodeInput = {
-  /** The account type of the user. */
-  accountType: UserActivationCodeAccountType;
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer required.") The account type of the user. */
+  accountType?: InputMaybe<UserActivationCodeAccountType>;
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The validation token received during the sign in request. */
   validationToken: Scalars['String']['input'];
@@ -6756,7 +6963,7 @@ export type RequestActivationCodeInput = {
 /** The return fields from requesting an activation code. */
 export type RequestActivationCodePayload = {
   __typename?: 'RequestActivationCodePayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -6766,7 +6973,7 @@ export type RequestActivationCodePayload = {
 export type ResetPasswordInput = {
   /** The activation key received in the email from a recover password request. */
   activationKey: Scalars['String']['input'];
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The email of the user to reset its password. */
   email: Scalars['String']['input'];
@@ -6779,7 +6986,7 @@ export type ResetPasswordInput = {
 /** The return fields from resetting a password. */
 export type ResetPasswordPayload = {
   __typename?: 'ResetPasswordPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -6937,15 +7144,27 @@ export type Search = Node & {
   __typename?: 'Search';
   /** The suggestions matched against the search query. */
   autosuggestions?: Maybe<SuggestionConnection>;
-  /** The channels matched against the search query. */
+  /**
+   * The channels matched against the search query.
+   * @deprecated Use `search.stories(filter: {story: {eq: CHANNEL}})`
+   */
   channels?: Maybe<ChannelConnection>;
-  /** The collections that matched against the search query. */
+  /**
+   * The collections that matched against the search query.
+   * @deprecated Use `search.stories(filter: {story: {eq: COLLECTION}})`.
+   */
   collections?: Maybe<CollectionConnection>;
-  /** The hashtags that matched against the search query. */
+  /**
+   * The hashtags that matched against the search query.
+   * @deprecated Use `search.stories(filter: {story: {eq: HASHTAG}})`.
+   */
   hashtags?: Maybe<HashtagConnection>;
   /** The ID of the object. */
   id: Scalars['ID']['output'];
-  /** The lives that matched against the search query. */
+  /**
+   * The lives that matched against the search query.
+   * @deprecated Use `search.stories(filter: {story: {eq: LIVE}})`.
+   */
   lives?: Maybe<LiveConnection>;
   /** The stories that matched against the search query. */
   stories?: Maybe<StoryConnection>;
@@ -6954,7 +7173,10 @@ export type Search = Node & {
    * @deprecated No longer supported.
    */
   topics?: Maybe<TopicConnection>;
-  /** The videos that matched against the search query. */
+  /**
+   * The videos that matched against the search query.
+   * @deprecated Use `search.stories(filter: {story: {eq: VIDEO}})`.
+   */
   videos?: Maybe<VideoConnection>;
 };
 
@@ -7107,7 +7329,7 @@ export type SectionEdge = {
 
 /** The input fields to send a transactional email. */
 export type SendTransactionalEmailInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The ID associated with the given email campaign. */
   emailCampaignId: Scalars['String']['input'];
@@ -7120,25 +7342,21 @@ export type SendTransactionalEmailInput = {
 /** The return fields from sending a transactional email. */
 export type SendTransactionalEmailPayload = {
   __typename?: 'SendTransactionalEmailPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
 };
 
-/** The input fields to send a validation email. */
-export type SendValidationEmailInput = {
-  /** The ID generated for the client performing the mutation. */
-  clientMutationId?: InputMaybe<Scalars['String']['input']>;
-  /** The URI to redirect the user to in the email. */
-  redirectURI?: InputMaybe<Scalars['String']['input']>;
+/** The input fields to send a code to verify the email. */
+export type SendVerifyEmailCodeInput = {
+  /** The token to request a code to verify the email. */
+  token: Scalars['String']['input'];
 };
 
-/** The return fields from sending a validation email. */
-export type SendValidationEmailPayload = {
-  __typename?: 'SendValidationEmailPayload';
-  /** The ID generated for the client performing the mutation. */
-  clientMutationId?: Maybe<Scalars['String']['output']>;
+/** The return fields to send a code to verify the email. */
+export type SendVerifyEmailCodePayload = {
+  __typename?: 'SendVerifyEmailCodePayload';
   /** The status of the mutation. */
   status?: Maybe<Status>;
 };
@@ -7450,6 +7668,8 @@ export type ThreadEdge = {
 
 /** The available input fields of a Thread filter. */
 export type ThreadFilter = {
+  /** Filter threads by the id. */
+  id?: InputMaybe<IdOperator>;
   /** Filter threads by the openerId. */
   openerId?: InputMaybe<IdOperator>;
   /** Filter threads by thread typename. */
@@ -7709,14 +7929,14 @@ export enum TopicWhitelistStatusMode {
 export type UnfollowChannelInput = {
   /** The Dailymotion ID of the channel to unfollow. */
   channelXid: Scalars['String']['input'];
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** The return fields from unfollowing a channel for the connected user. */
 export type UnfollowChannelPayload = {
   __typename?: 'UnfollowChannelPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -7724,7 +7944,7 @@ export type UnfollowChannelPayload = {
 
 /** The input fields to unfollow a topic for the connected user. */
 export type UnfollowTopicInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The Dailymotion ID of the topic to unfollow. */
   topicXid: Scalars['String']['input'];
@@ -7733,7 +7953,7 @@ export type UnfollowTopicInput = {
 /** The return fields from unfollowing a topic for the connected user. */
 export type UnfollowTopicPayload = {
   __typename?: 'UnfollowTopicPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -7741,7 +7961,7 @@ export type UnfollowTopicPayload = {
 
 /** The input fields to unfollow a user for the connected user. */
 export type UnfollowUserInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The Dailymotion ID of the user. */
   xid: Scalars['String']['input'];
@@ -7750,7 +7970,7 @@ export type UnfollowUserInput = {
 /** The return fields from unfollowing a chanusernel for the connected user. */
 export type UnfollowUserPayload = {
   __typename?: 'UnfollowUserPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -7758,7 +7978,7 @@ export type UnfollowUserPayload = {
 
 /** The input fields to unlike a video for the connected user. */
 export type UnlikeVideoInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The Dailymotion ID of the video to unlike. */
   videoXid: Scalars['String']['input'];
@@ -7767,7 +7987,7 @@ export type UnlikeVideoInput = {
 /** The return fields from unliking a video for the connected user. */
 export type UnlikeVideoPayload = {
   __typename?: 'UnlikeVideoPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -7775,7 +7995,7 @@ export type UnlikeVideoPayload = {
 
 /** The input fields to update a behavior rule. */
 export type UpdateBehaviorRuleInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** Condition when to apply the rule (contains JSON). */
   condition?: InputMaybe<Scalars['String']['input']>;
@@ -7804,7 +8024,7 @@ export type UpdateBehaviorRuleInput = {
 /** The return fields from updating a rule used for feature flipping or AB experiments. */
 export type UpdateBehaviorRulePayload = {
   __typename?: 'UpdateBehaviorRulePayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The updated rule. */
   rule?: Maybe<Rule>;
@@ -7814,7 +8034,7 @@ export type UpdateBehaviorRulePayload = {
 export type UpdateChannelInput = {
   /** The url of the avatar of the channel. Send `null` to remove the avatar url. */
   avatarUrl?: InputMaybe<Scalars['String']['input']>;
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The country of the channel. */
   country?: InputMaybe<Scalars['String']['input']>;
@@ -7837,7 +8057,7 @@ export type UpdateChannelPayload = {
   __typename?: 'UpdateChannelPayload';
   /** The updated channel. */
   channel?: Maybe<Channel>;
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -7845,7 +8065,7 @@ export type UpdateChannelPayload = {
 
 /** The input fields to update a collection. */
 export type UpdateCollectionInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The Dailymotion ID of the collection to update. */
   collectionXid: Scalars['String']['input'];
@@ -7860,7 +8080,7 @@ export type UpdateCollectionInput = {
 /** The return fields from updating a collection. */
 export type UpdateCollectionPayload = {
   __typename?: 'UpdateCollectionPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The updated collection. */
   collection?: Maybe<Collection>;
@@ -7870,7 +8090,7 @@ export type UpdateCollectionPayload = {
 
 /** The input fields to update the email notification settings of the connected user. */
 export type UpdateNotificationSettingsEmailInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** Indicate whether to receive notification when a channel you follow starts a live. */
   followingChannelStartsLive?: InputMaybe<Scalars['Boolean']['input']>;
@@ -7891,7 +8111,7 @@ export type UpdateNotificationSettingsEmailInput = {
 /** The return fields from updating the email notification settings of the connected user. */
 export type UpdateNotificationSettingsEmailPayload = {
   __typename?: 'UpdateNotificationSettingsEmailPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The udpated email notification settngs. */
   notificationSettings?: Maybe<NotificationSettings>;
@@ -7901,7 +8121,7 @@ export type UpdateNotificationSettingsEmailPayload = {
 
 /** The input fields to update the push notification settings of the connected user. */
 export type UpdateNotificationSettingsPushInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** Indicate whether to receive notification when a channel you follow starts a live. */
   followingStartsLive?: InputMaybe<Scalars['Boolean']['input']>;
@@ -7916,7 +8136,7 @@ export type UpdateNotificationSettingsPushInput = {
 /** The return fields from updating the email notification settings of the connected user. */
 export type UpdateNotificationSettingsPushPayload = {
   __typename?: 'UpdateNotificationSettingsPushPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The updated push notification settings. */
   notificationSettings?: Maybe<NotificationSettings>;
@@ -7926,7 +8146,7 @@ export type UpdateNotificationSettingsPushPayload = {
 
 /** The input fields to update a reaction. */
 export type UpdateReactionInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** the hashtags of the reaction */
   hashtags?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -7944,7 +8164,7 @@ export type UpdateUserInput = {
   avatarURL?: InputMaybe<Scalars['String']['input']>;
   /** The birthday (DateTime ISO8601) of the user. */
   birthday?: InputMaybe<Scalars['DateTime']['input']>;
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** @deprecated(reason: "Use mutation `emailChangeRequest`.") - The email address of the user. */
   email?: InputMaybe<Scalars['String']['input']>;
@@ -7984,7 +8204,7 @@ export type UpdateUserInput = {
 /** The return fields to updating a user. */
 export type UpdateUserPayload = {
   __typename?: 'UpdateUserPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -7996,7 +8216,7 @@ export type UpdateUserPayload = {
 export type UpdateVideoInput = {
   /** The category of the video. */
   category?: InputMaybe<MediaCategory>;
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The description of the video. */
   description?: InputMaybe<Scalars['String']['input']>;
@@ -8025,7 +8245,7 @@ export type UpdateVideoInput = {
 /** The return fields from updating a video. */
 export type UpdateVideoPayload = {
   __typename?: 'UpdateVideoPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -8048,7 +8268,7 @@ export type User = Node & {
   accountStatus?: Maybe<Scalars['String']['output']>;
   /**
    * The account type of the user (viewer, partner, partner-verified).
-   * @deprecated Use `channel.accountType`.
+   * @deprecated Use `channel.account`.
    */
   accountType?: Maybe<Scalars['String']['output']>;
   /** The Apple ID of the user. */
@@ -8097,6 +8317,8 @@ export type User = Node & {
   email?: Maybe<Scalars['String']['output']>;
   /** Information about the email change request of the user. */
   emailChangeRequest?: Maybe<EmailChangeRequest>;
+  /** Indicates whether the email of the user is verified. */
+  emailVerified: Scalars['Boolean']['output'];
   /** The Facebook ID of the user. */
   facebookID?: Maybe<Scalars['String']['output']>;
   /** The first name of the user. */
@@ -8149,7 +8371,10 @@ export type User = Node & {
   interests?: Maybe<UserInterestConnection>;
   /** Indicates whether the user is an admin. */
   isAdmin: Scalars['Boolean']['output'];
-  /** Indicates whether the user is confirmed. */
+  /**
+   * Indicates whether the user is confirmed.
+   * @deprecated Use `emailVerified`.
+   */
   isConfirmed: Scalars['Boolean']['output'];
   /** Indicates whether the user can mass report videos as copyright owner. */
   isCopyrightOwnerMassReport: Scalars['Boolean']['output'];
@@ -8426,7 +8651,7 @@ export enum UserCollectionsSort {
 
 /** The input fields to confirm an email change. */
 export type UserEmailChangeConfirmInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The confirmation code received from the email change request. */
   code: Scalars['String']['input'];
@@ -8435,7 +8660,7 @@ export type UserEmailChangeConfirmInput = {
 /** The return fields from confirming an email change. */
 export type UserEmailChangeConfirmPayload = {
   __typename?: 'UserEmailChangeConfirmPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -8443,7 +8668,7 @@ export type UserEmailChangeConfirmPayload = {
 
 /** The input fields to request an email change. */
 export type UserEmailChangeRequestInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The new email for the connected user. */
   email: Scalars['String']['input'];
@@ -8454,7 +8679,7 @@ export type UserEmailChangeRequestInput = {
 /** The return fields from requesting an email change. */
 export type UserEmailChangeRequestPayload = {
   __typename?: 'UserEmailChangeRequestPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -8462,14 +8687,14 @@ export type UserEmailChangeRequestPayload = {
 
 /** The input fields to request a new email confirmation code. */
 export type UserEmailConfirmationCodeResetInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** The return fields from requesting a new email confirmation code. */
 export type UserEmailConfirmationCodeResetPayload = {
   __typename?: 'UserEmailConfirmationCodeResetPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -8477,7 +8702,7 @@ export type UserEmailConfirmationCodeResetPayload = {
 
 /** The input fields to generate an email validation token. */
 export type UserEmailValidationTokenInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The email address of the user. */
   email: Scalars['String']['input'];
@@ -8486,7 +8711,7 @@ export type UserEmailValidationTokenInput = {
 /** The return fields from requesting an email validation token. */
 export type UserEmailValidationTokenPayload = {
   __typename?: 'UserEmailValidationTokenPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The email validation token to request an activation code. */
   emailValidationToken: Scalars['String']['output'];
@@ -8525,7 +8750,7 @@ export type UserInterest = Node & {
 
 /** The input fields to add an interest to a user. */
 export type UserInterestAddInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The ID of the interest. */
   interestId: Scalars['Int']['input'];
@@ -8534,7 +8759,7 @@ export type UserInterestAddInput = {
 /** The return fields from adding an interest of the user. */
 export type UserInterestAddPayload = {
   __typename?: 'UserInterestAddPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -8562,7 +8787,7 @@ export type UserInterestEdge = {
 
 /** The input fields to remove an interest from a user. */
 export type UserInterestRemoveInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The ID of the interest. */
   interestId: Scalars['Int']['input'];
@@ -8571,7 +8796,7 @@ export type UserInterestRemoveInput = {
 /** The return fields from removing an interest from the user. */
 export type UserInterestRemovePayload = {
   __typename?: 'UserInterestRemovePayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -8579,7 +8804,7 @@ export type UserInterestRemovePayload = {
 
 /** The input fields to replace the interests of a user. */
 export type UserInterestsUpdateInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The ID of the interest. */
   interestIds: Array<Scalars['Int']['input']>;
@@ -8588,7 +8813,7 @@ export type UserInterestsUpdateInput = {
 /** The return fields from replacing the interests of the user. */
 export type UserInterestsUpdatePayload = {
   __typename?: 'UserInterestsUpdatePayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -8596,7 +8821,7 @@ export type UserInterestsUpdatePayload = {
 
 /** The input fields to request a code B of OpenWeb service. */
 export type UserOpenWebCodeBRequestInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The session ID received from client side. */
   codeA: Scalars['String']['input'];
@@ -8605,7 +8830,7 @@ export type UserOpenWebCodeBRequestInput = {
 /** The return fields from confirming an email change. */
 export type UserOpenWebCodeBRequestPayload = {
   __typename?: 'UserOpenWebCodeBRequestPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The code B provided by OpenWeb service. */
   codeB: Scalars['String']['output'];
@@ -8750,7 +8975,10 @@ export enum UserSubscriptionsType {
 /** Information about a video. */
 export type Video = Content & Node & Recording & {
   __typename?: 'Video';
-  /** Indicates whether the video can be embedded outside of Dailymotion. */
+  /**
+   * Indicates whether the video can be embedded outside of Dailymotion.
+   * @deprecated Use `settings.embeddable` field.
+   */
   allowEmbed?: Maybe<Scalars['Boolean']['output']>;
   /** The aspect ratio of the video (e.g. 1.33333 for 4/3, 1.77777 for 16/9). */
   aspectRatio?: Maybe<Scalars['Float']['output']>;
@@ -8804,9 +9032,17 @@ export type Video = Content & Node & Recording & {
   description?: Maybe<Scalars['String']['output']>;
   /** The duration of the video in seconds. */
   duration?: Maybe<Scalars['Int']['output']>;
-  /** The HTML embedding code to embed the video outside of Dailymotion. */
+  /** The embed details of the video. */
+  embed?: Maybe<Embed>;
+  /**
+   * The HTML embedding code to embed the video outside of Dailymotion.
+   * @deprecated Use `embed.html` field.
+   */
   embedHtml?: Maybe<Scalars['String']['output']>;
-  /** The URL to embed the video outside of Dailymotion. */
+  /**
+   * The URL to embed the video outside of Dailymotion.
+   * @deprecated Use `embed.url` field.
+   */
   embedURL?: Maybe<Scalars['String']['output']>;
   /** The geoblocked countries of the video. */
   geoblockedCountries?: Maybe<GeoblockedCountries>;
@@ -8844,7 +9080,10 @@ export type Video = Content & Node & Recording & {
   interests?: Maybe<InterestConnection>;
   /** Indicates whether the video is 360°. */
   is360?: Maybe<Scalars['Boolean']['output']>;
-  /** Indicates whether advertising is blocked on the video. */
+  /**
+   * Indicates whether advertising is blocked on the video.
+   * @deprecated Use `settings.adsStreamable` field.
+   */
   isAdvertisingBlocked?: Maybe<Scalars['Boolean']['output']>;
   /**
    * Indicates whether the video is bookmarked by the connected user.
@@ -8852,11 +9091,17 @@ export type Video = Content & Node & Recording & {
    * @deprecated Use `viewerEngagement.bookmarked` field.
    */
   isBookmarked?: Maybe<Scalars['Boolean']['output']>;
-  /** Indicates whether comments is enabled on the video. */
+  /**
+   * Indicates whether comments is enabled on the video.
+   * @deprecated Use `settings.threadsDisabled` field.
+   */
   isCommentsEnabled?: Maybe<Scalars['Boolean']['output']>;
   /** Indicates whether the video is "Created for Kids" (intends to target an audience of age 16 and under). */
   isCreatedForKids?: Maybe<Scalars['Boolean']['output']>;
-  /** Indicates whether the video can be downloaded. */
+  /**
+   * Indicates whether the video can be downloaded.
+   * @deprecated Use `settings.downloadable` field.
+   */
   isDownloadable?: Maybe<Scalars['Boolean']['output']>;
   /** Indicates whether the video is explicit. */
   isExplicit?: Maybe<Scalars['Boolean']['output']>;
@@ -8885,7 +9130,10 @@ export type Video = Content & Node & Recording & {
    * @deprecated Use `viewerEngagement.reacted` field.
    */
   isReacted?: Maybe<Scalars['Boolean']['output']>;
-  /** Indicates whether reaction videos are allowed on the video. */
+  /**
+   * Indicates whether reaction videos are allowed on the video.
+   * @deprecated Use `settings.threadsDisabled` field.
+   */
   isReactionVideosEnabled?: Maybe<Scalars['Boolean']['output']>;
   /**
    * Indicates whether the current user has started watching the video.
@@ -8921,6 +9169,8 @@ export type Video = Content & Node & Recording & {
   relatedVideos?: Maybe<VideoConnection>;
   /** The restriction information of the video. */
   restriction?: Maybe<Restriction>;
+  /** The settings of the video. */
+  settings?: Maybe<VideoSettings>;
   /** The share urls of the video. */
   shareUrls?: Maybe<VideoShareUrls>;
   /**
@@ -9007,8 +9257,8 @@ export type VideoCollectionsArgs = {
 /** Information about a video. */
 export type VideoCommentsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<CommentSort>;
   page?: InputMaybe<Scalars['Int']['input']>;
-  sort?: InputMaybe<CommentSort>;
 };
 
 
@@ -9132,6 +9382,13 @@ export type VideoTopicsArgs = {
   whitelistedOnly?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+
+/** Information about a video. */
+export type VideoTranscriptArgs = {
+  first?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+};
+
 /** The connection type for Video. */
 export type VideoConnection = {
   __typename?: 'VideoConnection';
@@ -9252,6 +9509,21 @@ export enum VideoRelatedAlgo {
   /** Uploader with siblong channels. */
   UploaderWithSiblings = 'UPLOADER_WITH_SIBLINGS'
 }
+
+/** Information about the settings of a Video. */
+export type VideoSettings = Node & {
+  __typename?: 'VideoSettings';
+  /** Indicates whether ads can be streamed while the video plays. */
+  adsStreamable?: Maybe<Scalars['Boolean']['output']>;
+  /** Indicates whether the video can be downloaded. */
+  downloadable?: Maybe<Scalars['Boolean']['output']>;
+  /** Indicates whether the video can be embedded. */
+  embeddable?: Maybe<Scalars['Boolean']['output']>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** Indicates whether threads (comments and reactions) are disabled. */
+  threadsDisabled?: Maybe<Scalars['Boolean']['output']>;
+};
 
 /** Information about the share urls of a Video. */
 export type VideoShareUrls = Node & ShareUrls & {
@@ -9544,7 +9816,7 @@ export type Watch = History & Node & {
 
 /** The input fields to add a video to the `Watched` list of the connected user. */
 export type WatchedVideoAddInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** Indicates whether the video is watched completely. */
   completed?: InputMaybe<Scalars['Boolean']['input']>;
@@ -9555,7 +9827,7 @@ export type WatchedVideoAddInput = {
 /** The return fields from adding a video to the `Watched` list of the connected user. */
 export type WatchedVideoAddPayload = {
   __typename?: 'WatchedVideoAddPayload';
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
@@ -9641,7 +9913,7 @@ export type WebMetadataConnectionEdge = {
 
 /** The input fields to add a like for the connected user. */
 export type AddLikeInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The ID of the post. */
   postId: Scalars['ID']['input'];
@@ -9651,7 +9923,7 @@ export type AddLikeInput = {
 
 /** The input fields to remove a post for the connected user. */
 export type RemoveLikeInput = {
-  /** The ID generated for the client performing the mutation. */
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The ID of the post. */
   postId: Scalars['ID']['input'];
@@ -9740,11 +10012,11 @@ export type ResolversUnionTypes<_RefType extends Record<string, unknown>> = {
 export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> = {
   AnalyticsPayload: ( AnalyticsFlatPayload ) | ( AnalyticsGroupedPayload );
   Bookmark: ( Omit<Favorite, 'post'> & { post: _RefType['Post'] } ) | ( Omit<Like, 'post'> & { post: _RefType['Post'] } );
-  Category: ( ContentCategory ) | ( CuratedCategory );
+  Category: ( ContentCategory ) | ( CuratedCategory ) | ( Interest );
   Content: ( Collection ) | ( Omit<Comment, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( Live ) | ( Omit<Reaction, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( Video );
   History: ( Omit<Favorite, 'post'> & { post: _RefType['Post'] } ) | ( Omit<Like, 'post'> & { post: _RefType['Post'] } ) | ( Omit<Watch, 'post'> & { post: _RefType['Post'] } );
-  Metric: ( BookmarkMetric ) | ( ChannelMetric ) | ( CollectionMetric ) | ( CommentMetric ) | ( LikeMetric ) | ( LiveMetric ) | ( ReactionMetric ) | ( VideoMetric );
-  Node: ( Omit<Analytics, 'timeSeries' | 'topValues'> & { timeSeries: _RefType['AnalyticsPayload'], topValues: _RefType['AnalyticsPayload'] } ) | ( AnalyticsGroupedPayloadItem ) | ( AnalyticsReport ) | ( Attribute ) | ( Behavior ) | ( BehaviorRuleTag ) | ( BookmarkMetric ) | ( Caption ) | ( Channel ) | ( ChannelEngagementMetrics ) | ( ChannelExternalLinks ) | ( ChannelMetric ) | ( ChannelMetrics ) | ( ChannelShareUrls ) | ( ChannelStats ) | ( ChannelStatsFollowers ) | ( ChannelStatsReactions ) | ( ChannelStatsVideos ) | ( ChannelStatsViews ) | ( ChannelUpdateRequired ) | ( Collection ) | ( CollectionEngagementMetrics ) | ( CollectionMetric ) | ( CollectionMetrics ) | ( CollectionStats ) | ( CollectionStatsVideos ) | ( Omit<Comment, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( CommentEngagementMetrics ) | ( CommentMetrics ) | ( CommentViewerEngagement ) | ( ContentCategory ) | ( Omit<Conversation, 'story'> & { story?: Maybe<_RefType['Story']> } ) | ( Country ) | ( CuratedCategory ) | ( DailymotionAd ) | ( EmailChangeRequest ) | ( ExperimentMatch ) | ( FallbackCountry ) | ( Omit<Favorite, 'post'> & { post: _RefType['Post'] } ) | ( FeatureMatch ) | ( FeaturedContent ) | ( FileUpload ) | ( FollowedChannel ) | ( FollowedTopic ) | ( Follower ) | ( FollowerEngagement ) | ( FollowerEngagementNotifications ) | ( Omit<Following, 'story'> & { story?: Maybe<_RefType['Story']> } ) | ( FollowingChannelStartsLive ) | ( FollowingChannelUploadsVideo ) | ( FollowingStartsLive ) | ( GeoblockedCountries ) | ( Geoblocking ) | ( Hashtag ) | ( HashtagEngagementMetrics ) | ( HashtagMetrics ) | ( Image ) | ( Interest ) | ( Language ) | ( Omit<Like, 'post'> & { post: _RefType['Post'] } ) | ( Live ) | ( LiveEngagementMetrics ) | ( LiveMetric ) | ( LiveMetrics ) | ( LiveShareUrls ) | ( LiveStats ) | ( LiveStatsViews ) | ( LiveStreamUrls ) | ( LiveStreams ) | ( LiveViewerEngagement ) | ( Localization ) | ( LocalizationMe ) | ( MediaModeration ) | ( MediaTag ) | ( MediaUploadInfo ) | ( Metadata ) | ( MonetizationInsights ) | ( Neon ) | ( NotificationSettings ) | ( Organization ) | ( OrganizationAnalysis ) | ( OrganizationStats ) | ( OrganizationStatsChannels ) | ( Partner ) | ( PartnerReportFile ) | ( PartnerSpace ) | ( Player ) | ( PlayerQueue ) | ( Omit<Poll, 'component' | 'opener' | 'post'> & { component?: Maybe<_RefType['Component']>, opener?: Maybe<_RefType['Story']>, post?: Maybe<_RefType['Post']> } ) | ( PollOption ) | ( PollShareUrls ) | ( ProductUpdates ) | ( Quality ) | ( Omit<Reaction, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( ReactionEngagementMetrics ) | ( ReactionMetric ) | ( ReactionMetrics ) | ( ReactionShareUrls ) | ( ReactionStreamUrls ) | ( ReactionVideo ) | ( ReactionVideoStats ) | ( ReactionVideoStatsBookmarks ) | ( ReactionVideoStatsFavorites ) | ( ReactionVideoStatsLikes ) | ( ReactionVideoStatsReactionVideos ) | ( ReactionVideoStatsSaves ) | ( ReactionViewerEngagement ) | ( Omit<RecommendedRecording, 'recording'> & { recording?: Maybe<_RefType['Recording']> } ) | ( RemindUnwatchedVideos ) | ( ReportFileDownloadLink ) | ( Restriction ) | ( Rule ) | ( Search ) | ( Omit<Section, 'relatedComponent'> & { relatedComponent?: Maybe<_RefType['Component']> } ) | ( SharingUrl ) | ( Subdivision ) | ( Subtitle ) | ( Suggestion ) | ( SupportedCountry ) | ( SupportedLanguage ) | ( Thumbnails ) | ( Tips ) | ( Topic ) | ( TopicLabel ) | ( TopicShareUrls ) | ( TopicStats ) | ( TopicStatsFollowers ) | ( TopicStatsVideos ) | ( TopicWhitelistStatus ) | ( User ) | ( UserInterest ) | ( UserPollAnswer ) | ( UserStats ) | ( UserStatsCollections ) | ( UserStatsFollowers ) | ( UserStatsFollowingChannels ) | ( UserStatsFollowingTopics ) | ( UserStatsLikedVideos ) | ( UserStatsReactionVideos ) | ( UserStatsUploadedVideos ) | ( UserStatsVideos ) | ( UserStatsWatchLater ) | ( UserStatsWatchedVideos ) | ( Video ) | ( VideoDigest ) | ( VideoEngagementMetrics ) | ( VideoMetric ) | ( VideoMetrics ) | ( VideoShareUrls ) | ( VideoStats ) | ( VideoStatsBookmarks ) | ( VideoStatsFavorites ) | ( VideoStatsLikes ) | ( VideoStatsReactionVideos ) | ( VideoStatsSaves ) | ( VideoStatsViews ) | ( VideoStreamUrls ) | ( VideoStreams ) | ( VideoViewMetrics ) | ( VideoViewerEngagement ) | ( Views ) | ( Omit<Watch, 'post'> & { post: _RefType['Post'] } ) | ( Web ) | ( WebMetadata ) | ( WebMetadataConnection );
+  Metric: ( BookmarkMetric ) | ( ChannelMetric ) | ( CollectionMetric ) | ( CommentMetric ) | ( FollowerMetric ) | ( FollowingMetric ) | ( LikeMetric ) | ( LiveMetric ) | ( ReactionMetric ) | ( VideoMetric );
+  Node: ( Omit<Analytics, 'timeSeries' | 'topValues'> & { timeSeries: _RefType['AnalyticsPayload'], topValues: _RefType['AnalyticsPayload'] } ) | ( AnalyticsGroupedPayloadItem ) | ( AnalyticsReport ) | ( Attribute ) | ( Behavior ) | ( BehaviorRuleTag ) | ( BookmarkMetric ) | ( Caption ) | ( Channel ) | ( ChannelEngagementMetrics ) | ( ChannelExternalLinks ) | ( ChannelMetric ) | ( ChannelMetrics ) | ( ChannelShareUrls ) | ( ChannelStats ) | ( ChannelStatsFollowers ) | ( ChannelStatsReactions ) | ( ChannelStatsVideos ) | ( ChannelStatsViews ) | ( ChannelUpdateRequired ) | ( ChannelViewMetrics ) | ( Collection ) | ( CollectionEngagementMetrics ) | ( CollectionMetric ) | ( CollectionMetrics ) | ( CollectionStats ) | ( CollectionStatsVideos ) | ( Omit<Comment, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( CommentEngagementMetrics ) | ( CommentMetric ) | ( CommentMetrics ) | ( CommentViewerEngagement ) | ( ContentCategory ) | ( Omit<Conversation, 'story'> & { story?: Maybe<_RefType['Story']> } ) | ( Country ) | ( CuratedCategory ) | ( DailymotionAd ) | ( EmailChangeRequest ) | ( Embed ) | ( ExperimentMatch ) | ( FallbackCountry ) | ( Omit<Favorite, 'post'> & { post: _RefType['Post'] } ) | ( FeatureMatch ) | ( FeaturedContent ) | ( FileUpload ) | ( FollowedChannel ) | ( FollowedTopic ) | ( Follower ) | ( FollowerEngagement ) | ( FollowerEngagementNotifications ) | ( FollowerMetric ) | ( Omit<Following, 'story'> & { story?: Maybe<_RefType['Story']> } ) | ( FollowingChannelStartsLive ) | ( FollowingChannelUploadsVideo ) | ( FollowingMetric ) | ( FollowingStartsLive ) | ( GeoblockedCountries ) | ( Geoblocking ) | ( Hashtag ) | ( HashtagEngagementMetrics ) | ( HashtagMetrics ) | ( Image ) | ( Interest ) | ( Language ) | ( Omit<Like, 'post'> & { post: _RefType['Post'] } ) | ( LikeMetric ) | ( Live ) | ( LiveEngagementMetrics ) | ( LiveMetric ) | ( LiveMetrics ) | ( LiveShareUrls ) | ( LiveStats ) | ( LiveStatsViews ) | ( LiveStreamUrls ) | ( LiveStreams ) | ( LiveViewerEngagement ) | ( Localization ) | ( LocalizationMe ) | ( MediaModeration ) | ( MediaPublishingInfo ) | ( MediaTag ) | ( MediaUploadInfo ) | ( Metadata ) | ( MonetizationInsights ) | ( Neon ) | ( NotificationSettings ) | ( Organization ) | ( OrganizationAnalysis ) | ( OrganizationStats ) | ( OrganizationStatsChannels ) | ( Partner ) | ( PartnerReportFile ) | ( PartnerSpace ) | ( Player ) | ( PlayerQueue ) | ( Omit<Poll, 'component' | 'opener' | 'post'> & { component?: Maybe<_RefType['Component']>, opener?: Maybe<_RefType['Story']>, post?: Maybe<_RefType['Post']> } ) | ( PollOption ) | ( PollShareUrls ) | ( ProductUpdates ) | ( Quality ) | ( Omit<Reaction, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( ReactionEngagementMetrics ) | ( ReactionMetric ) | ( ReactionMetrics ) | ( ReactionShareUrls ) | ( ReactionStreamUrls ) | ( ReactionVideo ) | ( ReactionVideoStats ) | ( ReactionVideoStatsBookmarks ) | ( ReactionVideoStatsFavorites ) | ( ReactionVideoStatsLikes ) | ( ReactionVideoStatsReactionVideos ) | ( ReactionVideoStatsSaves ) | ( ReactionViewerEngagement ) | ( Omit<RecommendedRecording, 'recording'> & { recording?: Maybe<_RefType['Recording']> } ) | ( RemindUnwatchedVideos ) | ( ReportFileDownloadLink ) | ( Restriction ) | ( Rule ) | ( Search ) | ( Omit<Section, 'relatedComponent'> & { relatedComponent?: Maybe<_RefType['Component']> } ) | ( SharingUrl ) | ( Subdivision ) | ( Subtitle ) | ( Suggestion ) | ( SupportedCountry ) | ( SupportedLanguage ) | ( Thumbnails ) | ( Tips ) | ( Topic ) | ( TopicLabel ) | ( TopicShareUrls ) | ( TopicStats ) | ( TopicStatsFollowers ) | ( TopicStatsVideos ) | ( TopicWhitelistStatus ) | ( User ) | ( UserInterest ) | ( UserPollAnswer ) | ( UserStats ) | ( UserStatsCollections ) | ( UserStatsFollowers ) | ( UserStatsFollowingChannels ) | ( UserStatsFollowingTopics ) | ( UserStatsLikedVideos ) | ( UserStatsReactionVideos ) | ( UserStatsUploadedVideos ) | ( UserStatsVideos ) | ( UserStatsWatchLater ) | ( UserStatsWatchedVideos ) | ( Video ) | ( VideoDigest ) | ( VideoEngagementMetrics ) | ( VideoMetric ) | ( VideoMetrics ) | ( VideoSettings ) | ( VideoShareUrls ) | ( VideoStats ) | ( VideoStatsBookmarks ) | ( VideoStatsFavorites ) | ( VideoStatsLikes ) | ( VideoStatsReactionVideos ) | ( VideoStatsSaves ) | ( VideoStatsViews ) | ( VideoStreamUrls ) | ( VideoStreams ) | ( VideoViewMetrics ) | ( VideoViewerEngagement ) | ( Views ) | ( Omit<Watch, 'post'> & { post: _RefType['Post'] } ) | ( Web ) | ( WebMetadata ) | ( WebMetadataConnection );
   PostEngagementMetrics: ( LiveEngagementMetrics ) | ( ReactionEngagementMetrics ) | ( VideoEngagementMetrics );
   PostMetrics: ( LiveMetrics ) | ( ReactionMetrics ) | ( VideoMetrics );
   Recording: ( Live ) | ( Omit<Reaction, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( Video );
@@ -9923,6 +10195,7 @@ export type ResolversTypes = {
   DeleteVideoInput: DeleteVideoInput;
   DeleteVideoPayload: ResolverTypeWrapper<DeleteVideoPayload>;
   EmailChangeRequest: ResolverTypeWrapper<EmailChangeRequest>;
+  Embed: ResolverTypeWrapper<Embed>;
   EmbedType: EmbedType;
   ExperimentMatch: ResolverTypeWrapper<ExperimentMatch>;
   ExperimentMatchConnection: ResolverTypeWrapper<ExperimentMatchConnection>;
@@ -9967,6 +10240,9 @@ export type ResolversTypes = {
   FollowerEdge: ResolverTypeWrapper<FollowerEdge>;
   FollowerEngagement: ResolverTypeWrapper<FollowerEngagement>;
   FollowerEngagementNotifications: ResolverTypeWrapper<FollowerEngagementNotifications>;
+  FollowerMetric: ResolverTypeWrapper<FollowerMetric>;
+  FollowerMetricConnection: ResolverTypeWrapper<FollowerMetricConnection>;
+  FollowerMetricEdge: ResolverTypeWrapper<FollowerMetricEdge>;
   Following: ResolverTypeWrapper<Omit<Following, 'story'> & { story?: Maybe<ResolversTypes['Story']> }>;
   FollowingChannelStartsLive: ResolverTypeWrapper<FollowingChannelStartsLive>;
   FollowingChannelUploadsVideo: ResolverTypeWrapper<FollowingChannelUploadsVideo>;
@@ -9974,11 +10250,16 @@ export type ResolversTypes = {
   FollowingEdge: ResolverTypeWrapper<FollowingEdge>;
   FollowingFilter: FollowingFilter;
   FollowingInput: FollowingInput;
+  FollowingMetric: ResolverTypeWrapper<FollowingMetric>;
+  FollowingMetricConnection: ResolverTypeWrapper<FollowingMetricConnection>;
+  FollowingMetricEdge: ResolverTypeWrapper<FollowingMetricEdge>;
   FollowingPayload: ResolverTypeWrapper<FollowingPayload>;
   FollowingStartsLive: ResolverTypeWrapper<FollowingStartsLive>;
   Gender: Gender;
   GenerateFileUploadUrlInput: GenerateFileUploadUrlInput;
   GenerateFileUploadUrlPayload: ResolverTypeWrapper<GenerateFileUploadUrlPayload>;
+  GenerateVerifyEmailTokenInput: GenerateVerifyEmailTokenInput;
+  GenerateVerifyEmailTokenPayload: ResolverTypeWrapper<GenerateVerifyEmailTokenPayload>;
   GeoblockedCountries: ResolverTypeWrapper<GeoblockedCountries>;
   Geoblocking: ResolverTypeWrapper<Geoblocking>;
   GeoblockingConnection: ResolverTypeWrapper<GeoblockingConnection>;
@@ -10026,6 +10307,7 @@ export type ResolversTypes = {
   LiveMetricConnection: ResolverTypeWrapper<LiveMetricConnection>;
   LiveMetricEdge: ResolverTypeWrapper<LiveMetricEdge>;
   LiveMetrics: ResolverTypeWrapper<LiveMetrics>;
+  LiveSettings: ResolverTypeWrapper<LiveSettings>;
   LiveShareUrls: ResolverTypeWrapper<LiveShareUrls>;
   LiveStats: ResolverTypeWrapper<LiveStats>;
   LiveStatsViews: ResolverTypeWrapper<LiveStatsViews>;
@@ -10168,6 +10450,8 @@ export type ResolversTypes = {
   ReportFileDownloadLink: ResolverTypeWrapper<ReportFileDownloadLink>;
   ReportFileDownloadLinkConnection: ResolverTypeWrapper<ReportFileDownloadLinkConnection>;
   ReportFileDownloadLinkEdge: ResolverTypeWrapper<ReportFileDownloadLinkEdge>;
+  ReportRecordingInput: ReportRecordingInput;
+  ReportRecordingPayload: ResolverTypeWrapper<ReportRecordingPayload>;
   ReportVideoInput: ReportVideoInput;
   ReportVideoPayload: ResolverTypeWrapper<ReportVideoPayload>;
   ReporterEmailVerifyInput: ReporterEmailVerifyInput;
@@ -10192,8 +10476,8 @@ export type ResolversTypes = {
   SectionEdge: ResolverTypeWrapper<SectionEdge>;
   SendTransactionalEmailInput: SendTransactionalEmailInput;
   SendTransactionalEmailPayload: ResolverTypeWrapper<SendTransactionalEmailPayload>;
-  SendValidationEmailInput: SendValidationEmailInput;
-  SendValidationEmailPayload: ResolverTypeWrapper<SendValidationEmailPayload>;
+  SendVerifyEmailCodeInput: SendVerifyEmailCodeInput;
+  SendVerifyEmailCodePayload: ResolverTypeWrapper<SendVerifyEmailCodePayload>;
   ShareUrls: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['ShareUrls']>;
   SharingURL: ResolverTypeWrapper<SharingUrl>;
   SharingURLConnection: ResolverTypeWrapper<SharingUrlConnection>;
@@ -10317,6 +10601,7 @@ export type ResolversTypes = {
   VideoMetrics: ResolverTypeWrapper<VideoMetrics>;
   VideoOrLive: ResolverTypeWrapper<ResolversUnionTypes<ResolversTypes>['VideoOrLive']>;
   VideoRelatedAlgo: VideoRelatedAlgo;
+  VideoSettings: ResolverTypeWrapper<VideoSettings>;
   VideoShareUrls: ResolverTypeWrapper<VideoShareUrls>;
   VideoStats: ResolverTypeWrapper<VideoStats>;
   VideoStatsBookmarks: ResolverTypeWrapper<VideoStatsBookmarks>;
@@ -10499,6 +10784,7 @@ export type ResolversParentTypes = {
   DeleteVideoInput: DeleteVideoInput;
   DeleteVideoPayload: DeleteVideoPayload;
   EmailChangeRequest: EmailChangeRequest;
+  Embed: Embed;
   ExperimentMatch: ExperimentMatch;
   ExperimentMatchConnection: ExperimentMatchConnection;
   ExperimentMatchEdge: ExperimentMatchEdge;
@@ -10538,6 +10824,9 @@ export type ResolversParentTypes = {
   FollowerEdge: FollowerEdge;
   FollowerEngagement: FollowerEngagement;
   FollowerEngagementNotifications: FollowerEngagementNotifications;
+  FollowerMetric: FollowerMetric;
+  FollowerMetricConnection: FollowerMetricConnection;
+  FollowerMetricEdge: FollowerMetricEdge;
   Following: Omit<Following, 'story'> & { story?: Maybe<ResolversParentTypes['Story']> };
   FollowingChannelStartsLive: FollowingChannelStartsLive;
   FollowingChannelUploadsVideo: FollowingChannelUploadsVideo;
@@ -10545,10 +10834,15 @@ export type ResolversParentTypes = {
   FollowingEdge: FollowingEdge;
   FollowingFilter: FollowingFilter;
   FollowingInput: FollowingInput;
+  FollowingMetric: FollowingMetric;
+  FollowingMetricConnection: FollowingMetricConnection;
+  FollowingMetricEdge: FollowingMetricEdge;
   FollowingPayload: FollowingPayload;
   FollowingStartsLive: FollowingStartsLive;
   GenerateFileUploadUrlInput: GenerateFileUploadUrlInput;
   GenerateFileUploadUrlPayload: GenerateFileUploadUrlPayload;
+  GenerateVerifyEmailTokenInput: GenerateVerifyEmailTokenInput;
+  GenerateVerifyEmailTokenPayload: GenerateVerifyEmailTokenPayload;
   GeoblockedCountries: GeoblockedCountries;
   Geoblocking: Geoblocking;
   GeoblockingConnection: GeoblockingConnection;
@@ -10593,6 +10887,7 @@ export type ResolversParentTypes = {
   LiveMetricConnection: LiveMetricConnection;
   LiveMetricEdge: LiveMetricEdge;
   LiveMetrics: LiveMetrics;
+  LiveSettings: LiveSettings;
   LiveShareUrls: LiveShareUrls;
   LiveStats: LiveStats;
   LiveStatsViews: LiveStatsViews;
@@ -10714,6 +11009,8 @@ export type ResolversParentTypes = {
   ReportFileDownloadLink: ReportFileDownloadLink;
   ReportFileDownloadLinkConnection: ReportFileDownloadLinkConnection;
   ReportFileDownloadLinkEdge: ReportFileDownloadLinkEdge;
+  ReportRecordingInput: ReportRecordingInput;
+  ReportRecordingPayload: ReportRecordingPayload;
   ReportVideoInput: ReportVideoInput;
   ReportVideoPayload: ReportVideoPayload;
   ReporterEmailVerifyInput: ReporterEmailVerifyInput;
@@ -10733,8 +11030,8 @@ export type ResolversParentTypes = {
   SectionEdge: SectionEdge;
   SendTransactionalEmailInput: SendTransactionalEmailInput;
   SendTransactionalEmailPayload: SendTransactionalEmailPayload;
-  SendValidationEmailInput: SendValidationEmailInput;
-  SendValidationEmailPayload: SendValidationEmailPayload;
+  SendVerifyEmailCodeInput: SendVerifyEmailCodeInput;
+  SendVerifyEmailCodePayload: SendVerifyEmailCodePayload;
   ShareUrls: ResolversInterfaceTypes<ResolversParentTypes>['ShareUrls'];
   SharingURL: SharingUrl;
   SharingURLConnection: SharingUrlConnection;
@@ -10846,6 +11143,7 @@ export type ResolversParentTypes = {
   VideoMetricEdge: VideoMetricEdge;
   VideoMetrics: VideoMetrics;
   VideoOrLive: ResolversUnionTypes<ResolversParentTypes>['VideoOrLive'];
+  VideoSettings: VideoSettings;
   VideoShareUrls: VideoShareUrls;
   VideoStats: VideoStats;
   VideoStatsBookmarks: VideoStatsBookmarks;
@@ -10897,7 +11195,6 @@ export type BetaDirectiveArgs = {
 export type BetaDirectiveResolver<Result, Parent, ContextType = any, Args = BetaDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
 
 export type ConstraintDirectiveArgs = {
-  args?: Maybe<Array<Scalars['String']['input']>>;
   fieldName?: Maybe<Scalars['String']['input']>;
   filterOperators?: Maybe<Array<Scalars['String']['input']>>;
   filterValues?: Maybe<Array<Scalars['String']['input']>>;
@@ -10909,6 +11206,7 @@ export type ConstraintDirectiveArgs = {
   min?: Maybe<Scalars['Int']['input']>;
   minItems?: Maybe<Scalars['Int']['input']>;
   minLength?: Maybe<Scalars['Int']['input']>;
+  oneOf?: Maybe<Array<Scalars['String']['input']>>;
   pattern?: Maybe<Scalars['String']['input']>;
 };
 
@@ -11190,9 +11488,10 @@ export type CaptionEdgeResolvers<ContextType = any, ParentType extends Resolvers
 };
 
 export type CategoryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Category'] = ResolversParentTypes['Category']> = {
-  __resolveType: TypeResolveFn<'ContentCategory' | 'CuratedCategory', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'ContentCategory' | 'CuratedCategory' | 'Interest', ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  slug?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
 
 export type CategoryConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['CategoryConnection'] = ResolversParentTypes['CategoryConnection']> = {
@@ -11209,14 +11508,17 @@ export type CategoryEdgeResolvers<ContextType = any, ParentType extends Resolver
 };
 
 export type ChannelResolvers<ContextType = any, ParentType extends ResolversParentTypes['Channel'] = ResolversParentTypes['Channel']> = {
+  account?: Resolver<Maybe<ResolversTypes['Account']>, ParentType, ContextType>;
   accountType?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   avatar?: Resolver<Maybe<ResolversTypes['Image']>, ParentType, ContextType, RequireFields<ChannelAvatarArgs, 'height'>>;
   banner?: Resolver<Maybe<ResolversTypes['Image']>, ParentType, ContextType, Partial<ChannelBannerArgs>>;
   bookmarks?: Resolver<Maybe<ResolversTypes['BookmarkConnection']>, ParentType, ContextType, RequireFields<ChannelBookmarksArgs, 'first' | 'page'>>;
   canChangeName?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   collections?: Resolver<Maybe<ResolversTypes['CollectionConnection']>, ParentType, ContextType, RequireFields<ChannelCollectionsArgs, 'first' | 'hasPublicVideos' | 'page'>>;
+  comments?: Resolver<Maybe<ResolversTypes['CommentConnection']>, ParentType, ContextType, RequireFields<ChannelCommentsArgs, 'first' | 'page'>>;
   country?: Resolver<Maybe<ResolversTypes['Country']>, ParentType, ContextType>;
   coverURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType, RequireFields<ChannelCoverUrlArgs, 'size'>>;
+  createDate?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   displayName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   externalLinks?: Resolver<Maybe<ResolversTypes['ChannelExternalLinks']>, ParentType, ContextType>;
@@ -11231,6 +11533,7 @@ export type ChannelResolvers<ContextType = any, ParentType extends ResolversPare
   isNotificationEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   language?: Resolver<Maybe<ResolversTypes['Language']>, ParentType, ContextType>;
   lives?: Resolver<Maybe<ResolversTypes['LiveConnection']>, ParentType, ContextType, RequireFields<ChannelLivesArgs, 'first' | 'page'>>;
+  loginDate?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
   logoURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType, RequireFields<ChannelLogoUrlArgs, 'size'>>;
   medias?: Resolver<Maybe<ResolversTypes['MediaConnection']>, ParentType, ContextType, RequireFields<ChannelMediasArgs, 'first' | 'page'>>;
   metabaseIframeURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType, RequireFields<ChannelMetabaseIframeUrlArgs, 'dashboardId'>>;
@@ -11274,8 +11577,8 @@ export type ChannelEdgeResolvers<ContextType = any, ParentType extends Resolvers
 export type ChannelEngagementMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['ChannelEngagementMetrics'] = ResolversParentTypes['ChannelEngagementMetrics']> = {
   bookmarks?: Resolver<Maybe<ResolversTypes['BookmarkMetricConnection']>, ParentType, ContextType, Partial<ChannelEngagementMetricsBookmarksArgs>>;
   collections?: Resolver<Maybe<ResolversTypes['CollectionMetricConnection']>, ParentType, ContextType, Partial<ChannelEngagementMetricsCollectionsArgs>>;
-  followers?: Resolver<Maybe<ResolversTypes['ChannelMetricConnection']>, ParentType, ContextType>;
-  followings?: Resolver<Maybe<ResolversTypes['ChannelMetricConnection']>, ParentType, ContextType>;
+  followers?: Resolver<Maybe<ResolversTypes['FollowerMetricConnection']>, ParentType, ContextType>;
+  followings?: Resolver<Maybe<ResolversTypes['FollowingMetricConnection']>, ParentType, ContextType, Partial<ChannelEngagementMetricsFollowingsArgs>>;
   history?: Resolver<Maybe<ResolversTypes['PostMetricConnection']>, ParentType, ContextType, RequireFields<ChannelEngagementMetricsHistoryArgs, 'filter'>>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   lives?: Resolver<Maybe<ResolversTypes['LiveMetricConnection']>, ParentType, ContextType, Partial<ChannelEngagementMetricsLivesArgs>>;
@@ -11482,7 +11785,7 @@ export type CollectionStatsVideosResolvers<ContextType = any, ParentType extends
 
 export type CommentResolvers<ContextType = any, ParentType extends ResolversParentTypes['Comment'] = ResolversParentTypes['Comment']> = {
   createDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  creator?: Resolver<ResolversTypes['Channel'], ParentType, ContextType>;
+  creator?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   metrics?: Resolver<Maybe<ResolversTypes['CommentMetrics']>, ParentType, ContextType>;
   opener?: Resolver<Maybe<ResolversTypes['Story']>, ParentType, ContextType>;
@@ -11569,6 +11872,7 @@ export type ContentResolvers<ContextType = any, ParentType extends ResolversPare
 export type ContentCategoryResolvers<ContextType = any, ParentType extends ResolversParentTypes['ContentCategory'] = ResolversParentTypes['ContentCategory']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  slug?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -11653,6 +11957,7 @@ export type CuratedCategoryResolvers<ContextType = any, ParentType extends Resol
   categoryId?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  slug?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -11717,6 +12022,13 @@ export type DeleteVideoPayloadResolvers<ContextType = any, ParentType extends Re
 export type EmailChangeRequestResolvers<ContextType = any, ParentType extends ResolversParentTypes['EmailChangeRequest'] = ResolversParentTypes['EmailChangeRequest']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   newEmail?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type EmbedResolvers<ContextType = any, ParentType extends ResolversParentTypes['Embed'] = ResolversParentTypes['Embed']> = {
+  html?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -11933,6 +12245,25 @@ export type FollowerEngagementNotificationsResolvers<ContextType = any, ParentTy
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type FollowerMetricResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowerMetric'] = ResolversParentTypes['FollowerMetric']> = {
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type FollowerMetricConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowerMetricConnection'] = ResolversParentTypes['FollowerMetricConnection']> = {
+  edges?: Resolver<Array<Maybe<ResolversTypes['FollowerMetricEdge']>>, ParentType, ContextType>;
+  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
+  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type FollowerMetricEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowerMetricEdge'] = ResolversParentTypes['FollowerMetricEdge']> = {
+  node?: Resolver<Maybe<ResolversTypes['FollowerMetric']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type FollowingResolvers<ContextType = any, ParentType extends ResolversParentTypes['Following'] = ResolversParentTypes['Following']> = {
   creator?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
@@ -11966,6 +12297,25 @@ export type FollowingEdgeResolvers<ContextType = any, ParentType extends Resolve
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type FollowingMetricResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowingMetric'] = ResolversParentTypes['FollowingMetric']> = {
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type FollowingMetricConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowingMetricConnection'] = ResolversParentTypes['FollowingMetricConnection']> = {
+  edges?: Resolver<Array<Maybe<ResolversTypes['FollowingMetricEdge']>>, ParentType, ContextType>;
+  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
+  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type FollowingMetricEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowingMetricEdge'] = ResolversParentTypes['FollowingMetricEdge']> = {
+  node?: Resolver<Maybe<ResolversTypes['FollowingMetric']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type FollowingPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowingPayload'] = ResolversParentTypes['FollowingPayload']> = {
   status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -11981,6 +12331,12 @@ export type GenerateFileUploadUrlPayloadResolvers<ContextType = any, ParentType 
   clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   fileUpload?: Resolver<Maybe<ResolversTypes['FileUpload']>, ParentType, ContextType>;
   status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type GenerateVerifyEmailTokenPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['GenerateVerifyEmailTokenPayload'] = ResolversParentTypes['GenerateVerifyEmailTokenPayload']> = {
+  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
+  token?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -12034,6 +12390,7 @@ export type HashtagEdgeResolvers<ContextType = any, ParentType extends Resolvers
 };
 
 export type HashtagEngagementMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['HashtagEngagementMetrics'] = ResolversParentTypes['HashtagEngagementMetrics']> = {
+  followers?: Resolver<Maybe<ResolversTypes['ChannelMetricConnection']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   videos?: Resolver<Maybe<ResolversTypes['VideoMetricConnection']>, ParentType, ContextType, Partial<HashtagEngagementMetricsVideosArgs>>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -12093,6 +12450,7 @@ export type InterestResolvers<ContextType = any, ParentType extends ResolversPar
   interestId?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   isEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  slug?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -12172,6 +12530,7 @@ export type LiveResolvers<ContextType = any, ParentType extends ResolversParentT
   creator?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
   curatedCategories?: Resolver<Maybe<ResolversTypes['CuratedCategoryConnection']>, ParentType, ContextType, RequireFields<LiveCuratedCategoriesArgs, 'page'>>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  embed?: Resolver<Maybe<ResolversTypes['Embed']>, ParentType, ContextType>;
   embedHtml?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   embedURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   endAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
@@ -12200,6 +12559,7 @@ export type LiveResolvers<ContextType = any, ParentType extends ResolversParentT
   quality?: Resolver<Maybe<ResolversTypes['Quality']>, ParentType, ContextType, RequireFields<LiveQualityArgs, 'auto'>>;
   reactions?: Resolver<Maybe<ResolversTypes['ReactionConnection']>, ParentType, ContextType, RequireFields<LiveReactionsArgs, 'first' | 'page'>>;
   restriction?: Resolver<Maybe<ResolversTypes['Restriction']>, ParentType, ContextType>;
+  settings?: Resolver<Maybe<ResolversTypes['LiveSettings']>, ParentType, ContextType>;
   shareUrls?: Resolver<Maybe<ResolversTypes['LiveShareUrls']>, ParentType, ContextType>;
   sharingURLs?: Resolver<Maybe<ResolversTypes['SharingURLConnection']>, ParentType, ContextType, RequireFields<LiveSharingUrLsArgs, 'page'>>;
   startAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
@@ -12266,6 +12626,12 @@ export type LiveMetricEdgeResolvers<ContextType = any, ParentType extends Resolv
 export type LiveMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['LiveMetrics'] = ResolversParentTypes['LiveMetrics']> = {
   engagement?: Resolver<Maybe<ResolversTypes['LiveEngagementMetrics']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type LiveSettingsResolvers<ContextType = any, ParentType extends ResolversParentTypes['LiveSettings'] = ResolversParentTypes['LiveSettings']> = {
+  embeddable?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  id?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -12371,6 +12737,7 @@ export type MediaModerationResolvers<ContextType = any, ParentType extends Resol
 };
 
 export type MediaPublishingInfoResolvers<ContextType = any, ParentType extends ResolversParentTypes['MediaPublishingInfo'] = ResolversParentTypes['MediaPublishingInfo']> = {
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   percentage?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -12424,7 +12791,7 @@ export type MetadataResolvers<ContextType = any, ParentType extends ResolversPar
 };
 
 export type MetricResolvers<ContextType = any, ParentType extends ResolversParentTypes['Metric'] = ResolversParentTypes['Metric']> = {
-  __resolveType: TypeResolveFn<'BookmarkMetric' | 'ChannelMetric' | 'CollectionMetric' | 'CommentMetric' | 'LikeMetric' | 'LiveMetric' | 'ReactionMetric' | 'VideoMetric', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'BookmarkMetric' | 'ChannelMetric' | 'CollectionMetric' | 'CommentMetric' | 'FollowerMetric' | 'FollowingMetric' | 'LikeMetric' | 'LiveMetric' | 'ReactionMetric' | 'VideoMetric', ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
 };
@@ -12478,6 +12845,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   followedUserAdd?: Resolver<Maybe<ResolversTypes['FollowUserPayload']>, ParentType, ContextType, RequireFields<MutationFollowedUserAddArgs, 'input'>>;
   followedUserRemove?: Resolver<Maybe<ResolversTypes['UnfollowUserPayload']>, ParentType, ContextType, RequireFields<MutationFollowedUserRemoveArgs, 'input'>>;
   generateFileUploadUrl?: Resolver<Maybe<ResolversTypes['GenerateFileUploadUrlPayload']>, ParentType, ContextType, RequireFields<MutationGenerateFileUploadUrlArgs, 'input'>>;
+  generateVerifyEmailToken?: Resolver<Maybe<ResolversTypes['GenerateVerifyEmailTokenPayload']>, ParentType, ContextType, RequireFields<MutationGenerateVerifyEmailTokenArgs, 'input'>>;
   likeVideo?: Resolver<Maybe<ResolversTypes['LikeVideoPayload']>, ParentType, ContextType, RequireFields<MutationLikeVideoArgs, 'input'>>;
   moderationActionAppeal?: Resolver<Maybe<ResolversTypes['ModerationActionAppealPayload']>, ParentType, ContextType, RequireFields<MutationModerationActionAppealArgs, 'input'>>;
   notificationFollowedChannelUpdate?: Resolver<Maybe<ResolversTypes['NotificationFollowedChannelUpdatePayload']>, ParentType, ContextType, RequireFields<MutationNotificationFollowedChannelUpdateArgs, 'input'>>;
@@ -12495,12 +12863,13 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   reorderCollectionMedia?: Resolver<Maybe<ResolversTypes['ReorderCollectionMediaPayload']>, ParentType, ContextType, RequireFields<MutationReorderCollectionMediaArgs, 'input'>>;
   reportComment?: Resolver<ResolversTypes['ReportCommentPayload'], ParentType, ContextType, RequireFields<MutationReportCommentArgs, 'input'>>;
   reportCreator?: Resolver<ResolversTypes['ReportCreatorPayload'], ParentType, ContextType, RequireFields<MutationReportCreatorArgs, 'input'>>;
+  reportRecording?: Resolver<Maybe<ResolversTypes['ReportRecordingPayload']>, ParentType, ContextType, RequireFields<MutationReportRecordingArgs, 'input'>>;
   reportVideo?: Resolver<Maybe<ResolversTypes['ReportVideoPayload']>, ParentType, ContextType, RequireFields<MutationReportVideoArgs, 'input'>>;
   reporterEmailVerify?: Resolver<ResolversTypes['ReporterEmailVerifyPayload'], ParentType, ContextType, RequireFields<MutationReporterEmailVerifyArgs, 'input'>>;
   requestActivationCode?: Resolver<Maybe<ResolversTypes['RequestActivationCodePayload']>, ParentType, ContextType, RequireFields<MutationRequestActivationCodeArgs, 'input'>>;
   resetPassword?: Resolver<Maybe<ResolversTypes['ResetPasswordPayload']>, ParentType, ContextType, RequireFields<MutationResetPasswordArgs, 'input'>>;
   sendTransactionalEmail?: Resolver<Maybe<ResolversTypes['SendTransactionalEmailPayload']>, ParentType, ContextType, RequireFields<MutationSendTransactionalEmailArgs, 'input'>>;
-  sendValidationEmail?: Resolver<Maybe<ResolversTypes['SendValidationEmailPayload']>, ParentType, ContextType, RequireFields<MutationSendValidationEmailArgs, 'input'>>;
+  sendVerifyEmailCode?: Resolver<Maybe<ResolversTypes['SendVerifyEmailCodePayload']>, ParentType, ContextType, RequireFields<MutationSendVerifyEmailCodeArgs, 'input'>>;
   unfollowChannel?: Resolver<Maybe<ResolversTypes['UnfollowChannelPayload']>, ParentType, ContextType, RequireFields<MutationUnfollowChannelArgs, 'input'>>;
   unfollowTopic?: Resolver<Maybe<ResolversTypes['UnfollowTopicPayload']>, ParentType, ContextType, RequireFields<MutationUnfollowTopicArgs, 'input'>>;
   unlikeVideo?: Resolver<Maybe<ResolversTypes['UnlikeVideoPayload']>, ParentType, ContextType, RequireFields<MutationUnlikeVideoArgs, 'input'>>;
@@ -12531,7 +12900,7 @@ export type NeonResolvers<ContextType = any, ParentType extends ResolversParentT
 };
 
 export type NodeResolvers<ContextType = any, ParentType extends ResolversParentTypes['Node'] = ResolversParentTypes['Node']> = {
-  __resolveType: TypeResolveFn<'Analytics' | 'AnalyticsGroupedPayloadItem' | 'AnalyticsReport' | 'Attribute' | 'Behavior' | 'BehaviorRuleTag' | 'BookmarkMetric' | 'Caption' | 'Channel' | 'ChannelEngagementMetrics' | 'ChannelExternalLinks' | 'ChannelMetric' | 'ChannelMetrics' | 'ChannelShareUrls' | 'ChannelStats' | 'ChannelStatsFollowers' | 'ChannelStatsReactions' | 'ChannelStatsVideos' | 'ChannelStatsViews' | 'ChannelUpdateRequired' | 'Collection' | 'CollectionEngagementMetrics' | 'CollectionMetric' | 'CollectionMetrics' | 'CollectionStats' | 'CollectionStatsVideos' | 'Comment' | 'CommentEngagementMetrics' | 'CommentMetrics' | 'CommentViewerEngagement' | 'ContentCategory' | 'Conversation' | 'Country' | 'CuratedCategory' | 'DailymotionAd' | 'EmailChangeRequest' | 'ExperimentMatch' | 'FallbackCountry' | 'Favorite' | 'FeatureMatch' | 'FeaturedContent' | 'FileUpload' | 'FollowedChannel' | 'FollowedTopic' | 'Follower' | 'FollowerEngagement' | 'FollowerEngagementNotifications' | 'Following' | 'FollowingChannelStartsLive' | 'FollowingChannelUploadsVideo' | 'FollowingStartsLive' | 'GeoblockedCountries' | 'Geoblocking' | 'Hashtag' | 'HashtagEngagementMetrics' | 'HashtagMetrics' | 'Image' | 'Interest' | 'Language' | 'Like' | 'Live' | 'LiveEngagementMetrics' | 'LiveMetric' | 'LiveMetrics' | 'LiveShareUrls' | 'LiveStats' | 'LiveStatsViews' | 'LiveStreamUrls' | 'LiveStreams' | 'LiveViewerEngagement' | 'Localization' | 'LocalizationMe' | 'MediaModeration' | 'MediaTag' | 'MediaUploadInfo' | 'Metadata' | 'MonetizationInsights' | 'Neon' | 'NotificationSettings' | 'Organization' | 'OrganizationAnalysis' | 'OrganizationStats' | 'OrganizationStatsChannels' | 'Partner' | 'PartnerReportFile' | 'PartnerSpace' | 'Player' | 'PlayerQueue' | 'Poll' | 'PollOption' | 'PollShareUrls' | 'ProductUpdates' | 'Quality' | 'Reaction' | 'ReactionEngagementMetrics' | 'ReactionMetric' | 'ReactionMetrics' | 'ReactionShareUrls' | 'ReactionStreamUrls' | 'ReactionVideo' | 'ReactionVideoStats' | 'ReactionVideoStatsBookmarks' | 'ReactionVideoStatsFavorites' | 'ReactionVideoStatsLikes' | 'ReactionVideoStatsReactionVideos' | 'ReactionVideoStatsSaves' | 'ReactionViewerEngagement' | 'RecommendedRecording' | 'RemindUnwatchedVideos' | 'ReportFileDownloadLink' | 'Restriction' | 'Rule' | 'Search' | 'Section' | 'SharingURL' | 'Subdivision' | 'Subtitle' | 'Suggestion' | 'SupportedCountry' | 'SupportedLanguage' | 'Thumbnails' | 'Tips' | 'Topic' | 'TopicLabel' | 'TopicShareUrls' | 'TopicStats' | 'TopicStatsFollowers' | 'TopicStatsVideos' | 'TopicWhitelistStatus' | 'User' | 'UserInterest' | 'UserPollAnswer' | 'UserStats' | 'UserStatsCollections' | 'UserStatsFollowers' | 'UserStatsFollowingChannels' | 'UserStatsFollowingTopics' | 'UserStatsLikedVideos' | 'UserStatsReactionVideos' | 'UserStatsUploadedVideos' | 'UserStatsVideos' | 'UserStatsWatchLater' | 'UserStatsWatchedVideos' | 'Video' | 'VideoDigest' | 'VideoEngagementMetrics' | 'VideoMetric' | 'VideoMetrics' | 'VideoShareUrls' | 'VideoStats' | 'VideoStatsBookmarks' | 'VideoStatsFavorites' | 'VideoStatsLikes' | 'VideoStatsReactionVideos' | 'VideoStatsSaves' | 'VideoStatsViews' | 'VideoStreamUrls' | 'VideoStreams' | 'VideoViewMetrics' | 'VideoViewerEngagement' | 'Views' | 'Watch' | 'Web' | 'WebMetadata' | 'WebMetadataConnection', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'Analytics' | 'AnalyticsGroupedPayloadItem' | 'AnalyticsReport' | 'Attribute' | 'Behavior' | 'BehaviorRuleTag' | 'BookmarkMetric' | 'Caption' | 'Channel' | 'ChannelEngagementMetrics' | 'ChannelExternalLinks' | 'ChannelMetric' | 'ChannelMetrics' | 'ChannelShareUrls' | 'ChannelStats' | 'ChannelStatsFollowers' | 'ChannelStatsReactions' | 'ChannelStatsVideos' | 'ChannelStatsViews' | 'ChannelUpdateRequired' | 'ChannelViewMetrics' | 'Collection' | 'CollectionEngagementMetrics' | 'CollectionMetric' | 'CollectionMetrics' | 'CollectionStats' | 'CollectionStatsVideos' | 'Comment' | 'CommentEngagementMetrics' | 'CommentMetric' | 'CommentMetrics' | 'CommentViewerEngagement' | 'ContentCategory' | 'Conversation' | 'Country' | 'CuratedCategory' | 'DailymotionAd' | 'EmailChangeRequest' | 'Embed' | 'ExperimentMatch' | 'FallbackCountry' | 'Favorite' | 'FeatureMatch' | 'FeaturedContent' | 'FileUpload' | 'FollowedChannel' | 'FollowedTopic' | 'Follower' | 'FollowerEngagement' | 'FollowerEngagementNotifications' | 'FollowerMetric' | 'Following' | 'FollowingChannelStartsLive' | 'FollowingChannelUploadsVideo' | 'FollowingMetric' | 'FollowingStartsLive' | 'GeoblockedCountries' | 'Geoblocking' | 'Hashtag' | 'HashtagEngagementMetrics' | 'HashtagMetrics' | 'Image' | 'Interest' | 'Language' | 'Like' | 'LikeMetric' | 'Live' | 'LiveEngagementMetrics' | 'LiveMetric' | 'LiveMetrics' | 'LiveShareUrls' | 'LiveStats' | 'LiveStatsViews' | 'LiveStreamUrls' | 'LiveStreams' | 'LiveViewerEngagement' | 'Localization' | 'LocalizationMe' | 'MediaModeration' | 'MediaPublishingInfo' | 'MediaTag' | 'MediaUploadInfo' | 'Metadata' | 'MonetizationInsights' | 'Neon' | 'NotificationSettings' | 'Organization' | 'OrganizationAnalysis' | 'OrganizationStats' | 'OrganizationStatsChannels' | 'Partner' | 'PartnerReportFile' | 'PartnerSpace' | 'Player' | 'PlayerQueue' | 'Poll' | 'PollOption' | 'PollShareUrls' | 'ProductUpdates' | 'Quality' | 'Reaction' | 'ReactionEngagementMetrics' | 'ReactionMetric' | 'ReactionMetrics' | 'ReactionShareUrls' | 'ReactionStreamUrls' | 'ReactionVideo' | 'ReactionVideoStats' | 'ReactionVideoStatsBookmarks' | 'ReactionVideoStatsFavorites' | 'ReactionVideoStatsLikes' | 'ReactionVideoStatsReactionVideos' | 'ReactionVideoStatsSaves' | 'ReactionViewerEngagement' | 'RecommendedRecording' | 'RemindUnwatchedVideos' | 'ReportFileDownloadLink' | 'Restriction' | 'Rule' | 'Search' | 'Section' | 'SharingURL' | 'Subdivision' | 'Subtitle' | 'Suggestion' | 'SupportedCountry' | 'SupportedLanguage' | 'Thumbnails' | 'Tips' | 'Topic' | 'TopicLabel' | 'TopicShareUrls' | 'TopicStats' | 'TopicStatsFollowers' | 'TopicStatsVideos' | 'TopicWhitelistStatus' | 'User' | 'UserInterest' | 'UserPollAnswer' | 'UserStats' | 'UserStatsCollections' | 'UserStatsFollowers' | 'UserStatsFollowingChannels' | 'UserStatsFollowingTopics' | 'UserStatsLikedVideos' | 'UserStatsReactionVideos' | 'UserStatsUploadedVideos' | 'UserStatsVideos' | 'UserStatsWatchLater' | 'UserStatsWatchedVideos' | 'Video' | 'VideoDigest' | 'VideoEngagementMetrics' | 'VideoMetric' | 'VideoMetrics' | 'VideoSettings' | 'VideoShareUrls' | 'VideoStats' | 'VideoStatsBookmarks' | 'VideoStatsFavorites' | 'VideoStatsLikes' | 'VideoStatsReactionVideos' | 'VideoStatsSaves' | 'VideoStatsViews' | 'VideoStreamUrls' | 'VideoStreams' | 'VideoViewMetrics' | 'VideoViewerEngagement' | 'Views' | 'Watch' | 'Web' | 'WebMetadata' | 'WebMetadataConnection', ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
 };
 
@@ -12787,7 +13156,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   recording?: Resolver<Maybe<ResolversTypes['Recording']>, ParentType, ContextType, RequireFields<QueryRecordingArgs, 'id'>>;
   search?: Resolver<Maybe<ResolversTypes['Search']>, ParentType, ContextType>;
   supportedCountries?: Resolver<Maybe<Array<Maybe<ResolversTypes['Country']>>>, ParentType, ContextType>;
-  threads?: Resolver<Maybe<ResolversTypes['ThreadConnection']>, ParentType, ContextType, Partial<QueryThreadsArgs>>;
+  threads?: Resolver<Maybe<ResolversTypes['ThreadConnection']>, ParentType, ContextType, RequireFields<QueryThreadsArgs, 'first'>>;
   topic?: Resolver<Maybe<ResolversTypes['Topic']>, ParentType, ContextType, Partial<QueryTopicArgs>>;
   topics?: Resolver<Maybe<ResolversTypes['TopicConnection']>, ParentType, ContextType, RequireFields<QueryTopicsArgs, 'first' | 'page'>>;
   user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<QueryUserArgs, 'xid'>>;
@@ -12817,7 +13186,7 @@ export type ReactionResolvers<ContextType = any, ParentType extends ResolversPar
   subtitles?: Resolver<Maybe<ResolversTypes['SubtitleConnection']>, ParentType, ContextType, RequireFields<ReactionSubtitlesArgs, 'auto' | 'autoGenerated' | 'page'>>;
   thumbnail?: Resolver<Maybe<ResolversTypes['Image']>, ParentType, ContextType, RequireFields<ReactionThumbnailArgs, 'height'>>;
   title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  transcript?: Resolver<Maybe<ResolversTypes['CaptionConnection']>, ParentType, ContextType>;
+  transcript?: Resolver<Maybe<ResolversTypes['CaptionConnection']>, ParentType, ContextType, RequireFields<ReactionTranscriptArgs, 'page'>>;
   url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   viewerEngagement?: Resolver<Maybe<ResolversTypes['ReactionViewerEngagement']>, ParentType, ContextType>;
   xid?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -13100,6 +13469,11 @@ export type ReportFileDownloadLinkEdgeResolvers<ContextType = any, ParentType ex
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type ReportRecordingPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReportRecordingPayload'] = ResolversParentTypes['ReportRecordingPayload']> = {
+  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type ReportVideoPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReportVideoPayload'] = ResolversParentTypes['ReportVideoPayload']> = {
   clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
@@ -13210,8 +13584,7 @@ export type SendTransactionalEmailPayloadResolvers<ContextType = any, ParentType
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type SendValidationEmailPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['SendValidationEmailPayload'] = ResolversParentTypes['SendValidationEmailPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type SendVerifyEmailCodePayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['SendVerifyEmailCodePayload'] = ResolversParentTypes['SendVerifyEmailCodePayload']> = {
   status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -13563,6 +13936,7 @@ export type UserResolvers<ContextType = any, ParentType extends ResolversParentT
   createdAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
   email?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   emailChangeRequest?: Resolver<Maybe<ResolversTypes['EmailChangeRequest']>, ParentType, ContextType>;
+  emailVerified?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   facebookID?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   firstName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   followedChannels?: Resolver<Maybe<ResolversTypes['FollowedChannelConnection']>, ParentType, ContextType, RequireFields<UserFollowedChannelsArgs, 'first' | 'page'>>;
@@ -13774,6 +14148,7 @@ export type VideoResolvers<ContextType = any, ParentType extends ResolversParent
   curatedCategories?: Resolver<Maybe<ResolversTypes['CuratedCategoryConnection']>, ParentType, ContextType, RequireFields<VideoCuratedCategoriesArgs, 'page'>>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   duration?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  embed?: Resolver<Maybe<ResolversTypes['Embed']>, ParentType, ContextType>;
   embedHtml?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   embedURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   geoblockedCountries?: Resolver<Maybe<ResolversTypes['GeoblockedCountries']>, ParentType, ContextType>;
@@ -13812,6 +14187,7 @@ export type VideoResolvers<ContextType = any, ParentType extends ResolversParent
   reactions?: Resolver<Maybe<ResolversTypes['ReactionConnection']>, ParentType, ContextType, RequireFields<VideoReactionsArgs, 'first' | 'page'>>;
   relatedVideos?: Resolver<Maybe<ResolversTypes['VideoConnection']>, ParentType, ContextType, RequireFields<VideoRelatedVideosArgs, 'first' | 'page'>>;
   restriction?: Resolver<Maybe<ResolversTypes['Restriction']>, ParentType, ContextType>;
+  settings?: Resolver<Maybe<ResolversTypes['VideoSettings']>, ParentType, ContextType>;
   shareUrls?: Resolver<Maybe<ResolversTypes['VideoShareUrls']>, ParentType, ContextType>;
   sharingURLs?: Resolver<Maybe<ResolversTypes['SharingURLConnection']>, ParentType, ContextType, RequireFields<VideoSharingUrLsArgs, 'page'>>;
   spritesheet?: Resolver<Maybe<ResolversTypes['Image']>, ParentType, ContextType>;
@@ -13826,7 +14202,7 @@ export type VideoResolvers<ContextType = any, ParentType extends ResolversParent
   thumbnails?: Resolver<Maybe<ResolversTypes['Thumbnails']>, ParentType, ContextType>;
   title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   topics?: Resolver<Maybe<ResolversTypes['TopicConnection']>, ParentType, ContextType, RequireFields<VideoTopicsArgs, 'first' | 'page' | 'whitelistedOnly'>>;
-  transcript?: Resolver<Maybe<ResolversTypes['CaptionConnection']>, ParentType, ContextType>;
+  transcript?: Resolver<Maybe<ResolversTypes['CaptionConnection']>, ParentType, ContextType, RequireFields<VideoTranscriptArgs, 'page'>>;
   updateDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   updatedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
   uploadInfo?: Resolver<Maybe<ResolversTypes['MediaUploadInfo']>, ParentType, ContextType>;
@@ -13895,6 +14271,15 @@ export type VideoMetricsResolvers<ContextType = any, ParentType extends Resolver
 
 export type VideoOrLiveResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoOrLive'] = ResolversParentTypes['VideoOrLive']> = {
   __resolveType: TypeResolveFn<'Live' | 'Video', ParentType, ContextType>;
+};
+
+export type VideoSettingsResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoSettings'] = ResolversParentTypes['VideoSettings']> = {
+  adsStreamable?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  downloadable?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  embeddable?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  threadsDisabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type VideoShareUrlsResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoShareUrls'] = ResolversParentTypes['VideoShareUrls']> = {
@@ -14177,6 +14562,7 @@ export type Resolvers<ContextType = any> = {
   DeleteUserPayload?: DeleteUserPayloadResolvers<ContextType>;
   DeleteVideoPayload?: DeleteVideoPayloadResolvers<ContextType>;
   EmailChangeRequest?: EmailChangeRequestResolvers<ContextType>;
+  Embed?: EmbedResolvers<ContextType>;
   ExperimentMatch?: ExperimentMatchResolvers<ContextType>;
   ExperimentMatchConnection?: ExperimentMatchConnectionResolvers<ContextType>;
   ExperimentMatchEdge?: ExperimentMatchEdgeResolvers<ContextType>;
@@ -14208,14 +14594,21 @@ export type Resolvers<ContextType = any> = {
   FollowerEdge?: FollowerEdgeResolvers<ContextType>;
   FollowerEngagement?: FollowerEngagementResolvers<ContextType>;
   FollowerEngagementNotifications?: FollowerEngagementNotificationsResolvers<ContextType>;
+  FollowerMetric?: FollowerMetricResolvers<ContextType>;
+  FollowerMetricConnection?: FollowerMetricConnectionResolvers<ContextType>;
+  FollowerMetricEdge?: FollowerMetricEdgeResolvers<ContextType>;
   Following?: FollowingResolvers<ContextType>;
   FollowingChannelStartsLive?: FollowingChannelStartsLiveResolvers<ContextType>;
   FollowingChannelUploadsVideo?: FollowingChannelUploadsVideoResolvers<ContextType>;
   FollowingConnection?: FollowingConnectionResolvers<ContextType>;
   FollowingEdge?: FollowingEdgeResolvers<ContextType>;
+  FollowingMetric?: FollowingMetricResolvers<ContextType>;
+  FollowingMetricConnection?: FollowingMetricConnectionResolvers<ContextType>;
+  FollowingMetricEdge?: FollowingMetricEdgeResolvers<ContextType>;
   FollowingPayload?: FollowingPayloadResolvers<ContextType>;
   FollowingStartsLive?: FollowingStartsLiveResolvers<ContextType>;
   GenerateFileUploadUrlPayload?: GenerateFileUploadUrlPayloadResolvers<ContextType>;
+  GenerateVerifyEmailTokenPayload?: GenerateVerifyEmailTokenPayloadResolvers<ContextType>;
   GeoblockedCountries?: GeoblockedCountriesResolvers<ContextType>;
   Geoblocking?: GeoblockingResolvers<ContextType>;
   GeoblockingConnection?: GeoblockingConnectionResolvers<ContextType>;
@@ -14250,6 +14643,7 @@ export type Resolvers<ContextType = any> = {
   LiveMetricConnection?: LiveMetricConnectionResolvers<ContextType>;
   LiveMetricEdge?: LiveMetricEdgeResolvers<ContextType>;
   LiveMetrics?: LiveMetricsResolvers<ContextType>;
+  LiveSettings?: LiveSettingsResolvers<ContextType>;
   LiveShareUrls?: LiveShareUrlsResolvers<ContextType>;
   LiveStats?: LiveStatsResolvers<ContextType>;
   LiveStatsViews?: LiveStatsViewsResolvers<ContextType>;
@@ -14351,6 +14745,7 @@ export type Resolvers<ContextType = any> = {
   ReportFileDownloadLink?: ReportFileDownloadLinkResolvers<ContextType>;
   ReportFileDownloadLinkConnection?: ReportFileDownloadLinkConnectionResolvers<ContextType>;
   ReportFileDownloadLinkEdge?: ReportFileDownloadLinkEdgeResolvers<ContextType>;
+  ReportRecordingPayload?: ReportRecordingPayloadResolvers<ContextType>;
   ReportVideoPayload?: ReportVideoPayloadResolvers<ContextType>;
   ReporterEmailVerifyPayload?: ReporterEmailVerifyPayloadResolvers<ContextType>;
   RequestActivationCodePayload?: RequestActivationCodePayloadResolvers<ContextType>;
@@ -14364,7 +14759,7 @@ export type Resolvers<ContextType = any> = {
   SectionConnection?: SectionConnectionResolvers<ContextType>;
   SectionEdge?: SectionEdgeResolvers<ContextType>;
   SendTransactionalEmailPayload?: SendTransactionalEmailPayloadResolvers<ContextType>;
-  SendValidationEmailPayload?: SendValidationEmailPayloadResolvers<ContextType>;
+  SendVerifyEmailCodePayload?: SendVerifyEmailCodePayloadResolvers<ContextType>;
   ShareUrls?: ShareUrlsResolvers<ContextType>;
   SharingURL?: SharingUrlResolvers<ContextType>;
   SharingURLConnection?: SharingUrlConnectionResolvers<ContextType>;
@@ -14448,6 +14843,7 @@ export type Resolvers<ContextType = any> = {
   VideoMetricEdge?: VideoMetricEdgeResolvers<ContextType>;
   VideoMetrics?: VideoMetricsResolvers<ContextType>;
   VideoOrLive?: VideoOrLiveResolvers<ContextType>;
+  VideoSettings?: VideoSettingsResolvers<ContextType>;
   VideoShareUrls?: VideoShareUrlsResolvers<ContextType>;
   VideoStats?: VideoStatsResolvers<ContextType>;
   VideoStatsBookmarks?: VideoStatsBookmarksResolvers<ContextType>;
