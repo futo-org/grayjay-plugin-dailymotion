@@ -633,6 +633,7 @@ declare class PlatformVideoDetails extends PlatformVideo {
   live: any;
   rating: any;
   subtitles: any[];
+  getContentRecommendations: () => VideoPager;
 
   constructor(obj: PlatformVideoDetailsDef) {
     super(obj);
@@ -1182,6 +1183,8 @@ interface Source {
   saveState(): void;
 
   getChannelTemplateByClaimMap(): any;
+
+  getContentRecommendations(url: string, initialData: any): VideoPager;
 }
 
 function parseSettings(settings) {
