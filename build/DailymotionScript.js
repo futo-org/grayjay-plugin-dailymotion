@@ -1472,7 +1472,7 @@ function oauthClientCredentialsRequest(httpClient, url, clientId, secret, throwO
     }
 }
 function extractClientCredentials(httpClient) {
-    const detailsRequestHtml = httpClient.GET(BASE_URL, {}, false);
+    const detailsRequestHtml = httpClient.GET(BASE_URL, applyCommonHeaders(), false);
     if (!detailsRequestHtml.isOk) {
         throw new ScriptException('Failed to fetch page to extract auth details');
     }
