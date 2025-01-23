@@ -120,3 +120,7 @@ export function generateUUIDv4() {
 export function applyCommonHeaders(headers: Record<string, string>={}) : Record<string, string>{
   return { ...DEFAULT_HEADERS, ...headers };
 }
+
+export function notifyMaintenanceMode() {
+  bridge.toast('Dailymotion is currently offline for maintenance. Thanks for your patience.');
+}

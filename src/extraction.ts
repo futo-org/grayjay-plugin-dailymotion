@@ -56,12 +56,7 @@ export function oauthClientCredentialsRequest(
   }
 }
 
-export function extractClientCredentials(httpClient: IHttp) {
-  const detailsRequestHtml = httpClient.GET(BASE_URL, applyCommonHeaders(), false);
-
-  if (!detailsRequestHtml.isOk) {
-    throw new ScriptException('Failed to fetch page to extract auth details');
-  }
+export function extractClientCredentials(detailsRequestHtml) {
 
   const result = [];
 

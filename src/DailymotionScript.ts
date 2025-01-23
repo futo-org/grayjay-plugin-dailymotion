@@ -5,7 +5,8 @@ const state = {
   anonymousUserAuthorizationToken: '',
   anonymousUserAuthorizationTokenExpirationDate: 0,
   commentWebServiceToken: '',
-  channelsCache: {} as Record<string, PlatformChannel>
+  channelsCache: {} as Record<string, PlatformChannel>,
+  maintenanceMode: false
 };
 
 import {
@@ -52,7 +53,13 @@ import {
   playerVideosDataQuery,
 } from './gqlQueries';
 
-import { getChannelNameFromUrl, getQuery, generateUUIDv4, applyCommonHeaders } from './util';
+import {
+  getChannelNameFromUrl,
+  getQuery,
+  generateUUIDv4,
+  applyCommonHeaders,
+  notifyMaintenanceMode
+} from './util';
 
 import {
   Channel,
@@ -155,10 +162,10 @@ source.enable = function (conf, settings, saveStateStr) {
       if (saveState) {
 
         Object
-        .keys(state)
-        .forEach((key) => {
-          state[key] = saveState[key];
-        });
+          .keys(state)
+          .forEach((key) => {
+            state[key] = saveState[key];
+          });
 
         if (!isTokenValid()) {
           log('Token expired. Fetching a new one.');
@@ -178,7 +185,30 @@ source.enable = function (conf, settings, saveStateStr) {
       log('Getting a new tokens');
     }
 
-    const clientCredentials = extractClientCredentials(http);
+    let detailsRequestHtml;
+    
+    try {
+
+      detailsRequestHtml = http.GET(BASE_URL, applyCommonHeaders(), false);
+      
+      if (!detailsRequestHtml.isOk) {
+        if (detailsRequestHtml.code >= 500 && detailsRequestHtml.code < 600) {
+          state.maintenanceMode = true;
+          notifyMaintenanceMode();
+        } else {
+          throw new ScriptException('Failed to fetch page to extract auth details');
+        }
+        return;
+      }
+    } catch(e) {
+      state.maintenanceMode = true;
+      notifyMaintenanceMode();
+      return;
+    }
+
+    state.maintenanceMode = false;
+
+    const clientCredentials = extractClientCredentials(detailsRequestHtml);
 
     const {
       anonymousUserAuthorizationToken,
@@ -210,11 +240,11 @@ source.enable = function (conf, settings, saveStateStr) {
           }),
           false,
         );
-  
+
         if (!authenticateIm.isOk) {
           log('Failed to authenticate to comments service');
         }
-  
+
         state.commentWebServiceToken = authenticateIm?.headers?.['x-access-token']?.[0];
       } catch (error) {
         log('Failed to authenticate to comments service:' + error);
@@ -224,6 +254,11 @@ source.enable = function (conf, settings, saveStateStr) {
 };
 
 source.getHome = function () {
+
+  if (state.maintenanceMode) {
+    return new ContentPager([]);
+  }
+
   return getHomePager({}, 0);
 };
 
@@ -293,6 +328,11 @@ source.getChannel = function (url) {
 };
 
 source.getChannelContents = function (url, type, order, filters) {
+
+  if (state.maintenanceMode) {
+    return new ContentPager([]);
+  }
+
   const page = 1;
   return getChannelContentsPager(url, page, type, order, filters);
 };
@@ -433,8 +473,8 @@ class PlatformCommentPager extends CommentPager {
 source.isPlaylistUrl = (url): boolean => {
   return (
     REGEX_VIDEO_PLAYLIST_URL.test(url) || [
-      LIKED_VIDEOS_PLAYLIST_ID, 
-      FAVORITE_VIDEOS_PLAYLIST_ID, 
+      LIKED_VIDEOS_PLAYLIST_ID,
+      FAVORITE_VIDEOS_PLAYLIST_ID,
       RECENTLY_WATCHED_VIDEOS_PLAYLIST_ID
     ].includes(url)
   );
@@ -582,11 +622,11 @@ source.getUserPlaylists = (): string[] => {
     FAVORITE_VIDEOS_PLAYLIST_ID,
     RECENTLY_WATCHED_VIDEOS_PLAYLIST_ID,
   ]
-  .forEach((playlistId) => {
-    if (!playlists.includes(playlistId)) {
-      playlists.push(playlistId);
-    }
-  });
+    .forEach((playlistId) => {
+      if (!playlists.includes(playlistId)) {
+        playlists.push(playlistId);
+      }
+    });
 
   return playlists;
 };
@@ -600,7 +640,7 @@ source.getChannelTemplateByClaimMap = () => {
   };
 };
 
-source.getContentRecommendations = (url, initialData) => { 
+source.getContentRecommendations = (url, initialData) => {
 
   try {
     const videoXid = url.split('/').pop();
@@ -614,9 +654,9 @@ source.getContentRecommendations = (url, initialData) => {
       query: DISCOVERY_QUEUE_QUERY,
       usePlatformAuth: false,
     });
-  
+
     const videoXids: string[] = gqlResponse?.data?.views?.neon?.sections?.edges?.[0]?.node?.components?.edges?.map(e => e.node.xid) ?? [];
-  
+
     const gqlResponse1 = executeGqlQuery(http, {
       operationName: 'playerVideosDataQuery',
       variables: {
@@ -628,14 +668,14 @@ source.getContentRecommendations = (url, initialData) => {
       query: playerVideosDataQuery,
       usePlatformAuth: false,
     });
-  
-  
+
+
     const results =
-    gqlResponse1.data.videos.edges
+      gqlResponse1.data.videos.edges
         ?.map((edge) => {
           return SourceVideoToGrayjayVideo(config.id, edge.node as Video);
         });
-  
+
     return new VideoPager(results, false);
   } catch(error){
     log('Failed to get recommendations:' + error);
@@ -667,9 +707,9 @@ function getPlaylistsByUsername(
 
   const playlists: string[] = (collections.data.channel as Maybe<Channel>)?.collections?.edges?.map(
     (edge) => {
-      
+
       let playlistUrl = `${BASE_URL_PLAYLIST}/${edge?.node?.xid}`;
-      
+
       const isPrivatePlaylist = edge?.node?.isPrivate ?? false;
 
       if(isPrivatePlaylist){
@@ -801,9 +841,9 @@ function getChannelContentsPager(url, page, type, order, filters) {
   }
 
   /** 
-		Recent = Sort liked medias by most recent.
-		Visited - Sort liked medias by most viewed
-	*/
+    Recent = Sort liked medias by most recent.
+    Visited - Sort liked medias by most viewed
+  */
   let sort: string;
 
   if (order == Type.Order.Chronological) {
