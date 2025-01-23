@@ -1548,7 +1548,7 @@ function getTokenFromClientCredentials(httpClient, credentials, throwOnInvalid =
 
 let config;
 let _settings;
-const state = {
+let state = {
     anonymousUserAuthorizationToken: '',
     anonymousUserAuthorizationTokenExpirationDate: 0,
     commentWebServiceToken: '',
@@ -1602,11 +1602,7 @@ source.enable = function (conf, settings, saveStateStr) {
         if (saveStateStr) {
             const saveState = JSON.parse(saveStateStr);
             if (saveState) {
-                Object
-                    .keys(state)
-                    .forEach((key) => {
-                    state[key] = saveState[key];
-                });
+                state = saveState;
                 if (!isTokenValid()) {
                     log('Token expired. Fetching a new one.');
                 }
@@ -1625,31 +1621,41 @@ source.enable = function (conf, settings, saveStateStr) {
         if (IS_TESTING) {
             log('Getting a new tokens');
         }
-        let detailsRequestHtml;
-        try {
-            detailsRequestHtml = http.GET(BASE_URL, applyCommonHeaders(), false);
-            if (!detailsRequestHtml.isOk) {
-                if (detailsRequestHtml.code >= 500 && detailsRequestHtml.code < 600) {
-                    state.maintenanceMode = true;
-                    notifyMaintenanceMode();
+        //last known credentials. If they are not valid try to extract from page.
+        let clientCredentials = [
+            {
+                clientId: 'f1a362d288c1b98099c7e',
+                secret: 'eea605b96e01c796ff369935357eca920c5da4c5',
+            }
+        ];
+        let { anonymousUserAuthorizationToken, anonymousUserAuthorizationTokenExpirationDate } = getTokenFromClientCredentials(http, clientCredentials);
+        if (!anonymousUserAuthorizationToken) {
+            let detailsRequestHtml;
+            try {
+                detailsRequestHtml = http.GET(BASE_URL, applyCommonHeaders(), false);
+                if (!detailsRequestHtml.isOk) {
+                    if (detailsRequestHtml.code >= 500 && detailsRequestHtml.code < 600) {
+                        state.maintenanceMode = true;
+                    }
+                    else {
+                        throw new ScriptException('Failed to fetch page to extract auth details');
+                    }
                 }
                 else {
-                    throw new ScriptException('Failed to fetch page to extract auth details');
+                    clientCredentials = extractClientCredentials(detailsRequestHtml);
+                    let token = getTokenFromClientCredentials(http, clientCredentials);
+                    anonymousUserAuthorizationToken = token.anonymousUserAuthorizationToken;
+                    anonymousUserAuthorizationTokenExpirationDate = token.anonymousUserAuthorizationTokenExpirationDate;
+                    state.maintenanceMode = !token.isValid;
                 }
-                return;
+            }
+            catch (e) {
+                state.maintenanceMode = true;
             }
         }
-        catch (e) {
-            state.maintenanceMode = true;
+        if (state.maintenanceMode) {
             notifyMaintenanceMode();
             return;
-        }
-        state.maintenanceMode = false;
-        const clientCredentials = extractClientCredentials(detailsRequestHtml);
-        const { anonymousUserAuthorizationToken, anonymousUserAuthorizationTokenExpirationDate, isValid, } = getTokenFromClientCredentials(http, clientCredentials);
-        if (!isValid) {
-            console.error('Failed to get token');
-            throw new ScriptException('Failed to get authentication token');
         }
         state.channelsCache = {};
         state.anonymousUserAuthorizationToken =
