@@ -6,7 +6,7 @@ import {
   REGEX_INITIAL_DATA_API_AUTH_1,
   USER_AGENT,
 } from './constants';
-import { objectToUrlEncodedString } from './util';
+import { objectToUrlEncodedString, applyCommonHeaders } from './util';
 
 export function oauthClientCredentialsRequest(
   httpClient: IHttp,
@@ -57,7 +57,7 @@ export function oauthClientCredentialsRequest(
 }
 
 export function extractClientCredentials(httpClient: IHttp) {
-  const detailsRequestHtml = httpClient.GET(BASE_URL, {}, false);
+  const detailsRequestHtml = httpClient.GET(BASE_URL, applyCommonHeaders(), false);
 
   if (!detailsRequestHtml.isOk) {
     throw new ScriptException('Failed to fetch page to extract auth details');
