@@ -1157,6 +1157,9 @@ function generateUUIDv4() {
 function applyCommonHeaders(headers = {}) {
     return { ...DEFAULT_HEADERS, ...headers };
 }
+function notifyMaintenanceMode() {
+    bridge.toast('Dailymotion is currently offline for maintenance. Thanks for your patience.');
+}
 
 class SearchPagerAll extends VideoPager {
     cb;
@@ -1471,11 +1474,7 @@ function oauthClientCredentialsRequest(httpClient, url, clientId, secret, throwO
         return null;
     }
 }
-function extractClientCredentials(httpClient) {
-    const detailsRequestHtml = httpClient.GET(BASE_URL, applyCommonHeaders(), false);
-    if (!detailsRequestHtml.isOk) {
-        throw new ScriptException('Failed to fetch page to extract auth details');
-    }
+function extractClientCredentials(detailsRequestHtml) {
     const result = [];
     const match = detailsRequestHtml.body.match(REGEX_INITIAL_DATA_API_AUTH_1);
     if (match?.length === 2 && match[0] && match[1]) {
@@ -1553,7 +1552,8 @@ const state = {
     anonymousUserAuthorizationToken: '',
     anonymousUserAuthorizationTokenExpirationDate: 0,
     commentWebServiceToken: '',
-    channelsCache: {}
+    channelsCache: {},
+    maintenanceMode: false
 };
 source.setSettings = function (settings) {
     _settings = settings;
@@ -1625,7 +1625,27 @@ source.enable = function (conf, settings, saveStateStr) {
         if (IS_TESTING) {
             log('Getting a new tokens');
         }
-        const clientCredentials = extractClientCredentials(http);
+        let detailsRequestHtml;
+        try {
+            detailsRequestHtml = http.GET(BASE_URL, applyCommonHeaders(), false);
+            if (!detailsRequestHtml.isOk) {
+                if (detailsRequestHtml.code >= 500 && detailsRequestHtml.code < 600) {
+                    state.maintenanceMode = true;
+                    notifyMaintenanceMode();
+                }
+                else {
+                    throw new ScriptException('Failed to fetch page to extract auth details');
+                }
+                return;
+            }
+        }
+        catch (e) {
+            state.maintenanceMode = true;
+            notifyMaintenanceMode();
+            return;
+        }
+        state.maintenanceMode = false;
+        const clientCredentials = extractClientCredentials(detailsRequestHtml);
         const { anonymousUserAuthorizationToken, anonymousUserAuthorizationTokenExpirationDate, isValid, } = getTokenFromClientCredentials(http, clientCredentials);
         if (!isValid) {
             console.error('Failed to get token');
@@ -1655,6 +1675,9 @@ source.enable = function (conf, settings, saveStateStr) {
     }
 };
 source.getHome = function () {
+    if (state.maintenanceMode) {
+        return new ContentPager([]);
+    }
     return getHomePager({}, 0);
 };
 source.searchSuggestions = function (query) {
@@ -1704,6 +1727,9 @@ source.getChannel = function (url) {
     return state.channelsCache[url];
 };
 source.getChannelContents = function (url, type, order, filters) {
+    if (state.maintenanceMode) {
+        return new ContentPager([]);
+    }
     const page = 1;
     return getChannelContentsPager(url, page, type, order, filters);
 };
@@ -2055,9 +2081,9 @@ function getChannelContentsPager(url, page, type, order, filters) {
         log(`Getting channel contents for ${url}, page: ${page}, type: ${type}, order: ${order}, shouldLoadVideos: ${shouldLoadVideos}, shouldLoadLives: ${shouldLoadLives}, filters: ${JSON.stringify(filters)}`);
     }
     /**
-          Recent = Sort liked medias by most recent.
-          Visited - Sort liked medias by most viewed
-      */
+      Recent = Sort liked medias by most recent.
+      Visited - Sort liked medias by most viewed
+    */
     let sort;
     if (order == Type.Order.Chronological) {
         sort = LikedMediaSort.Recent;
