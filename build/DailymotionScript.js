@@ -106,6 +106,7 @@ const PRIVATE_PLAYLIST_QUERY_PARAM_FLAGGER = '&private=1';
 const DEFAULT_HEADERS = {
     'User-Agent': USER_AGENT,
     Origin: BASE_URL,
+    'X-DM-AppInfo-Id': 'com.dailymotion.neon'
 };
 
 const AUTOCOMPLETE_QUERY = `
@@ -1449,6 +1450,7 @@ function oauthClientCredentialsRequest(httpClient, url, clientId, secret, throwO
         client_id: clientId,
         client_secret: secret,
         grant_type: 'client_credentials',
+        visitor_id: generateUUIDv4()
     });
     try {
         return httpClient.POST(url, body, {

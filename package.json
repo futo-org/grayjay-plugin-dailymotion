@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "build": "rollup -c",
-    "start": "rollup -c -w",
+    "dev": "rollup -c -w",
     "prettier": "npx prettier --write ./src/**/*.ts"
   },
   "engines": {
