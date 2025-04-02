@@ -6,7 +6,7 @@ import {
   REGEX_INITIAL_DATA_API_AUTH_1,
   USER_AGENT,
 } from './constants';
-import { objectToUrlEncodedString, applyCommonHeaders } from './util';
+import { objectToUrlEncodedString, generateUUIDv4 } from './util';
 
 export function oauthClientCredentialsRequest(
   httpClient: IHttp,
@@ -25,6 +25,7 @@ export function oauthClientCredentialsRequest(
     client_id: clientId,
     client_secret: secret,
     grant_type: 'client_credentials',
+    visitor_id: generateUUIDv4()
   });
 
   try {
