@@ -2,7 +2,7 @@
   "name": "Dailymotion (Beta)",
   "platformUrl": "https://dailymotion.com",
   "description": "The latest news, sports, music and entertainment videos on Dailymotion",
-  "author": "Futo",
+  "author": "FUTO",
   "authorUrl": "https://futo.org",
   "sourceUrl": "https://plugins.grayjay.app/Dailymotion/DailymotionConfig.json",
   "scriptUrl": "./DailymotionScript.js",
