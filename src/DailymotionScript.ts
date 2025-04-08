@@ -1149,7 +1149,7 @@ function executeGqlQuery(httpClient, requestOptions) {
   }
 
   const res = httpClient.POST(BASE_URL_API, gql, headersToAdd, usePlatformAuth);
-
+  
   if (!res.isOk) {
     console.error('Failed to execute request', res);
     if (throwOnError) {
