@@ -1685,13 +1685,17 @@ source.getHome = function () {
 };
 source.searchSuggestions = function (query) {
     try {
-        const gqlResponse = executeGqlQuery(http, {
+        const [error, gqlResponse] = executeGqlQuery(http, {
             operationName: 'AUTOCOMPLETE_QUERY',
             variables: {
                 query,
             },
             query: AUTOCOMPLETE_QUERY,
         });
+        if (error) {
+            log(`Failed to get search suggestions: [${error.code}]} (${error.operationName})`);
+            return [];
+        }
         return (gqlResponse?.data?.search?.suggestedVideos?.edges?.map((edge) => edge?.node?.name ?? '') ?? []);
     }
     catch (error) {
@@ -1718,16 +1722,51 @@ source.getChannel = function (url) {
         return state.channelsCache[url];
     }
     const channel_name = getChannelNameFromUrl(url);
-    const channelDetails = executeGqlQuery(http, {
-        operationName: 'CHANNEL_QUERY_DESKTOP',
-        variables: {
-            channel_name,
-            avatar_size: CREATOR_AVATAR_HEIGHT[_settings?.avatarSizeOptionIndex],
-        },
-        query: CHANNEL_QUERY_DESKTOP,
-    });
-    state.channelsCache[url] = SourceChannelToGrayjayChannel(config.id, channelDetails.data.channel);
-    return state.channelsCache[url];
+    try {
+        const gqlParams = {
+            operationName: 'CHANNEL_QUERY_DESKTOP',
+            variables: {
+                channel_name,
+                avatar_size: CREATOR_AVATAR_HEIGHT[_settings?.avatarSizeOptionIndex],
+            },
+            query: CHANNEL_QUERY_DESKTOP,
+        };
+        let channelDetails;
+        const [error1, channelDetails1] = executeGqlQuery(http, gqlParams);
+        if (error1) {
+            log(`Failed to get channel: [${error1.code}] (${error1.operationName})`);
+            if (error1.code === 'GQL_ERROR') {
+                const [err] = error1.errors;
+                if (err.type === 'moved_permanently') {
+                    gqlParams.variables.channel_name = err.redirect_id;
+                    const [error2, channelDetails2] = executeGqlQuery(http, gqlParams);
+                    if (error2) {
+                        log(`Failed to get channel: [${error2.code}] (${error2.operationName})`);
+                        throw new ScriptException('Failed to get channel');
+                    }
+                    channelDetails = channelDetails2;
+                }
+                else {
+                    throw new ScriptException('Failed to get channel');
+                }
+            }
+            else {
+                throw new ScriptException('Failed to get channel');
+            }
+        }
+        else {
+            channelDetails = channelDetails1;
+        }
+        if (!channelDetails) {
+            throw new ScriptException('Failed to get channel');
+        }
+        state.channelsCache[url] = SourceChannelToGrayjayChannel(config.id, channelDetails.data.channel);
+        return state.channelsCache[url];
+    }
+    catch (error) {
+        log('Failed to get channel:' + error);
+        return null;
+    }
 };
 source.getChannelContents = function (url, type, order, filters) {
     if (state.maintenanceMode) {
@@ -1862,12 +1901,16 @@ source.getPlaylist = (url) => {
         avatar_size: CREATOR_AVATAR_HEIGHT[_settings.avatarSizeOptionIndex],
         thumbnail_resolution: THUMBNAIL_HEIGHT[thumbnailResolutionIndex],
     };
-    const gqlResponse = executeGqlQuery(http, {
+    const [error, gqlResponse] = executeGqlQuery(http, {
         operationName: 'PLAYLIST_VIDEO_QUERY',
         variables,
         query: PLAYLIST_DETAILS_QUERY,
         usePlatformAuth: isPrivatePlaylist,
     });
+    if (error) {
+        log(`Failed to get playlist: [${error.code}] (${error.operationName})`);
+        throw new UnavailableException(`Failed to get playlist - ${error.code}`);
+    }
     const videos = gqlResponse?.data?.collection?.videos?.edges.map((edge) => {
         return SourceVideoToGrayjayVideo(config.id, edge.node);
     });
@@ -1880,7 +1923,7 @@ source.getUserSubscriptions = () => {
     }
     const usePlatformAuth = true;
     const fetchSubscriptions = (page, first) => {
-        const gqlResponse = executeGqlQuery(http, {
+        const [error, gqlResponse] = executeGqlQuery(http, {
             operationName: 'SUBSCRIPTIONS_QUERY',
             variables: {
                 first: first,
@@ -1890,6 +1933,11 @@ source.getUserSubscriptions = () => {
             query: GET_USER_SUBSCRIPTIONS,
             usePlatformAuth,
         });
+        if (error) {
+            log(`Failed to fetch subscriptions: [${error.code}]} (${error.operationName})`);
+            // throw new UnavailableException(`Failed to fetch subscriptions - ${error.code}`);
+            return [];
+        }
         return (gqlResponse?.data?.me?.channel?.followings?.edges?.map((edge) => edge?.node?.creator?.name ?? '') ?? []);
     };
     const first = 100; // Number of records to fetch per page
@@ -1913,13 +1961,21 @@ source.getUserPlaylists = () => {
         throw new ScriptException('Not logged in');
     }
     const headers = applyCommonHeaders();
-    const gqlResponse = executeGqlQuery(http, {
+    const [error, gqlResponse] = executeGqlQuery(http, {
         operationName: 'SUBSCRIPTIONS_QUERY',
         headers,
         query: SUBSCRIPTIONS_QUERY,
         usePlatformAuth: true,
     });
+    if (error) {
+        log(`Failed to get user playlists: [${error.code}]} (${error.operationName})`);
+        return [];
+    }
     const userName = gqlResponse?.data?.me?.channel?.name;
+    if (!userName) {
+        log('Failed to get username from response');
+        return [];
+    }
     const playlists = getPlaylistsByUsername(userName, headers, true);
     // Used to trick migration "Import Playlists" to import "Favorites", "Recently Watched" and "Liked Videos"
     [
@@ -1945,7 +2001,7 @@ source.getChannelTemplateByClaimMap = () => {
 source.getContentRecommendations = (url, initialData) => {
     try {
         const videoXid = url.split('/').pop();
-        const gqlResponse = executeGqlQuery(http, {
+        const [error1, gqlResponse] = executeGqlQuery(http, {
             operationName: 'DISCOVERY_QUEUE_QUERY',
             variables: {
                 videoXid,
@@ -1954,8 +2010,16 @@ source.getContentRecommendations = (url, initialData) => {
             query: DISCOVERY_QUEUE_QUERY,
             usePlatformAuth: false,
         });
+        if (error1) {
+            log(`Failed to get video recommendations: [${error1.code}] ${error1.status || 'Unknown error'} (${error1.operationName})`);
+            return new VideoPager([], false);
+        }
         const videoXids = gqlResponse?.data?.views?.neon?.sections?.edges?.[0]?.node?.components?.edges?.map(e => e.node.xid) ?? [];
-        const gqlResponse1 = executeGqlQuery(http, {
+        if (!videoXids.length) {
+            log('No video recommendations found');
+            return new VideoPager([], false);
+        }
+        const [error2, gqlResponse1] = executeGqlQuery(http, {
             operationName: 'playerVideosDataQuery',
             variables: {
                 first: 30,
@@ -1966,6 +2030,10 @@ source.getContentRecommendations = (url, initialData) => {
             query: playerVideosDataQuery,
             usePlatformAuth: false,
         });
+        if (error2) {
+            log('Failed to get video details:' + error2.message);
+            return new VideoPager([], false);
+        }
         const results = gqlResponse1.data.videos.edges
             ?.map((edge) => {
             return SourceVideoToGrayjayVideo(config.id, edge.node);
@@ -1978,7 +2046,7 @@ source.getContentRecommendations = (url, initialData) => {
     }
 };
 function getPlaylistsByUsername(userName, headers, usePlatformAuth = false) {
-    const collections = executeGqlQuery(http, {
+    const [error, collections] = executeGqlQuery(http, {
         operationName: 'CHANNEL_PLAYLISTS_QUERY',
         variables: {
             channel_name: userName,
@@ -1992,6 +2060,10 @@ function getPlaylistsByUsername(userName, headers, usePlatformAuth = false) {
         query: GET_CHANNEL_PLAYLISTS_XID,
         usePlatformAuth,
     });
+    if (error) {
+        log('Failed to get playlists by username:' + error.message);
+        return [];
+    }
     const playlists = collections.data.channel?.collections?.edges?.map((edge) => {
         let playlistUrl = `${BASE_URL_PLAYLIST}/${edge?.node?.xid}`;
         const isPrivatePlaylist = edge?.node?.isPrivate ?? false;
@@ -2018,12 +2090,16 @@ function searchPlaylists(contextQuery) {
         thumbnail_resolution: THUMBNAIL_HEIGHT[_settings?.thumbnailResolutionOptionIndex],
         avatar_size: CREATOR_AVATAR_HEIGHT[_settings?.avatarSizeOptionIndex],
     };
-    const gqlResponse = executeGqlQuery(http, {
+    const [error, gqlResponse] = executeGqlQuery(http, {
         operationName: 'SEARCH_QUERY',
         variables: variables,
         query: SEARCH_QUERY,
         headers: undefined,
     });
+    if (error) {
+        log('Failed to search playlists:' + error.message);
+        return new PlaylistPager([]);
+    }
     const playlistConnection = gqlResponse?.data?.search
         ?.playlists;
     const searchResults = playlistConnection?.edges?.map((edge) => {
@@ -2052,7 +2128,7 @@ function getHomePager(params, page) {
     });
     let obj;
     try {
-        obj = executeGqlQuery(http, {
+        const [error, response] = executeGqlQuery(http, {
             operationName: 'SEACH_DISCOVERY_QUERY',
             variables: {
                 avatar_size: CREATOR_AVATAR_HEIGHT[_settings?.avatarSizeOptionIndex],
@@ -2061,8 +2137,14 @@ function getHomePager(params, page) {
             query: SEACH_DISCOVERY_QUERY,
             headers: headersToAdd,
         });
+        if (error) {
+            log('Failed to get home page:' + error.message);
+            return new VideoPager([], false, { params });
+        }
+        obj = response;
     }
     catch (error) {
+        log('Exception in getHomePager:' + error);
         return new VideoPager([], false, { params });
     }
     const results = obj?.data?.home?.neon?.sections?.edges?.[0]?.node?.components?.edges
@@ -2097,7 +2179,7 @@ function getChannelContentsPager(url, page, type, order, filters) {
     else {
         sort = LikedMediaSort.Recent;
     }
-    const gqlResponse = executeGqlQuery(http, {
+    const [error, gqlResponse] = executeGqlQuery(http, {
         operationName: 'CHANNEL_VIDEOS_QUERY',
         variables: {
             channel_name,
@@ -2112,6 +2194,10 @@ function getChannelContentsPager(url, page, type, order, filters) {
         },
         query: CHANNEL_VIDEOS_QUERY,
     });
+    if (error) {
+        log('Failed to get channel contents:' + error.message);
+        return new ChannelVideoPager([], false, { url, type, order, page, filters }, getChannelContentsPager);
+    }
     const channel = gqlResponse?.data?.channel;
     const all = [
         ...(channel?.lives?.edges
@@ -2148,12 +2234,16 @@ function getSearchPagerAll(contextQuery) {
         avatar_size: CREATOR_AVATAR_HEIGHT[_settings?.avatarSizeOptionIndex],
         thumbnail_resolution: THUMBNAIL_HEIGHT[_settings?.thumbnailResolutionOptionIndex],
     };
-    const gqlResponse = executeGqlQuery(http, {
+    const [error, gqlResponse] = executeGqlQuery(http, {
         operationName: 'SEARCH_QUERY',
         variables: variables,
         query: SEARCH_QUERY,
         headers: undefined,
     });
+    if (error) {
+        log('Failed to search:' + error.message);
+        return new VideoPager([], false);
+    }
     const videoConnection = gqlResponse?.data?.search?.videos;
     const liveConnection = gqlResponse?.data?.search?.lives;
     const all = [
@@ -2220,7 +2310,7 @@ function getSavedVideo(url, usePlatformAuth = false) {
     return videoDetails;
 }
 function getSearchChannelPager(context) {
-    const searchResponse = executeGqlQuery(http, {
+    const [error, searchResponse] = executeGqlQuery(http, {
         operationName: 'SEARCH_QUERY',
         variables: {
             query: context.q,
@@ -2230,6 +2320,10 @@ function getSearchChannelPager(context) {
         },
         query: SEARCH_CHANNEL,
     });
+    if (error) {
+        log('Failed to search channels:' + error.message);
+        return new SearchChannelPager([], false, { query: context.q }, context.page, getSearchChannelPager);
+    }
     const results = searchResponse?.data?.search?.channels?.edges.map((edge) => {
         const channel = edge.node;
         return SourceChannelToGrayjayChannel(config.id, channel);
@@ -2243,7 +2337,7 @@ function getChannelPlaylists(url, page = 1) {
     const headers = applyCommonHeaders();
     const usePlatformAuth = false;
     const channel_name = getChannelNameFromUrl(url);
-    const gqlResponse = executeGqlQuery(http, {
+    const [error, gqlResponse] = executeGqlQuery(http, {
         operationName: 'CHANNEL_PLAYLISTS_QUERY',
         variables: {
             channel_name,
@@ -2257,6 +2351,10 @@ function getChannelPlaylists(url, page = 1) {
         query: CHANNEL_PLAYLISTS_QUERY,
         usePlatformAuth,
     });
+    if (error) {
+        log('Failed to get channel playlists:' + error.message);
+        return new PlaylistPager([], false);
+    }
     const channel = gqlResponse.data.channel;
     const content = (channel?.collections?.edges ?? [])
         .filter((e) => e?.node?.metrics?.engagement?.videos?.edges?.[0]?.node?.total) //exclude empty playlists. could be empty doe to geographic restrictions
@@ -2286,28 +2384,62 @@ function executeGqlQuery(httpClient, requestOptions) {
     const usePlatformAuth = requestOptions.usePlatformAuth == undefined
         ? false
         : requestOptions.usePlatformAuth;
-    const throwOnError = requestOptions.throwOnError == undefined
-        ? true
-        : requestOptions.throwOnError;
     if (!usePlatformAuth) {
         headersToAdd.Authorization = state.anonymousUserAuthorizationToken;
     }
-    const res = httpClient.POST(BASE_URL_API, gql, headersToAdd, usePlatformAuth);
-    if (!res.isOk) {
-        console.error('Failed to execute request', res);
-        if (throwOnError) {
-            throw new ScriptException('Failed to execute request', res);
+    try {
+        const res = httpClient.POST(BASE_URL_API, gql, headersToAdd, usePlatformAuth);
+        if (!res.isOk) {
+            const errorInfo = {
+                code: res.code,
+                status: `HTTP ${res.code}`,
+                operationName: requestOptions.operationName,
+                body: res.body ? (typeof res.body === 'string' ? res.body : JSON.stringify(res.body)) : 'No response body',
+                variables: requestOptions.variables
+            };
+            console.error('Failed to execute request', errorInfo);
+            return [errorInfo, null];
         }
-    }
-    const body = JSON.parse(res.body);
-    // some errors may be returned in the body with a status code 200
-    if (body.errors) {
-        const message = body.errors.map((e) => e.message).join(', ');
-        if (throwOnError) {
-            throw new UnavailableException(message);
+        let body;
+        try {
+            body = JSON.parse(res.body);
         }
+        catch (parseError) {
+            const errorInfo = {
+                code: 'PARSE_ERROR',
+                status: 'Failed to parse response body',
+                operationName: requestOptions.operationName,
+                body: res.body ? res.body.substring(0, 500) : 'No response body', // Limit response size
+                parseError: String(parseError),
+                variables: requestOptions.variables
+            };
+            return [errorInfo, null];
+        }
+        // some errors may be returned in the body with a status code 200
+        if (body.errors) {
+            const message = body.errors.map((e) => e.message).join(', ');
+            const errorInfo = {
+                code: 'GQL_ERROR',
+                status: message,
+                operationName: requestOptions.operationName,
+                errors: body.errors,
+                variables: requestOptions.variables,
+                data: body.data
+            };
+            return [errorInfo, body.data ? body : null]; // Return partial data if available
+        }
+        return [null, body];
     }
-    return body;
+    catch (error) {
+        const errorInfo = {
+            code: 'EXCEPTION',
+            status: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+            operationName: requestOptions.operationName,
+            variables: requestOptions.variables
+        };
+        return [errorInfo, null];
+    }
 }
 function getPages(httpClient, query, operationName, variables, usePlatformAuth, setRoot, hasNextCallback, getNextPage, map) {
     let all = [];
@@ -2318,12 +2450,16 @@ function getPages(httpClient, query, operationName, variables, usePlatformAuth, 
     let nextPage = 1;
     do {
         variables = { ...variables, page: nextPage };
-        const gqlResponse = executeGqlQuery(httpClient, {
+        const [error, gqlResponse] = executeGqlQuery(httpClient, {
             operationName,
             variables,
             query,
             usePlatformAuth,
         });
+        if (error) {
+            log('Failed in getPages:' + error.message);
+            return all; // Return what we have so far
+        }
         const root = setRoot(gqlResponse);
         nextPage = getNextPage(root, nextPage);
         const items = map(root);

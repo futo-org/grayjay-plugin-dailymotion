@@ -381,6 +381,9 @@
     ],
     "28": [
       "Fix search;"
+    ],
+    "29": [
+      "Fix: Follow channel URL changes redirects;"
     ]
   }
 }
