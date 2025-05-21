@@ -622,7 +622,6 @@ source.getUserSubscriptions = (): string[] => {
 
     if (error) {
       log(`Failed to fetch subscriptions: [${error.code}]} (${error.operationName})`);
-      // throw new UnavailableException(`Failed to fetch subscriptions - ${error.code}`);
       return [];
     }
 
@@ -924,6 +923,11 @@ function getHomePager(params, page) {
 }
 
 function getChannelContentsPager(url, page, type, order, filters) {
+
+  if(IS_TESTING && !type){
+    type = Type.Feed.Mixed;
+  }
+
   const channel_name = getChannelNameFromUrl(url);
 
   const shouldLoadVideos =
@@ -1266,7 +1270,7 @@ function executeGqlQuery(httpClient, requestOptions) {
 
   try {
     const res = httpClient.POST(BASE_URL_API, gql, headersToAdd, usePlatformAuth);
-    
+
     if (!res.isOk) {
       const errorInfo = {
         code: res.code,

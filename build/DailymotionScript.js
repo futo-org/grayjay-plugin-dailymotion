@@ -1935,7 +1935,6 @@ source.getUserSubscriptions = () => {
         });
         if (error) {
             log(`Failed to fetch subscriptions: [${error.code}]} (${error.operationName})`);
-            // throw new UnavailableException(`Failed to fetch subscriptions - ${error.code}`);
             return [];
         }
         return (gqlResponse?.data?.me?.channel?.followings?.edges?.map((edge) => edge?.node?.creator?.name ?? '') ?? []);
@@ -2157,6 +2156,9 @@ function getHomePager(params, page) {
     return new SearchPagerAll(results, hasMore, params, page, getHomePager);
 }
 function getChannelContentsPager(url, page, type, order, filters) {
+    if (IS_TESTING && !type) {
+        type = Type.Feed.Mixed;
+    }
     const channel_name = getChannelNameFromUrl(url);
     const shouldLoadVideos = type === Type.Feed.Mixed || type === Type.Feed.Videos;
     const shouldLoadLives = type === Type.Feed.Mixed ||
