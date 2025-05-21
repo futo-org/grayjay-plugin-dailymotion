@@ -374,7 +374,7 @@
       "Fix search;"
     ],
     "29": [
-      "Fix: Follow channel URL changes redirects;",
+      "Fix: Follow channel URL redirects;",
       "Fix: Authentication;"
     ]
   }
