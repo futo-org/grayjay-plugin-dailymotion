@@ -146,5 +146,6 @@ export const PRIVATE_PLAYLIST_QUERY_PARAM_FLAGGER = '&private=1';
 export const DEFAULT_HEADERS:Record<string, string> = {
   'User-Agent': USER_AGENT,
   Origin: BASE_URL,
-  'X-DM-AppInfo-Id': 'com.dailymotion.neon'
+  'X-DM-AppInfo-Id': 'com.dailymotion.neon',
+  'Referer':'https://www.dailymotion.com/'
 };

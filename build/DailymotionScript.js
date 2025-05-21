@@ -106,7 +106,8 @@ const PRIVATE_PLAYLIST_QUERY_PARAM_FLAGGER = '&private=1';
 const DEFAULT_HEADERS = {
     'User-Agent': USER_AGENT,
     Origin: BASE_URL,
-    'X-DM-AppInfo-Id': 'com.dailymotion.neon'
+    'X-DM-AppInfo-Id': 'com.dailymotion.neon',
+    'Referer': 'https://www.dailymotion.com/'
 };
 
 const AUTOCOMPLETE_QUERY = `
