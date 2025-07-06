@@ -365,6 +365,7 @@ source.getChannel = function (url) {
     state.channelsCache[url] = SourceChannelToGrayjayChannel(
       config.id,
       channelDetails.data.channel as Channel,
+      url,
     );
 
     return state.channelsCache[url];
@@ -381,6 +382,18 @@ source.getChannelContents = function (url, type, order, filters) {
   }
 
   const page = 1;
+
+  const parsedUrl = new URL(url);
+  const sortQuery = parsedUrl.searchParams.get('sort');
+
+  if(sortQuery){
+    switch(sortQuery) {
+      case 'visited':
+        order = 'Popular';
+        break;
+    }
+  }
+
   return getChannelContentsPager(url, page, type, order, filters);
 };
 

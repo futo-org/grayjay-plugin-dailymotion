@@ -378,7 +378,8 @@
       "Fix: Authentication;"
     ],
     "30": [
-      "Fix: Deep linking to channel URLs with query params;"
+      "Fix: Deep linking to channel URLs with query params;",
+      "Improvement: support deep linking to channel URLs with content sorting param;"
     ]
   }
 }

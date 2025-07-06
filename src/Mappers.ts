@@ -24,6 +24,7 @@ import {
 export const SourceChannelToGrayjayChannel = (
   pluginId: string,
   sourceChannel: Channel,
+  url?: string,
 ): PlatformChannel => {
   const externalLinks = sourceChannel?.externalLinks ?? {};
 
@@ -62,7 +63,10 @@ export const SourceChannelToGrayjayChannel = (
       sourceChannel?.metrics?.engagement?.followers?.edges?.[0]?.node?.total ??
       0,
     description,
-    url: `${BASE_URL}/${sourceChannel.name}`,
+    url: url ?? `${BASE_URL}/${sourceChannel.name}`,
+    urlAlternatives: [
+      `${BASE_URL}/${sourceChannel.name}`
+    ],
     links,
   });
 };
