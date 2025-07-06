@@ -15,8 +15,9 @@ export const objectToUrlEncodedString = (obj) => {
 };
 
 export function getChannelNameFromUrl(url) {
-  const channel_name = url.split('/').pop();
-  return channel_name;
+  const match = url.match(/dailymotion\.com\/([^?&#]+)/);
+  const channel_slug = match ? match[1] : null;
+  return channel_slug;
 }
 
 export const parseUploadDateFilter = (filter: string): string | null => {

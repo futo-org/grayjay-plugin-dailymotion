@@ -376,6 +376,9 @@
     "29": [
       "Fix: Follow channel URL redirects;",
       "Fix: Authentication;"
+    ],
+    "30": [
+      "Fix: Deep linking to channel URLs with query params;"
     ]
   }
 }
