@@ -1075,8 +1075,9 @@ const objectToUrlEncodedString = (obj) => {
     return encodedParams.join('&');
 };
 function getChannelNameFromUrl(url) {
-    const channel_name = url.split('/').pop();
-    return channel_name;
+    const match = url.match(/dailymotion\.com\/([^?&#]+)/);
+    const channel_slug = match ? match[1] : null;
+    return channel_slug;
 }
 const parseUploadDateFilter = (filter) => {
     let createdAfterVideos = null;
@@ -1235,7 +1236,7 @@ class SearchPlaylistPager extends PlaylistPager {
     }
 }
 
-const SourceChannelToGrayjayChannel = (pluginId, sourceChannel) => {
+const SourceChannelToGrayjayChannel = (pluginId, sourceChannel, url) => {
     const externalLinks = sourceChannel?.externalLinks ?? {};
     const links = Object.keys(externalLinks).reduce((acc, key) => {
         if (externalLinks[key]) {
@@ -1257,7 +1258,10 @@ const SourceChannelToGrayjayChannel = (pluginId, sourceChannel) => {
         subscribers: sourceChannel?.metrics?.engagement?.followers?.edges?.[0]?.node?.total ??
             0,
         description,
-        url: `${BASE_URL}/${sourceChannel.name}`,
+        url: url ?? `${BASE_URL}/${sourceChannel.name}`,
+        urlAlternatives: [
+            `${BASE_URL}/${sourceChannel.name}`
+        ],
         links,
     });
 };
@@ -1760,7 +1764,7 @@ source.getChannel = function (url) {
         if (!channelDetails) {
             throw new ScriptException('Failed to get channel');
         }
-        state.channelsCache[url] = SourceChannelToGrayjayChannel(config.id, channelDetails.data.channel);
+        state.channelsCache[url] = SourceChannelToGrayjayChannel(config.id, channelDetails.data.channel, url);
         return state.channelsCache[url];
     }
     catch (error) {
@@ -1773,6 +1777,15 @@ source.getChannelContents = function (url, type, order, filters) {
         return new ContentPager([]);
     }
     const page = 1;
+    const parsedUrl = new URL(url);
+    const sortQuery = parsedUrl.searchParams.get('sort');
+    if (sortQuery) {
+        switch (sortQuery) {
+            case 'visited':
+                order = 'Popular';
+                break;
+        }
+    }
     return getChannelContentsPager(url, page, type, order, filters);
 };
 source.getChannelPlaylists = (url) => {

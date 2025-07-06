@@ -803,6 +803,7 @@ declare interface PlatformChannelDef {
   description: string;
   url: string;
   links?: Map<string>;
+  urlAlternatives?: string[];
 }
 
 declare class PlatformChannel {

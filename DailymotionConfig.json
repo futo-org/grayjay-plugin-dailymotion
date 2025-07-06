@@ -7,7 +7,7 @@
   "sourceUrl": "https://plugins.grayjay.app/Dailymotion/DailymotionConfig.json",
   "scriptUrl": "./DailymotionScript.js",
   "repositoryUrl": "https://gitlab.futo.org/videostreaming/plugins/dailymotion",
-  "version": 29,
+  "version": 30,
   "iconUrl": "./DailymotionIcon.png",
   "id": "9c87e8db-e75d-48f4-afe5-2d203d4b95c5",
   "scriptSignature": "",
@@ -376,6 +376,10 @@
     "29": [
       "Fix: Follow channel URL redirects;",
       "Fix: Authentication;"
+    ],
+    "30": [
+      "Fix: Deep linking to channel URLs with query params;",
+      "Improvement: support deep linking to channel URLs with content sorting param;"
     ]
   }
 }
