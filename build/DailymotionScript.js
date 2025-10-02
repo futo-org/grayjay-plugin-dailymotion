@@ -15,6 +15,8 @@ const REGEX_VIDEO_URL_EMBED = /^https:\/\/(?:www\.)?dailymotion\.com\/embed\/vid
 const REGEX_VIDEO_CHANNEL_URL = /^https:\/\/(?:www\.)?dailymotion\.com\/[a-z0-9][a-z0-9._-]{2,26}(?:\?[a-zA-Z0-9=&._-]*)?$/i;
 const REGEX_VIDEO_PLAYLIST_URL = /^https:\/\/(?:www\.)?dailymotion\.com\/playlist\/[a-zA-Z0-9]+(?:[?&][a-zA-Z0-9_\-=&%]*)?$/i;
 const REGEX_INITIAL_DATA_API_AUTH_1 = /(?<=window\.__LOADABLE_LOADED_CHUNKS__=.*)\b[a-f0-9]{20}\b|\b[a-f0-9]{40}\b/g;
+const REGEX_API_CLIENT_ID = /get apiClientId\(\)\{return"([a-f0-9]{20})"\}/;
+const REGEX_API_CLIENT_SECRET = /get apiClientSecret\(\)\{return"([a-f0-9]{40})"\}/;
 const createAuthRegexByTextLength = (length) => new RegExp(`\\b\\w+\\s*=\\s*"([a-zA-Z0-9]{${length}})"`);
 const USER_AGENT = 'Mozilla/5.0 (Linux; Android 12) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.230 Mobile Safari/537.36';
 const FALLBACK_SPOT_ID = 'sp_vWPN1lBu';
@@ -1483,13 +1485,25 @@ function oauthClientCredentialsRequest(httpClient, url, clientId, secret, throwO
 }
 function extractClientCredentials(detailsRequestHtml) {
     const result = [];
+    // Try new regex patterns first
+    const clientIdMatch = detailsRequestHtml.body.match(REGEX_API_CLIENT_ID);
+    const clientSecretMatch = detailsRequestHtml.body.match(REGEX_API_CLIENT_SECRET);
+    if (clientIdMatch && clientSecretMatch && clientIdMatch[1] && clientSecretMatch[1]) {
+        result.unshift({
+            clientId: clientIdMatch[1],
+            secret: clientSecretMatch[1],
+        });
+        log('Successfully extracted API credentials from page using new regex patterns');
+        return result;
+    }
+    // Fallback to old regex pattern
     const match = detailsRequestHtml.body.match(REGEX_INITIAL_DATA_API_AUTH_1);
     if (match?.length === 2 && match[0] && match[1]) {
         result.unshift({
             clientId: match[0],
             secret: match[1],
         });
-        log('Successfully extracted API credentials from page');
+        log('Successfully extracted API credentials from page using old regex pattern');
     }
     else {
         log('Failed to extract API credentials from page using regex. Using DOM parsing.');
@@ -2143,8 +2157,8 @@ function getHomePager(params, page) {
         const [error, response] = executeGqlQuery(http, {
             operationName: 'SEACH_DISCOVERY_QUERY',
             variables: {
-                avatar_size: CREATOR_AVATAR_HEIGHT[_settings?.avatarSizeOptionIndex],
-                thumbnail_resolution: THUMBNAIL_HEIGHT[_settings?.thumbnailResolutionOptionIndex],
+                avatar_size: CREATOR_AVATAR_HEIGHT[_settings?.avatarSizeOptionIndex ?? 0] ?? 'SQUARE_720',
+                thumbnail_resolution: THUMBNAIL_HEIGHT[_settings?.thumbnailResolutionOptionIndex ?? 0] ?? 'THUMBNAIL_720',
             },
             query: SEACH_DISCOVERY_QUERY,
             headers: headersToAdd,
@@ -2538,6 +2552,9 @@ function getPlatformSystemPlaylist(opts) {
 }
 function getPreferredCountry(preferredCountryIndex) {
     const country = COUNTRY_NAMES_TO_CODE[preferredCountryIndex];
+    if (!country || typeof country !== 'string') {
+        return '';
+    }
     const parts = country.split('-');
     const code = parts[0] ?? '';
     return (code || '').toLowerCase();

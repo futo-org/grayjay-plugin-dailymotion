@@ -902,9 +902,9 @@ function getHomePager(params, page) {
     const [error, response] = executeGqlQuery(http, {
       operationName: 'SEACH_DISCOVERY_QUERY',
       variables: {
-        avatar_size: CREATOR_AVATAR_HEIGHT[_settings?.avatarSizeOptionIndex],
+        avatar_size: CREATOR_AVATAR_HEIGHT[_settings?.avatarSizeOptionIndex ?? 0] ?? 'SQUARE_720',
         thumbnail_resolution:
-          THUMBNAIL_HEIGHT[_settings?.thumbnailResolutionOptionIndex],
+          THUMBNAIL_HEIGHT[_settings?.thumbnailResolutionOptionIndex ?? 0] ?? 'THUMBNAIL_720',
       },
       query: SEACH_DISCOVERY_QUERY,
       headers: headersToAdd,
@@ -1482,6 +1482,9 @@ function getPlatformSystemPlaylist(
 
 function getPreferredCountry(preferredCountryIndex) {
   const country = COUNTRY_NAMES_TO_CODE[preferredCountryIndex];
+  if (!country || typeof country !== 'string') {
+    return '';
+  }
   const parts = country.split('-');
   const code = parts[0] ?? '';
   return (code || '').toLowerCase();

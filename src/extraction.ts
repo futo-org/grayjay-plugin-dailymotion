@@ -4,6 +4,8 @@ import {
   BASE_URL_API_AUTH,
   createAuthRegexByTextLength,
   REGEX_INITIAL_DATA_API_AUTH_1,
+  REGEX_API_CLIENT_ID,
+  REGEX_API_CLIENT_SECRET,
   USER_AGENT,
 } from './constants';
 import { objectToUrlEncodedString, generateUUIDv4 } from './util';
@@ -61,6 +63,20 @@ export function extractClientCredentials(detailsRequestHtml) {
 
   const result = [];
 
+  // Try new regex patterns first
+  const clientIdMatch = detailsRequestHtml.body.match(REGEX_API_CLIENT_ID);
+  const clientSecretMatch = detailsRequestHtml.body.match(REGEX_API_CLIENT_SECRET);
+
+  if (clientIdMatch && clientSecretMatch && clientIdMatch[1] && clientSecretMatch[1]) {
+    result.unshift({
+      clientId: clientIdMatch[1],
+      secret: clientSecretMatch[1],
+    });
+    log('Successfully extracted API credentials from page using new regex patterns');
+    return result;
+  }
+
+  // Fallback to old regex pattern
   const match = detailsRequestHtml.body.match(REGEX_INITIAL_DATA_API_AUTH_1);
 
   if (match?.length === 2 && match[0] && match[1]) {
@@ -68,7 +84,7 @@ export function extractClientCredentials(detailsRequestHtml) {
       clientId: match[0],
       secret: match[1],
     });
-    log('Successfully extracted API credentials from page');
+    log('Successfully extracted API credentials from page using old regex pattern');
   } else {
     log('Failed to extract API credentials from page using regex. Using DOM parsing.');
 
