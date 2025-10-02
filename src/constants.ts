@@ -37,6 +37,9 @@ export const REGEX_VIDEO_PLAYLIST_URL =
 export const REGEX_INITIAL_DATA_API_AUTH_1 =
   /(?<=window\.__LOADABLE_LOADED_CHUNKS__=.*)\b[a-f0-9]{20}\b|\b[a-f0-9]{40}\b/g;
 
+export const REGEX_API_CLIENT_ID = /get apiClientId\(\)\{return"([a-f0-9]{20})"\}/;
+export const REGEX_API_CLIENT_SECRET = /get apiClientSecret\(\)\{return"([a-f0-9]{40})"\}/;
+
 export const createAuthRegexByTextLength = (length: number) =>
   new RegExp(`\\b\\w+\\s*=\\s*"([a-zA-Z0-9]{${length}})"`);
 
