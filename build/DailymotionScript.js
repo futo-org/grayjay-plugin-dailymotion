@@ -1936,6 +1936,13 @@ source.getPlaylist = (url) => {
     });
     if (error) {
         log(`Failed to get playlist: [${error.code}] (${error.operationName})`);
+        // Check if the error is a "not_found" type
+        if (error.code === 'GQL_ERROR' && error.errors) {
+            const notFoundError = error.errors.find((e) => e.type === 'not_found');
+            if (notFoundError) {
+                throw new UnavailableException('The playlist was not found. It may have been deleted, made private, or the URL is incorrect.');
+            }
+        }
         throw new UnavailableException(`Failed to get playlist - ${error.code}`);
     }
     const videos = gqlResponse?.data?.collection?.videos?.edges.map((edge) => {
