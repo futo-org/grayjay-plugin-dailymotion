@@ -93,6 +93,11 @@ export const SourceVideoToGrayjayVideo = (
   const isLive = getIsLive(sourceVideo);
   const viewCount = getViewCount(sourceVideo);
 
+  // Determine if this is a short based on aspect ratio
+  // Aspect ratio < 1 means height > width (portrait/vertical orientation)
+  const aspectRatio = (sourceVideo as Video)?.aspectRatio;
+  const isShort = aspectRatio != null && aspectRatio < 1;
+
   const video: PlatformVideoDef = {
     id: new PlatformID(
       PLATFORM,
@@ -115,6 +120,7 @@ export const SourceVideoToGrayjayVideo = (
     duration: (sourceVideo as Video)?.duration ?? 0,
     viewCount,
     isLive,
+    isShort,
   };
 
   return new PlatformVideo(video);

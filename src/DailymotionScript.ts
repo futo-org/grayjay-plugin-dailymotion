@@ -51,6 +51,7 @@ import {
   USER_WATCH_LATER_VIDEOS_QUERY,
   DISCOVERY_QUEUE_QUERY,
   playerVideosDataQuery,
+  GET_SHORTS_FEED_QUERY,
 } from './gqlQueries';
 
 import {
@@ -260,6 +261,15 @@ source.getHome = function () {
   }
 
   return getHomePager({}, 0);
+};
+
+source.getShorts = function () {
+
+  if (state.maintenanceMode) {
+    return new ContentPager([]);
+  }
+
+  return getShortsPager({}, 0);
 };
 
 source.searchSuggestions = function (query): string[] {
@@ -942,6 +952,76 @@ function getHomePager(params, page) {
       ?.hasNextPage ?? false;
 
   return new SearchPagerAll(results, hasMore, params, page, getHomePager);
+}
+
+function getShortsPager(params, page) {
+  const count = VIDEOS_PER_PAGE_OPTIONS[_settings.videosPerPageOptionIndex] || 4;
+
+  if (!params) {
+    params = {};
+  }
+
+  params = { ...params, count };
+
+  // Use the same headers as the provided curl request
+  const headersToAdd = applyCommonHeaders({
+    // 'accept': 'multipart/mixed; deferSpec=20220824, application/json',
+    // 'accept-encoding': 'gzip',
+    // 'accept-language': 'en',
+    // 'x-apollo-operation-id': '196d45847508b833c87b04bd9b24bd231a046f5d820b8a3659be1d116dd9bc7f',
+    // 'x-apollo-operation-name': 'GetHomeFeed',
+    // 'x-dm-appinfo-id': 'com.dailymotion.dailymotion',
+    // 'x-dm-appinfo-type': 'androidapp',
+    // 'x-dm-appinfo-version': '3.15.22',
+    'X-DM-Preferred-Country': getPreferredCountry(_settings?.preferredCountryOptionIndex),
+  });
+
+  let obj;
+
+  try {
+    const [error, response] = executeGqlQuery(http, {
+      operationName: 'GetHomeFeed',
+      variables: {
+        thumbnailHeight: 'PORTRAIT_240',
+        channelLogoSize: 'SQUARE_240',
+        watchedVideoIds: [],
+        first: count,
+        personalizationOptOut: true,
+      },
+      query: GET_SHORTS_FEED_QUERY,
+      headers: headersToAdd,
+    });
+
+    if (error) {
+      log('Failed to get shorts feed:' + error.message);
+      return new VideoPager([], false, { params });
+    }
+
+    obj = response;
+  } catch (error) {
+    log('Exception in getShortsPager:' + error);
+    return new VideoPager([], false, { params });
+  }
+
+  const results =
+    obj?.data?.conversations?.edges
+      ?.filter((edge) => {
+        const story = edge?.node?.story;
+        if (!story?.xid) return false;
+
+        // Filter to only include shorts (vertical videos with aspect ratio < 1)
+        // Aspect ratio < 1 means height > width (portrait/vertical orientation)
+        return story.aspectRatio && story.aspectRatio < 1;
+      })
+      ?.map((edge) => {
+        return SourceVideoToGrayjayVideo(config.id, edge.node.story as Video);
+      }) ?? [];
+
+  // Note: The conversations API doesn't seem to provide hasNextPage in the same way
+  // For now, we'll set hasMore to false. This may need adjustment based on API behavior
+  const hasMore = false;
+
+  return new SearchPagerAll(results, hasMore, params, page, getShortsPager);
 }
 
 function getChannelContentsPager(url, page, type, order, filters) {
