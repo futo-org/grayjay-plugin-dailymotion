@@ -2404,7 +2404,9 @@ function isTokenValid() {
     return state.anonymousUserAuthorizationTokenExpirationDate > currentTime;
 }
 function executeGqlQuery(httpClient, requestOptions) {
-    const headersToAdd = requestOptions.headers || applyCommonHeaders();
+    const headersToAdd = requestOptions.headers || applyCommonHeaders({
+        'X-DM-Preferred-Country': getPreferredCountry(_settings?.preferredCountryOptionIndex) ?? 'us',
+    });
     const gql = JSON.stringify({
         operationName: requestOptions.operationName,
         variables: requestOptions.variables,
