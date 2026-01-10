@@ -31,6 +31,8 @@ import {
   REGEX_VIDEO_URL_EMBED,
   PRIVATE_PLAYLIST_QUERY_PARAM_FLAGGER,
   FALLBACK_SPOT_ID,
+  IS_IMPERSONATION_AVAILABLE,
+  IMPERSONATION_TARGET,
 } from './constants';
 
 import {
@@ -112,6 +114,22 @@ let PLAYLISTS_PER_PAGE_OPTIONS: number[] = [];
 let CREATOR_AVATAR_HEIGHT: string[] = [];
 let THUMBNAIL_HEIGHT: string[] = [];
 
+let webclient;
+
+if (IS_IMPERSONATION_AVAILABLE) {
+    
+    const httpImpClient = httpimp.getDefaultClient(true);
+
+    if(httpImpClient.setDefaultImpersonateTarget) {
+        httpImpClient.setDefaultImpersonateTarget(IMPERSONATION_TARGET);
+    }
+
+    webclient = httpimp;
+} 
+else{
+    webclient = http;
+}
+
 //Source Methods
 source.enable = function (conf, settings, saveStateStr) {
   config = conf ?? {};
@@ -190,7 +208,7 @@ source.enable = function (conf, settings, saveStateStr) {
     
     try {
 
-      detailsRequestHtml = http.GET(BASE_URL, applyCommonHeaders(), false);
+      detailsRequestHtml = webclient.GET(BASE_URL, applyCommonHeaders(), false);
       
       if (!detailsRequestHtml.isOk) {
         if (detailsRequestHtml.code >= 500 && detailsRequestHtml.code < 600) {
@@ -232,7 +250,7 @@ source.enable = function (conf, settings, saveStateStr) {
     if (config.allowAllHttpHeaderAccess) {
       // get token for message service api-2-0.spot.im
       try {
-        const authenticateIm = http.POST(
+        const authenticateIm = webclient.POST(
           BASE_URL_COMMENTS_AUTH,
           '',
           applyCommonHeaders({
@@ -476,7 +494,7 @@ function getCommentPager(url, params, page) {
       'x-post-id': xid,
     });
 
-    const commentRequest = http.POST(
+    const commentRequest = webclient.POST(
       BASE_URL_COMMENTS,
       JSON.stringify(params),
       commentsHeaders,

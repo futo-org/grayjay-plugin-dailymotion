@@ -111,6 +111,9 @@ const DEFAULT_HEADERS = {
     'X-DM-AppInfo-Id': 'com.dailymotion.neon',
     'Referer': 'https://www.dailymotion.com/'
 };
+const IS_DESKTOP = bridge.buildPlatform === "desktop";
+const IMPERSONATION_TARGET = IS_DESKTOP ? 'chrome136' : 'chrome131_android';
+const IS_IMPERSONATION_AVAILABLE = (typeof httpimp !== 'undefined');
 
 const AUTOCOMPLETE_QUERY = `
 query AUTOCOMPLETE_QUERY($query: String!) {
@@ -1515,6 +1518,14 @@ const SourceVideoToPlatformVideoDetailsDef = (pluginId, sourceVideo, player_meta
         name: 'HLS',
         duration,
         url: player_metadata?.qualities?.auto[0]?.url,
+        requestModifier: {
+            options: {
+                applyAuthClient: "",
+                applyCookieClient: "",
+                applyOtherHeaders: false,
+                impersonateTarget: IMPERSONATION_TARGET
+            }
+        }
     });
     const sources = [source];
     const platformVideoDetails = {
@@ -1551,7 +1562,7 @@ const SourceVideoToPlatformVideoDetailsDef = (pluginId, sourceVideo, player_meta
                     format: 'text/vtt',
                     getSubtitles() {
                         try {
-                            const subResp = http.GET(subtitleUrl, {});
+                            const subResp = httpimp.GET(subtitleUrl, {});
                             if (!subResp.isOk) {
                                 if (IS_TESTING) {
                                     bridge.log(`Failed to fetch subtitles from ${subtitleUrl}`);
@@ -1736,6 +1747,17 @@ let VIDEOS_PER_PAGE_OPTIONS = [];
 let PLAYLISTS_PER_PAGE_OPTIONS = [];
 let CREATOR_AVATAR_HEIGHT = [];
 let THUMBNAIL_HEIGHT = [];
+let webclient;
+if (IS_IMPERSONATION_AVAILABLE) {
+    const httpImpClient = httpimp.getDefaultClient(true);
+    if (httpImpClient.setDefaultImpersonateTarget) {
+        httpImpClient.setDefaultImpersonateTarget(IMPERSONATION_TARGET);
+    }
+    webclient = httpimp;
+}
+else {
+    webclient = http;
+}
 //Source Methods
 source.enable = function (conf, settings, saveStateStr) {
     config = conf ?? {};
@@ -1800,7 +1822,7 @@ source.enable = function (conf, settings, saveStateStr) {
         }
         let detailsRequestHtml;
         try {
-            detailsRequestHtml = http.GET(BASE_URL, applyCommonHeaders(), false);
+            detailsRequestHtml = webclient.GET(BASE_URL, applyCommonHeaders(), false);
             if (!detailsRequestHtml.isOk) {
                 if (detailsRequestHtml.code >= 500 && detailsRequestHtml.code < 600) {
                     state.maintenanceMode = true;
@@ -1832,7 +1854,7 @@ source.enable = function (conf, settings, saveStateStr) {
         if (config.allowAllHttpHeaderAccess) {
             // get token for message service api-2-0.spot.im
             try {
-                const authenticateIm = http.POST(BASE_URL_COMMENTS_AUTH, '', applyCommonHeaders({
+                const authenticateIm = webclient.POST(BASE_URL_COMMENTS_AUTH, '', applyCommonHeaders({
                     'x-spot-id': FALLBACK_SPOT_ID, //
                     'x-post-id': 'no$post',
                 }), false);
@@ -2018,7 +2040,7 @@ function getCommentPager(url, params, page) {
             'x-spot-id': FALLBACK_SPOT_ID,
             'x-post-id': xid,
         });
-        const commentRequest = http.POST(BASE_URL_COMMENTS, JSON.stringify(params), commentsHeaders, false);
+        const commentRequest = webclient.POST(BASE_URL_COMMENTS, JSON.stringify(params), commentsHeaders, false);
         if (!commentRequest.isOk) {
             throw new UnavailableException('Failed to authenticate to comments service');
         }

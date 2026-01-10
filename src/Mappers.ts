@@ -19,6 +19,7 @@ import {
   PLATFORM,
   PLATFORM_CLAIMTYPE,
   POSITIVE_RATINGS_LABELS,
+  IMPERSONATION_TARGET
 } from './constants';
 
 export const SourceChannelToGrayjayChannel = (
@@ -239,6 +240,14 @@ export const SourceVideoToPlatformVideoDetailsDef = (
     name: 'HLS',
     duration,
     url: player_metadata?.qualities?.auto[0]?.url,
+    requestModifier: {
+      options: {
+        applyAuthClient: "",
+        applyCookieClient: "",
+        applyOtherHeaders: false,
+        impersonateTarget: IMPERSONATION_TARGET
+      }
+    }
   });
 
   const sources = [source];
@@ -289,7 +298,7 @@ export const SourceVideoToPlatformVideoDetailsDef = (
           format: 'text/vtt',
           getSubtitles() {
             try {
-              const subResp = http.GET(subtitleUrl, {});
+              const subResp = httpimp.GET(subtitleUrl, {});
 
               if (!subResp.isOk) {
                 if (IS_TESTING) {

@@ -584,6 +584,7 @@ declare interface PlatformVideoDef {
   duration?: number;
   viewCount: number;
   isLive: boolean;
+  isShort?: boolean;
   shareUrl?: any;
 }
 
@@ -1407,6 +1408,8 @@ let bridge = {
    * @return {Unit}
    **/
   toast: function (str: string): Unit {},
+
+  buildPlatform: string
 };
 
 //Package Http (variable: http)
@@ -1511,6 +1514,7 @@ interface IHttp {
 }
 
 let http: IHttp;
+let httpimp: IHttp;
 
 interface IPager<T> {
   hasMorePages(): Boolean;

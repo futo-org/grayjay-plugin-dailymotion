@@ -152,3 +152,9 @@ export const DEFAULT_HEADERS:Record<string, string> = {
   'X-DM-AppInfo-Id': 'com.dailymotion.neon',
   'Referer':'https://www.dailymotion.com/'
 };
+
+export const IS_DESKTOP = bridge.buildPlatform === "desktop";
+
+export const IMPERSONATION_TARGET = IS_DESKTOP ? 'chrome136' : 'chrome131_android';
+
+export const IS_IMPERSONATION_AVAILABLE = (typeof httpimp !== 'undefined');
