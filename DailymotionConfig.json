@@ -7,7 +7,7 @@
   "sourceUrl": "https://plugins.grayjay.app/Dailymotion/DailymotionConfig.json",
   "scriptUrl": "./DailymotionScript.js",
   "repositoryUrl": "https://gitlab.futo.org/videostreaming/plugins/dailymotion",
-  "version": 33,
+  "version": 34,
   "iconUrl": "./DailymotionIcon.png",
   "id": "9c87e8db-e75d-48f4-afe5-2d203d4b95c5",
   "scriptSignature": "",
@@ -22,7 +22,8 @@
   "allowUrls": [
     ".dailymotion.com",
     "graphql.api.dailymotion.com",
-    "api-2-0.spot.im"
+    "api-2-0.spot.im",
+    ".dmcdn.net"
   ],
   "authentication": {
     "loginUrl": "https://www.dailymotion.com/signin?urlback=/",
@@ -390,6 +391,9 @@
     ],
     "33": [
       "Improvement: Impersonate browser for request;"
+    ],
+    "34": [
+      "Fix: subtitles;"
     ]
   }
 }
