@@ -2,6 +2,8 @@ export const BASE_URL = 'https://www.dailymotion.com';
 
 export const BASE_URL_API = 'https://graphql.api.dailymotion.com';
 
+export const BASE_URL_SEARCH_API = 'https://search.dailymotion.com';
+
 export const BASE_URL_COMMENTS =
   'https://api-2-0.spot.im/v1.0.0/conversation/read';
 

@@ -76,6 +76,7 @@ fragment SEARCH_DISCOVERY_VIDEO_FRAGMENT on Video {
 	thumbnail(height:$thumbnail_resolution) {
 		url
 	}
+	createDate
 	createdAt
 	creator {
 		id
@@ -203,6 +204,7 @@ query CHANNEL_VIDEOS_QUERY(
             url
           }
           duration
+          createDate
           createdAt
           creator {
             id
@@ -236,6 +238,7 @@ fragment VIDEO_BASE_FRAGMENT on Video {
 	id
 	xid
 	title
+	createDate
 	createdAt
 	metrics {
 		engagement {
@@ -406,6 +409,7 @@ fragment VIDEO_FRAGMENT on Video {
 	thumbnail(height:$thumbnail_resolution) {
 		url
 	}
+	createDate
 	createdAt
 	metrics {
 		engagement {
@@ -473,6 +477,7 @@ fragment LIVE_FRAGMENT on Live {
 	thumbnail(height:$thumbnail_resolution){
 		url
 	}
+	createDate
 	createdAt
 	videoWidth: width
 	videoHeight: height
@@ -619,6 +624,7 @@ query PLAYLIST_VIDEO_QUERY($xid: String!, $numberOfVideos: Int = 100, $avatar_si
 					title
 					description
 					url
+					createDate
 					createdAt
 					thumbnail(height:$thumbnail_resolution) {
 						url
@@ -726,6 +732,7 @@ query CHANNEL_PLAYLISTS_QUERY(
 				node {
 					id
 					xid
+					createDate
 					createdAt
 					name
 					description
@@ -752,6 +759,7 @@ query CHANNEL_PLAYLISTS_QUERY(
 					videos {
 						edges {
 							node {
+								createDate
 								createdAt
 								creator {
 									id
@@ -931,6 +939,7 @@ fragment VideoFields on Video {
   	id
 	xid
 	title
+	createDate
 	createdAt
 	metrics {
 		engagement {

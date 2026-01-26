@@ -21,7 +21,8 @@
   "allowAllHttpHeaderAccess": false,
   "allowUrls": [
     ".dailymotion.com",
-    "graphql.api.dailymotion.com",
+    ".api.dailymotion.com",
+    "search.dailymotion.com",
     "api-2-0.spot.im",
     ".dmcdn.net"
   ],

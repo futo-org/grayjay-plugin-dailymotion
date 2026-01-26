@@ -22,6 +22,13 @@ import {
   IMPERSONATION_TARGET
 } from './constants';
 
+// TODO: createDate requires authentication, so we fallback to deprecated createdAt for unauthenticated requests
+const toUnixTimestamp = (dateStr: string | null | undefined): number => {
+  if (!dateStr) return 0;
+  const timestamp = new Date(dateStr).getTime();
+  return isNaN(timestamp) ? 0 : Math.floor(timestamp / 1000);
+};
+
 export const SourceChannelToGrayjayChannel = (
   pluginId: string,
   sourceChannel: Channel,
@@ -115,8 +122,8 @@ export const SourceVideoToGrayjayVideo = (
       pluginId,
       sourceVideo?.creator,
     ),
-    uploadDate: Math.floor(new Date(sourceVideo?.createdAt).getTime() / 1000),
-    datetime: Math.floor(new Date(sourceVideo?.createdAt).getTime() / 1000),
+    uploadDate: toUnixTimestamp(sourceVideo?.createDate ?? sourceVideo?.createdAt),
+    datetime: toUnixTimestamp(sourceVideo?.createDate ?? sourceVideo?.createdAt),
     url: `${BASE_URL_VIDEO}/${sourceVideo?.xid}`,
     duration: (sourceVideo as Video)?.duration ?? 0,
     viewCount,
@@ -267,9 +274,8 @@ export const SourceVideoToPlatformVideoDetailsDef = (
       pluginId,
       sourceVideo?.creator,
     ),
-    //TODO: sourceVideo?.createdAt is deprecated but sourceVideo?.createDate requires authentication
-    uploadDate: Math.floor(new Date(sourceVideo?.createdAt).getTime() / 1000),
-    datetime: Math.floor(new Date(sourceVideo?.createdAt).getTime() / 1000),
+    uploadDate: toUnixTimestamp(sourceVideo?.createDate ?? sourceVideo?.createdAt),
+    datetime: toUnixTimestamp(sourceVideo?.createDate ?? sourceVideo?.createdAt),
     duration,
     viewCount,
     url: sourceVideo?.xid ? `${BASE_URL_VIDEO}/${sourceVideo.xid}` : '',
