@@ -1,4 +1,3 @@
-import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -6,8 +5,6 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: 
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
-export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
-export type RequireFields<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: { input: string; output: string; }
@@ -46,6 +43,16 @@ export enum AccountType {
   VerifiedPartner = 'VERIFIED_PARTNER'
 }
 
+/** The possible values for an ActionGesture. */
+export enum ActionGesture {
+  /** The app is opened. For example: a user arrives from Google search. */
+  AppEnter = 'APP_ENTER',
+  /** The next video is automatically played. */
+  AutoNext = 'AUTO_NEXT',
+  /** A click action is performed. */
+  Click = 'CLICK'
+}
+
 /** The input fields to activate a user. */
 export type ActivateUserInput = {
   /** The activation key received in the email. */
@@ -69,18 +76,68 @@ export type ActivateUserPayload = {
 export enum Activity {
   /** An activity that is `favorited`. */
   Favorited = 'FAVORITED',
+  /** An activity that is `hearted`. */
+  Hearted = 'HEARTED',
   /** An activity that is `liked`. */
   Liked = 'LIKED',
-  /** An activity that is `saved`. */
+  /**
+   * An activity that is `saved`.
+   * @deprecated Use `bookmarks` with `filter: { bookmark: { eq: SAVE }}`.
+   */
   Saved = 'SAVED',
   /** An activity that is `watched`. */
   Watched = 'WATCHED'
 }
 
+/** The notification settings on activities to receive. */
+export type ActivityNotificationSettings = Node & {
+  __typename?: 'ActivityNotificationSettings';
+  /** Receive notifications when a creator you are following starts a live. */
+  followingCreatorStartsLive?: Maybe<Scalars['Boolean']['output']>;
+  /** Receive notifications when a creator you are following uploads a video. */
+  followingCreatorUploadsVideo?: Maybe<Scalars['Boolean']['output']>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+};
+
+/** The notifications settings on activities to receive. */
+export type ActivityNotificationSettingsInput = {
+  /** Indicate whether to receive notifications when a creator you are following starts a live. */
+  followingCreatorStartsLive?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Indicate whether to receive notifications when a creator you are following uploads a video. */
+  followingCreatorUploadsVideo?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
 /** The available input fields of an Activity operator. */
 export type ActivityOperator = {
   /** Short for equal, must match the given data exactly. */
   eq?: InputMaybe<Activity>;
+};
+
+/** The input fields to add a creator to the blocklist. */
+export type AddBlockedInput = {
+  /** The ID of the creator to add to the blocklist. */
+  id: Scalars['ID']['input'];
+};
+
+/** The return fields from adding a creator to the blocklist. */
+export type AddBlockedPayload = {
+  __typename?: 'AddBlockedPayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
+/** The input fields to add a boost. */
+export type AddBoostInput = {
+  /** The new boost event. */
+  event: BoostEvent;
+};
+
+/** The return fields from adding a boost. */
+export type AddBoostPayload = {
+  __typename?: 'AddBoostPayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
 };
 
 /** The input fields to add a video to a collection. */
@@ -119,14 +176,17 @@ export type AddWatchLaterVideoPayload = {
   status?: Maybe<Status>;
 };
 
-/** Information about the algorithm used to retrieve data. */
+/** The input fields to add a `Watched` to the watched list of the connected user. */
+export type AddWatchedInput = {
+  /** Indicates whether a `Watched` is completely watched. */
+  completed?: InputMaybe<Scalars['Boolean']['input']>;
+  /** The Dailymotion ID of the `Watched` to add. */
+  id: Scalars['ID']['input'];
+};
+
+/** Represents an algorithm. */
 export type Algorithm = {
-  __typename?: 'Algorithm';
-  /** Name of the algorithm. */
-  name?: Maybe<Scalars['String']['output']>;
-  /** Unique ID of the algorithm. */
-  uuid?: Maybe<Scalars['String']['output']>;
-  /** Version of the algorithm. */
+  /** The version of the algorithm. */
   version?: Maybe<Scalars['String']['output']>;
 };
 
@@ -161,6 +221,9 @@ export type Analytics = Node & {
   id: Scalars['ID']['output'];
   /** Analytics for a key performance indicator metric. */
   kpi: AnalyticsFlatPayload;
+  kpiForList: AnalyticsFlatPayload;
+  /** The share URLs of the analytics. */
+  shareUrls?: Maybe<AnalyticsShareUrls>;
   /** A selection of analytics aggregated over time. */
   timeSeries: AnalyticsPayload;
   /** A selection of top values of analytics aggregated over some dimensions. */
@@ -174,6 +237,16 @@ export type AnalyticsKpiArgs = {
   filter: AnalyticsFilter;
   metric: AnalyticsMetric;
   percentageChange?: InputMaybe<Scalars['Boolean']['input']>;
+  timePeriod: AnalyticsTimePeriod;
+};
+
+
+/** Represents the various forms of analytics. */
+export type AnalyticsKpiForListArgs = {
+  filter: AnalyticsFilter;
+  items: PayloadItemsInput;
+  limit: Scalars['Int']['input'];
+  metrics: Array<AnalyticsMetric>;
   timePeriod: AnalyticsTimePeriod;
 };
 
@@ -429,6 +502,15 @@ export enum AnalyticsReportStatus {
   Processing = 'PROCESSING'
 }
 
+/** Information about the share urls of the Analytics. */
+export type AnalyticsShareUrls = Node & ShareUrls & {
+  __typename?: 'AnalyticsShareUrls';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The permalink share url of the analtyics. */
+  permalink: Scalars['String']['output'];
+};
+
 /** The input fields of an analytics time period. */
 export type AnalyticsTimePeriod = {
   /** The end time of the data to be selected. */
@@ -437,6 +519,34 @@ export type AnalyticsTimePeriod = {
   frequency: Scalars['String']['input'];
   /** The start time of the data to be selected. */
   startTime: Scalars['DateTime']['input'];
+};
+
+/** Information about an Android / AOSP app. */
+export type Android = Node & {
+  __typename?: 'Android';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The current minimum version. */
+  minimum_version: Scalars['String']['output'];
+};
+
+/** The notification settings on announcements to receive. */
+export type AnnouncementNotificationSettings = Node & {
+  __typename?: 'AnnouncementNotificationSettings';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** Receive notifications about product tips. */
+  tips?: Maybe<Scalars['Boolean']['output']>;
+  /** Receive notifications about product updates. */
+  updates?: Maybe<Scalars['Boolean']['output']>;
+};
+
+/** The notifications settings on announcements to receive. */
+export type AnnouncementNotificationSettingsInput = {
+  /** Indicate whether to receive notifications about product tips. */
+  tips?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Indicate whether to receive notifications about product updates. */
+  updates?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 /**
@@ -535,6 +645,79 @@ export type AttributeEdge = {
   __typename?: 'AttributeEdge';
   /** The item at the end of the edge. */
   node?: Maybe<Attribute>;
+};
+
+/** The possible values for an Audience Guide. */
+export enum AudienceGuide {
+  /** Created for the geneal public (all ages). */
+  General = 'GENERAL',
+  /** Created for Kids (targets an audience of age 16 and under). */
+  Kids = 'KIDS',
+  /** Contains adult material (targets an audience that is 17 and older). */
+  Restricted = 'RESTRICTED'
+}
+
+/** The available input fields of an audience guide operator. */
+export type AudienceGuideOperator = {
+  /** Short for equal, must match the given data exactly. */
+  eq?: InputMaybe<AudienceGuide>;
+  /** Short for not equal, must be different from the given data. */
+  ne?: InputMaybe<AudienceGuide>;
+};
+
+/** Represents the audiovisual work type of the copyrighted content. */
+export enum AudiovisualWork {
+  /** Represents a live broadcast. */
+  Livestream = 'LIVESTREAM',
+  /** Represents a movie. */
+  Movie = 'MOVIE',
+  /** Represents an online video. */
+  OnlineVideo = 'ONLINE_VIDEO',
+  /** A sports event. */
+  SportsEvent = 'SPORTS_EVENT',
+  /** Represents a tv show (or series). */
+  TvShow = 'TV_SHOW'
+}
+
+/**
+ *
+ * The input fields to authorize a device.
+ *
+ */
+export type AuthorizeDeviceInput = {
+  /**
+   *
+   *   The user's authorization consent for the device.
+   *
+   */
+  consent?: InputMaybe<DeviceAuthorizationConsent>;
+  /**
+   *
+   *   The 6-digit user code for device authorization.
+   *
+   */
+  user_code: Scalars['String']['input'];
+};
+
+/**
+ *
+ * The return fields from authorizing a device.
+ *
+ */
+export type AuthorizeDevicePayload = {
+  __typename?: 'AuthorizeDevicePayload';
+  /**
+   *
+   *   The consent status of the device authorization.
+   *
+   */
+  consent?: Maybe<DeviceAuthorizationConsent>;
+  /**
+   *
+   *   The status of the mutation.
+   *
+   */
+  status?: Maybe<Status>;
 };
 
 /** The available input fields of an AutoSuggestion filter. */
@@ -660,6 +843,43 @@ export type BehaviorRuleTagEdge = {
   node?: Maybe<BehaviorRuleTag>;
 };
 
+/** Represents information about a blocked. */
+export type Blocked = Node & {
+  __typename?: 'Blocked';
+  /** The creator that is blocked. */
+  creator?: Maybe<Channel>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+};
+
+/** The connection type for a Blocked. */
+export type BlockedConnection = {
+  __typename?: 'BlockedConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<BlockedEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type BlockedEdge = {
+  __typename?: 'BlockedEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<Blocked>;
+};
+
+/** The available input fields for filtering blocked items. */
+export type BlockedFilter = {
+  /** Filter blocked items by the chatroom id. */
+  chatroom?: InputMaybe<IdOperator>;
+  /** Filter blocked items by the creator id. */
+  creator?: InputMaybe<IdOperator>;
+};
+
 /** Represents a Bookmark. */
 export type Bookmark = {
   /** The ID of the object. */
@@ -754,6 +974,124 @@ export type BooleanOperator = {
   eq: Scalars['Boolean']['input'];
 };
 
+/** Represents the boost information of the channel (aka creator). */
+export type Boost = Node & {
+  __typename?: 'Boost';
+  /** The current amount of boosts available to use. */
+  balance?: Maybe<Scalars['Int']['output']>;
+  /** The unique identifier for the boost. */
+  id: Scalars['ID']['output'];
+  /** The next available date and time (ISO 8601 format) the channel is able to collect boost events. */
+  nextAvailable?: Maybe<BoostNextAvailable>;
+  /** The boost transactions. */
+  transactions?: Maybe<BoostTransactionConnection>;
+};
+
+
+/** Represents the boost information of the channel (aka creator). */
+export type BoostTransactionsArgs = {
+  filter?: InputMaybe<BoostTransactionFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** The possible values for a BoostEvent. */
+export enum BoostEvent {
+  /** An adjustment was made to the boost balance for administrative reasons. */
+  Adjustment = 'ADJUSTMENT',
+  /** A boost event triggered when a user boosts a story. */
+  BoostStory = 'BOOST_STORY',
+  /** A boost event triggered daily. */
+  DailyStreak = 'DAILY_STREAK',
+  /** A boost event triggered at signup. */
+  WelcomeBoost = 'WELCOME_BOOST'
+}
+
+/** The available input fields of a BoostTransaction operator. */
+export type BoostEventOperator = {
+  /** Short for equal, must match the given data exactly. */
+  eq?: InputMaybe<BoostEvent>;
+};
+
+/** Represents the next available date and time to collect boost events. */
+export type BoostNextAvailable = {
+  __typename?: 'BoostNextAvailable';
+  /** The daily-streak event. */
+  dailyStreak?: Maybe<Scalars['DateTime']['output']>;
+};
+
+/** Represents a BoostTransaction. */
+export type BoostTransaction = Node & {
+  __typename?: 'BoostTransaction';
+  /** The amount of the transaction. */
+  amount?: Maybe<Scalars['Int']['output']>;
+  /** The date and time (ISO 8601 format) of the boost transaction. */
+  createDate?: Maybe<Scalars['DateTime']['output']>;
+  /** The event of the transaction. */
+  event?: Maybe<BoostEvent>;
+  /** The unique identifier for the boost transaction. */
+  id: Scalars['ID']['output'];
+};
+
+/** The connection type for a BoostTransaction. */
+export type BoostTransactionConnection = {
+  __typename?: 'BoostTransactionConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<BoostTransactionEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type BoostTransactionEdge = {
+  __typename?: 'BoostTransactionEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<BoostTransaction>;
+};
+
+/** The available input fields of a BoostTransaction filter. */
+export type BoostTransactionFilter = {
+  /** Filter by boost event. */
+  event: BoostEventOperator;
+};
+
+/** Information about a user that has boosted the requested user */
+export type Booster = Node & {
+  __typename?: 'Booster';
+  /** The Channel information about the booster. */
+  creator?: Maybe<Channel>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+};
+
+/** The connection type for Booster. */
+export type BoosterConnection = {
+  __typename?: 'BoosterConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<BoosterEdge>>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type BoosterEdge = {
+  __typename?: 'BoosterEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<Booster>;
+};
+
+/** The possible sort options for boosters. */
+export type BoosterSort = {
+  /** Sort by when the booster boosted the channel last. */
+  createDate?: InputMaybe<OrderDirection>;
+};
+
 /** Represents a caption in a transcript. */
 export type Caption = Node & {
   __typename?: 'Caption';
@@ -790,7 +1128,7 @@ export type Category = {
   /** The ID of the object. */
   id: Scalars['ID']['output'];
   /** The name of the category. */
-  name: Scalars['String']['output'];
+  name?: Maybe<Scalars['String']['output']>;
   /** The human-readable unique ID of the category. */
   slug: Scalars['String']['output'];
 };
@@ -817,7 +1155,10 @@ export type CategoryEdge = {
 
 /** The available input fields of a Category filter. */
 export type CategoryFilter = {
+  /** Filter by category. */
   category: CategoryOperator;
+  /** Filter by the Dailymotion match rating of the `story` to the category. */
+  percentage?: InputMaybe<IntOperator>;
 };
 
 /** The available input fields of a Category operator. */
@@ -832,9 +1173,29 @@ export enum CategoryTypename {
   ContentCategory = 'CONTENT_CATEGORY',
   /** A curated category. */
   CuratedCategory = 'CURATED_CATEGORY',
-  /** An interest category. */
+  /** An iab category. */
+  IabCategory = 'IAB_CATEGORY',
+  /**
+   * An interest category.
+   * @deprecated No longer supported.
+   */
   InterestCategory = 'INTEREST_CATEGORY'
 }
+
+/** The input fields to request an email change. */
+export type ChangeEmailInput = {
+  /** The new email for the connected user. */
+  email: Scalars['String']['input'];
+  /** The password of the connected user. */
+  password: Scalars['String']['input'];
+};
+
+/** The return fields from requesting an email change. */
+export type ChangeEmailPayload = {
+  __typename?: 'ChangeEmailPayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
 
 /** A channel manages medias and collections. */
 export type Channel = Node & {
@@ -846,12 +1207,23 @@ export type Channel = Node & {
    * @deprecated Use `account`.
    */
   accountType?: Maybe<Scalars['String']['output']>;
+  /** The required updates the channel must perform. */
+  alerts?: Maybe<ChannelAlertConnection>;
   /** The URL of the avatar image. */
   avatar?: Maybe<Image>;
   /** The URL of the banner image. */
   banner?: Maybe<Image>;
-  /** The bookmarked posts of the channel. */
+  /** The list of creators blocked by the channel. */
+  blocked?: Maybe<BlockedConnection>;
+  /**
+   * The bookmarked posts of the channel.
+   * @deprecated Use `channel.history`.
+   */
   bookmarks?: Maybe<BookmarkConnection>;
+  /** The boost information of the channel. */
+  boost?: Maybe<Boost>;
+  /** The boosters that have boosted the channel. */
+  boosters?: Maybe<BoosterConnection>;
   /** Indicates whether the channel name can be changed. */
   canChangeName?: Maybe<Scalars['Boolean']['output']>;
   /** The collections of the channel. */
@@ -871,7 +1243,10 @@ export type Channel = Node & {
   description?: Maybe<Scalars['String']['output']>;
   /** The display name of the channel. */
   displayName?: Maybe<Scalars['String']['output']>;
-  /** The external links of the channel. */
+  /**
+   * The external links of the channel.
+   * @deprecated Use `socialUrls` field.
+   */
   externalLinks?: Maybe<ChannelExternalLinks>;
   /** The follower engagement information of the channel. */
   followerEngagement?: Maybe<FollowerEngagement>;
@@ -885,7 +1260,10 @@ export type Channel = Node & {
   id: Scalars['ID']['output'];
   /** Indicates whether the channel is associated to an artist. */
   isArtist?: Maybe<Scalars['Boolean']['output']>;
-  /** Indicates whether the channel is available. */
+  /**
+   * Indicates whether the channel is available.
+   * @deprecated Use `user.channel`.
+   */
   isAvailable?: Maybe<Scalars['Boolean']['output']>;
   /**
    * Indicates whether the channel is followed by the user connected. Returns `False` if no user is connected.
@@ -920,7 +1298,10 @@ export type Channel = Node & {
   metabaseIframeURL?: Maybe<Scalars['String']['output']>;
   /** The metrics of the channel. */
   metrics?: Maybe<ChannelMetrics>;
-  /** The name of the channel. */
+  /**
+   * The username of the channel.
+   * @deprecated Use `username`.
+   */
   name?: Maybe<Scalars['String']['output']>;
   /** The network channels of the channel. */
   networkChannels?: Maybe<ChannelConnection>;
@@ -928,8 +1309,12 @@ export type Channel = Node & {
   organization?: Maybe<Organization>;
   /** The reactions created by the channel. */
   reactions?: Maybe<ReactionConnection>;
+  /** The settings of the channel. */
+  settings?: Maybe<ChannelSettings>;
   /** The share urls of the channel. */
   shareUrls?: Maybe<ChannelShareUrls>;
+  /** The social urls of the channel. */
+  socialUrls?: Maybe<SocialUrls>;
   /**
    * The stats of the channel.
    * @deprecated Use `metrics` field.
@@ -942,8 +1327,8 @@ export type Channel = Node & {
    * @deprecated Use `logolURL` field.
    */
   thumbnails?: Maybe<Thumbnails>;
-  /** Required updates on the channel, as it does not respect the community guidelines. */
-  updateRequired?: Maybe<ChannelUpdateRequired>;
+  /** The username of the channel. */
+  username?: Maybe<Scalars['String']['output']>;
   /** The videos of the channel. */
   videos?: Maybe<VideoConnection>;
   /**
@@ -951,6 +1336,8 @@ export type Channel = Node & {
    * @deprecated Use `stats.views.total` field.
    */
   viewCount?: Maybe<Scalars['BigInt']['output']>;
+  /** The viewer engagement information of the channel. */
+  viewerEngagement: ChannelViewerEngagement;
   /** The Dailymotion ID of the channel. */
   xid: Scalars['String']['output'];
 };
@@ -970,9 +1357,25 @@ export type ChannelBannerArgs = {
 
 
 /** A channel manages medias and collections. */
+export type ChannelBlockedArgs = {
+  filter: BlockedFilter;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/** A channel manages medias and collections. */
 export type ChannelBookmarksArgs = {
   filter?: InputMaybe<BookmarkFilter>;
   first?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/** A channel manages medias and collections. */
+export type ChannelBoostersArgs = {
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<BoosterSort>;
   page?: InputMaybe<Scalars['Int']['input']>;
 };
 
@@ -1094,6 +1497,41 @@ export type ChannelVideosArgs = {
   topicXids?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
+/** Represents a Channel Alert. */
+export type ChannelAlert = Node & {
+  __typename?: 'ChannelAlert';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The name of the channel alert. */
+  name?: Maybe<ChannelAlertName>;
+};
+
+/** The connection type for ChannelAlert. */
+export type ChannelAlertConnection = {
+  __typename?: 'ChannelAlertConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<ChannelAlertEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type ChannelAlertEdge = {
+  __typename?: 'ChannelAlertEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<ChannelAlert>;
+};
+
+/** The possible names of an alert for a channel. */
+export enum ChannelAlertName {
+  /** Requires the creator to update its name (aka @username). */
+  CreatorNameUpdate = 'CREATOR_NAME_UPDATE'
+}
+
 /** The connection type for Channel. */
 export type ChannelConnection = {
   __typename?: 'ChannelConnection';
@@ -1127,10 +1565,14 @@ export type ChannelCreateInput = {
   language: Scalars['String']['input'];
   /** The URL of the logo image of the channel. */
   logoURL?: InputMaybe<Scalars['String']['input']>;
-  /** The name of the channel. */
-  name: Scalars['String']['input'];
+  /** The username of the channel. */
+  name?: InputMaybe<Scalars['String']['input']>;
   /** The Dailymotion ID of the organization creating the channel. */
   organizationXid: Scalars['String']['input'];
+  /** The settings on a channel. */
+  settings?: InputMaybe<ChannelSettingsInput>;
+  /** The username of the channel. */
+  username?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** The return fields from creating a channel. */
@@ -1156,7 +1598,10 @@ export type ChannelEdge = {
 /** The engagement metrics of a Channel. */
 export type ChannelEngagementMetrics = Node & {
   __typename?: 'ChannelEngagementMetrics';
-  /** The bookmark metrics of the channel. */
+  /**
+   * The bookmark metrics of the channel.
+   * @deprecated Use `metrics.engagement.history`.
+   */
   bookmarks?: Maybe<BookmarkMetricConnection>;
   /** The collection metrics of the channel. */
   collections?: Maybe<CollectionMetricConnection>;
@@ -1306,6 +1751,36 @@ export enum ChannelPermissionLevel {
   Reader = 'READER'
 }
 
+/** Information about the settings of a Channel. */
+export type ChannelSettings = Node & {
+  __typename?: 'ChannelSettings';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The notifications settings of the Channel. */
+  notifications?: Maybe<NotificationSettings>;
+  /** Indicates whether the Channel has been banned to create a thread (comment or reaction). */
+  threadsBanned: Scalars['Boolean']['output'];
+  /** Indicates the default settings of the Channel when uploading a video. */
+  video?: Maybe<VideoSettings>;
+};
+
+/** The settings on a Channel. */
+export type ChannelSettingsInput = {
+  /** The notification settings of the Channel. */
+  notifications?: InputMaybe<NotificationSettingsInput>;
+  /** The default settings when creating a video. */
+  video?: InputMaybe<VideoSettingsInput>;
+};
+
+/** The return fields from updating the settings of the connected Channel. */
+export type ChannelSettingsPayload = {
+  __typename?: 'ChannelSettingsPayload';
+  /** The updated settings. */
+  settings?: Maybe<ChannelSettings>;
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
 /** Information about the share urls of a Channel. */
 export type ChannelShareUrls = Node & ShareUrls & {
   __typename?: 'ChannelShareUrls';
@@ -1378,15 +1853,6 @@ export type ChannelStatsViews = Node & {
   total?: Maybe<Scalars['BigInt']['output']>;
 };
 
-/** Information about required updates on the channel. */
-export type ChannelUpdateRequired = Node & {
-  __typename?: 'ChannelUpdateRequired';
-  /** The ID of the object. */
-  id: Scalars['ID']['output'];
-  /** Indicates whether the name of the channel is required to be updated. */
-  name: Scalars['Boolean']['output'];
-};
-
 /** The views metrics of a Channel. */
 export type ChannelViewMetrics = Node & {
   __typename?: 'ChannelViewMetrics';
@@ -1396,6 +1862,15 @@ export type ChannelViewMetrics = Node & {
   visits?: Maybe<ChannelMetricConnection>;
 };
 
+/** Information about the viewer engagement of a Channel. */
+export type ChannelViewerEngagement = Node & {
+  __typename?: 'ChannelViewerEngagement';
+  /** Indicates whether the viewer appears on the blocklist of the channel. */
+  blocked: Scalars['Boolean']['output'];
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+};
+
 /** The possible sort options for channels. */
 export enum ChannelsSort {
   /** Sort by popular. */
@@ -1403,6 +1878,134 @@ export enum ChannelsSort {
   /** Sort by recent. */
   Recent = 'RECENT'
 }
+
+/** Represents a chapter in a video. */
+export type Chapter = Node & {
+  __typename?: 'Chapter';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The start timecode of the chapter. */
+  timecode: Scalars['String']['output'];
+  /** The title of the chapter. */
+  title: Scalars['String']['output'];
+};
+
+/** The connection type for a Chapter. */
+export type ChapterConnection = {
+  __typename?: 'ChapterConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<ChapterEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type ChapterEdge = {
+  __typename?: 'ChapterEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<Chapter>;
+};
+
+/** Information about a comment. */
+export type Chatroom = Node & {
+  __typename?: 'Chatroom';
+  /** The creation date (DateTime ISO8601) of the chatroom. */
+  createDate: Scalars['DateTime']['output'];
+  /** The global ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The metrics of the chatroom. */
+  metrics?: Maybe<ChatroomMetrics>;
+  /** The ID of the chatroom. */
+  roomId: Scalars['String']['output'];
+  /** The status of the chatroom. */
+  status: ChatroomStatus;
+  /** The viewer engagement information of the chatroom. */
+  viewerEngagement: ChatroomViewerEngagement;
+};
+
+/** The engagement metrics of a Chatroom. */
+export type ChatroomEngagementMetrics = Node & {
+  __typename?: 'ChatroomEngagementMetrics';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The member metrics of the chatroom. */
+  members?: Maybe<ChatroomMetricConnection>;
+  /** The message metrics of the chatroom. */
+  messages?: Maybe<ChatroomMetricConnection>;
+};
+
+/** The node at the end of a ChatroomMetricEdge. */
+export type ChatroomMetric = Metric & Node & {
+  __typename?: 'ChatroomMetric';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The total count of the metric. A null value indicates that it is hidden or not available. */
+  total?: Maybe<Scalars['Int']['output']>;
+};
+
+/** The connection type for a ChatroomMetric. */
+export type ChatroomMetricConnection = {
+  __typename?: 'ChatroomMetricConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<ChatroomMetricEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type ChatroomMetricEdge = {
+  __typename?: 'ChatroomMetricEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<ChatroomMetric>;
+};
+
+/** The metrics of a Chatroom. */
+export type ChatroomMetrics = Node & {
+  __typename?: 'ChatroomMetrics';
+  /** The engagement metrics of the chatroom. */
+  engagement?: Maybe<ChatroomEngagementMetrics>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+};
+
+/** The possible values for a chatroom status. */
+export enum ChatroomStatus {
+  /** The chatroom is inactive and cannot be accessed by users. */
+  Disabled = 'DISABLED',
+  /** The chatroom is active and users can send and receive messages. */
+  Enabled = 'ENABLED',
+  /** The chatroom is visible but message sending is temporarily restricted. */
+  Frozen = 'FROZEN'
+}
+
+export type ChatroomTokenPayload = {
+  __typename?: 'ChatroomTokenPayload';
+  /** Access token for the chatroom. */
+  accessToken: Scalars['String']['output'];
+  /** Lifetime in seconds before the token expires. */
+  expiresIn: Scalars['Int']['output'];
+  /** Mutation execution status. */
+  status?: Maybe<Status>;
+  /** Type of the token (typically 'Bearer'). */
+  tokenType: Scalars['String']['output'];
+};
+
+/** Information about the viewer engagement of a Chatroom. */
+export type ChatroomViewerEngagement = Node & {
+  __typename?: 'ChatroomViewerEngagement';
+  /** Indicates whether the viewer appears on the blocklist of the creator of the chatroom. */
+  blocked: Scalars['Boolean']['output'];
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+};
 
 /** The input fields to clear the medias of a collection. */
 export type ClearCollectionMediasInput = {
@@ -1491,9 +2094,17 @@ export type Collection = Content & Node & {
   id: Scalars['ID']['output'];
   /** Indicates whether this collection is featured in `daily_picks`. */
   isFeatured?: Maybe<Scalars['Boolean']['output']>;
-  /** Indicates whether the collection is private. */
+  /**
+   * Indicates whether the collection is private.
+   * @deprecated Use `visibility` field.
+   */
   isPrivate?: Maybe<Scalars['Boolean']['output']>;
-  /** The medias of the collection. */
+  /** The lives of the channel. */
+  lives?: Maybe<LiveConnection>;
+  /**
+   * The medias of the collection.
+   * @deprecated Use `videos` or `lives` field.
+   */
   medias?: Maybe<MediaConnection>;
   /** The metrics of the collection. */
   metrics?: Maybe<CollectionMetrics>;
@@ -1525,6 +2136,8 @@ export type Collection = Content & Node & {
   updatedAt?: Maybe<Scalars['DateTime']['output']>;
   /** The videos of the collection. */
   videos?: Maybe<VideoConnection>;
+  /** The visibility of the collection. */
+  visibility?: Maybe<Visibility>;
   /** The Dailymotion ID of the collection. */
   xid: Scalars['String']['output'];
 };
@@ -1532,6 +2145,14 @@ export type Collection = Content & Node & {
 
 /** A collection manages medias. */
 export type CollectionHashtagsArgs = {
+  first?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/** A collection manages medias. */
+export type CollectionLivesArgs = {
+  filter?: InputMaybe<LiveFilter>;
   first?: InputMaybe<Scalars['Int']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -1607,6 +2228,12 @@ export type CollectionFilter = {
   visibility?: InputMaybe<VisibilityOperator>;
 };
 
+/** The input fields to clear/delete a collection. */
+export type CollectionInput = {
+  /** The ID of the collection. */
+  id: Scalars['ID']['input'];
+};
+
 /** The node at the end of a CollectionMetricEdge. */
 export type CollectionMetric = Metric & Node & {
   __typename?: 'CollectionMetric';
@@ -1645,6 +2272,19 @@ export type CollectionMetrics = Node & {
   id: Scalars['ID']['output'];
 };
 
+/** The return fields from modifying a collection. */
+export type CollectionPayload = {
+  __typename?: 'CollectionPayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
+/** The settings when creating/updating a collection. */
+export type CollectionSettingsInput = {
+  /** Indicates the visibility of the collection. */
+  visibility?: InputMaybe<Visibility>;
+};
+
 /** Represents the stats of a collection. */
 export type CollectionStats = Node & {
   __typename?: 'CollectionStats';
@@ -1666,6 +2306,8 @@ export type CollectionStatsVideos = Node & {
 /** Information about a comment. */
 export type Comment = Content & Node & Thread & {
   __typename?: 'Comment';
+  /** The chatroom associated with the comment. */
+  chatroom?: Maybe<Chatroom>;
   /** The creation date (DateTime ISO8601) of the comment. */
   createDate: Scalars['DateTime']['output'];
   /** The creator of the comment. */
@@ -1676,6 +2318,12 @@ export type Comment = Content & Node & Thread & {
   metrics?: Maybe<CommentMetrics>;
   /** The commented story. */
   opener?: Maybe<Story>;
+  /** Indicates whether the creator of the story has liked the comment. */
+  openerCreatorLiked: Scalars['Boolean']['output'];
+  /** The share URLs of the comment. */
+  shareUrls?: Maybe<CommentShareUrls>;
+  /** The human-readable unique ID of the comment. */
+  slug: Scalars['String']['output'];
   /** The content of the comment. */
   text: Scalars['String']['output'];
   /** The last update date (DateTime ISO8601) of the comment. */
@@ -1707,10 +2355,18 @@ export type CommentEdge = {
 /** The engagement metrics of a Comment. */
 export type CommentEngagementMetrics = Node & {
   __typename?: 'CommentEngagementMetrics';
+  /** The bookmark metrics of the comment. */
+  bookmarks?: Maybe<BookmarkMetricConnection>;
   /** The ID of the object. */
   id: Scalars['ID']['output'];
   /** The like metrics of the comment. */
   likes?: Maybe<LikeMetricConnection>;
+};
+
+
+/** The engagement metrics of a Comment. */
+export type CommentEngagementMetricsBookmarksArgs = {
+  filter?: InputMaybe<BookmarkFilter>;
 };
 
 /** The node at the end of a CommentMetricEdge. */
@@ -1751,6 +2407,15 @@ export type CommentMetrics = Node & {
   id: Scalars['ID']['output'];
 };
 
+/** Information about the share urls of a Comment. */
+export type CommentShareUrls = Node & ShareUrls & {
+  __typename?: 'CommentShareUrls';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The permalink share url of the comment. */
+  permalink: Scalars['String']['output'];
+};
+
 /** The possible sort options for comment. */
 export type CommentSort = {
   /** Sort by when the comment was created. */
@@ -1765,7 +2430,7 @@ export type CommentViewerEngagement = Node & ViewerEngagement & {
   /** Indicates the like rating of the comment from the viewer. */
   likeRating?: Maybe<LikeRating>;
   /** Indicates whether the viewer has liked the comment. Returns False if the viewer is not connected. */
-  liked: Scalars['Boolean']['output'];
+  liked?: Maybe<Scalars['Boolean']['output']>;
 };
 
 /** The violation reasons to report the `Comment`. */
@@ -1823,13 +2488,39 @@ export type ComponentEdge = {
   node?: Maybe<Component>;
 };
 
+/** The input fields to confirm an email change. */
+export type ConfirmEmailInput = {
+  /** The confirmation code received from the email change request. */
+  code: Scalars['String']['input'];
+};
+
+/** The return fields from confirming an email change. */
+export type ConfirmEmailPayload = {
+  __typename?: 'ConfirmEmailPayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
+/** The input fields to confirm the report. */
+export type ConfirmReportInput = {
+  /** The token received in the email. */
+  token: Scalars['String']['input'];
+};
+
+/** The return fields for confirming the report. */
+export type ConfirmReportPayload = {
+  __typename?: 'ConfirmReportPayload';
+  /** The status of the mutation. */
+  status: Status;
+};
+
 /** Represents a Content. */
 export type Content = {
   /** The channel that created the content. */
   creator?: Maybe<Channel>;
 };
 
-/** Information about a category. */
+/** Information about a content category. */
 export type ContentCategory = Category & Node & {
   __typename?: 'ContentCategory';
   /** The ID of the object. */
@@ -1840,19 +2531,38 @@ export type ContentCategory = Category & Node & {
   slug: Scalars['String']['output'];
 };
 
+/** The violation reason to report the story. */
+export enum ContentViolation {
+  /** Content that is copyrighted. */
+  CopyrightInfringement = 'COPYRIGHT_INFRINGEMENT'
+}
+
 /** Information about a conversation. */
 export type Conversation = Node & {
   __typename?: 'Conversation';
-  /** The algorithm that used to fetch conversation. */
-  algorithm?: Maybe<AlgorithmName>;
-  /** Information about the conversation DailymotionAd. */
+  /** The algorithm that suggested the conversation. */
+  algorithm?: Maybe<ConversationAlgorithm>;
+  /** Information about the DailymotionAd of the conversation. */
   dailymotionAd?: Maybe<DailymotionAd>;
   /** The ID of the object. */
   id: Scalars['ID']['output'];
-  /** A list of interactions. */
+  /** The interactions on the conversation. */
   interactions?: Maybe<InteractionConnection>;
-  /** The Story. */
+  /** The story that started a conversation. */
   story?: Maybe<Story>;
+};
+
+/** Information about the conversation algorithm. */
+export type ConversationAlgorithm = Algorithm & {
+  __typename?: 'ConversationAlgorithm';
+  /** The name of the algorithm. */
+  name?: Maybe<AlgorithmName>;
+  /** The match percentage of the conversation to the algorithm. */
+  percentage?: Maybe<Scalars['Int']['output']>;
+  /** The source. */
+  source?: Maybe<Scalars['String']['output']>;
+  /** The version. */
+  version?: Maybe<Scalars['String']['output']>;
 };
 
 /** The connection type for Conversation. */
@@ -1870,10 +2580,14 @@ export type ConversationConnection = {
 
 /** The input fields of a conversations context argument. */
 export type ConversationContext = {
+  /** The action gesture performed by the user. */
+  actionGesture?: InputMaybe<ActionGesture>;
   /** Indicate whether the user wants to opt out of personalized content. Defaults to true. */
   personalizationOptOut?: InputMaybe<Scalars['Boolean']['input']>;
   /** The ID generated by the player (each time it loads a recording). */
   viewId?: InputMaybe<Scalars['String']['input']>;
+  /** The conversation context of the viewer. */
+  viewer?: InputMaybe<ViewerContext>;
 };
 
 /** An edge in a connection. */
@@ -1889,11 +2603,63 @@ export type ConversationFilter = {
   algorithm?: InputMaybe<AlgorithmNameOperator>;
   /** Filter conversations by id. */
   id?: InputMaybe<IdOperator>;
+  /** Filter conversations by slug. */
+  slug?: InputMaybe<StringOperator>;
   /** Filter conversations by story. */
   story?: InputMaybe<StoryOperator>;
   /** Filter conversations by story ID. */
   storyId?: InputMaybe<IdOperator>;
 };
+
+/** Sort conversation by the available values. */
+export type ConversationSort = {
+  /** Sort conversations by when the stories were created. */
+  createDate?: InputMaybe<OrderDirection>;
+  /** Sort conversations by the number of views on the story. */
+  views?: InputMaybe<OrderDirection>;
+};
+
+/** Represents a response from the convert speech from audio to text query */
+export type ConvertSpeechFromAudioToTextResponse = {
+  __typename?: 'ConvertSpeechFromAudioToTextResponse';
+  /** The detected language of the response */
+  detectedLanguage?: Maybe<Scalars['String']['output']>;
+  /** The duration of the response */
+  duration?: Maybe<Scalars['Float']['output']>;
+  /** The full text of the response */
+  fullText: Scalars['String']['output'];
+  /** The provider of the response */
+  provider: SpeechToTextProvider;
+  /** The sentences of the response */
+  sentences: Array<Maybe<SentenceWithSegments>>;
+};
+
+/** The input fields of the copyrighted content for submitting the report. */
+export type CopyrightedContent = {
+  /** The audiovisual work type of the copyrighted content. */
+  audiovisualWork?: InputMaybe<AudiovisualWork>;
+  /** Relationship to the owner of the copyrighted content. */
+  claimant: ReporterClaimant;
+  /** The name of the copyrighted content owner. */
+  owner?: InputMaybe<Scalars['String']['input']>;
+  /** The title of the copyrighted content. */
+  title: Scalars['String']['input'];
+  /** The work type of the copyrighted content. */
+  typeOfWork?: CopyrightedWorkType;
+  /** The url of the copyrighted content. */
+  url: Scalars['String']['input'];
+};
+
+export enum CopyrightedWorkType {
+  /** Represents a motion picture or an audiovisual work -- Movies, TV Shows, Video Games, Animation, Videos. */
+  Audiovisual = 'AUDIOVISUAL',
+  /** Represents a literary work -- Fiction, Non-Fiction, Poetry, Articles, Periodicals. */
+  Literary = 'LITERARY',
+  /** Represents a sound recording -- A series of musical or other sounds, but not including the sounds accompanying a motion picture or other audiovisual work. */
+  SoundRecording = 'SOUND_RECORDING',
+  /** Represents a visual art -- Artwork, Illustrations, Jewelry, Fabric, Architecture. */
+  VisualArt = 'VISUAL_ART'
+}
 
 /** Information about a country. */
 export type Country = Node & {
@@ -1966,6 +2732,21 @@ export type CreateBehaviorRulePayload = {
   rule?: Maybe<Rule>;
 };
 
+/** The input fields to create a chatroom. */
+export type CreateChatroomInput = {
+  /** The ID of the Thread to create a chatroom for. */
+  id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+/** The return fields from creating a chatroom. */
+export type CreateChatroomPayload = {
+  __typename?: 'CreateChatroomPayload';
+  /** The new chatroom. */
+  chatroom?: Maybe<Chatroom>;
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
 /** The input fields to create a collection. */
 export type CreateCollectionInput = {
   /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
@@ -1974,8 +2755,10 @@ export type CreateCollectionInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   /** The name of the new collection. */
   name: Scalars['String']['input'];
-  /** Indicate whether the collection is private. */
+  /** @deprecated(reason: "settings.visibility` input arg.") - Indicate whether the collection is private. */
   private?: InputMaybe<Scalars['Boolean']['input']>;
+  /** The settings when creating a collection. */
+  settings?: InputMaybe<CollectionSettingsInput>;
 };
 
 /** The return fields from creating a collection. */
@@ -1993,9 +2776,11 @@ export type CreateCollectionPayload = {
 export type CreateCommentInput = {
   /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
-  /** The ID of the post that the comment is created for. */
+  /** The ID of the Video to create a comment for. */
+  id?: InputMaybe<Scalars['ID']['input']>;
+  /** @deprecated(reason: "Use `id` input arg.") - The ID of the post that the comment is created for. */
   postId?: InputMaybe<Scalars['ID']['input']>;
-  /** The ID of the story that the comment is created for. */
+  /** @deprecated(reason: "Use `id` input arg.") - The ID of the story that the comment is created for. */
   storyId?: InputMaybe<Scalars['ID']['input']>;
   /** The text on the comment. */
   text: Scalars['String']['input'];
@@ -2021,7 +2806,7 @@ export type CreateReactionInput = {
   /** The URL of the thumbnail image. */
   thumbnailURL?: InputMaybe<Scalars['String']['input']>;
   /** The title of the reaction. */
-  title: Scalars['String']['input'];
+  title?: InputMaybe<Scalars['String']['input']>;
   /** The URL of the reaction to get the upload file from. */
   url: Scalars['String']['input'];
 };
@@ -2053,6 +2838,8 @@ export type CreateUserInput = {
   password?: InputMaybe<Scalars['String']['input']>;
   /** The user response token provided by reCAPTCHA. */
   recaptchaToken?: InputMaybe<Scalars['String']['input']>;
+  /** The user response token provided by turnstile. */
+  turnstileToken?: InputMaybe<Scalars['String']['input']>;
   /** The mutation version. */
   version?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -2070,24 +2857,34 @@ export type CreateUserPayload = {
 
 /** The input fields to create a video. */
 export type CreateVideoInput = {
+  /** Indicates whether the video is AI-altered content. */
+  aiAltered?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Indicates the target audience the video is created for. */
+  audience?: InputMaybe<AudienceGuide>;
   /** The category of the video. */
   category?: InputMaybe<MediaCategory>;
   /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The description of the video. */
   description?: InputMaybe<Scalars['String']['input']>;
-  /** the hashtags of the video */
+  /** Indicates whether the video is exclusive to Dailymotion. */
+  exclusive?: InputMaybe<Scalars['Boolean']['input']>;
+  /** The hashtags of the video */
   hashtags?: InputMaybe<Array<Scalars['String']['input']>>;
-  /** Indicates whether the video is created for kids. */
+  /** @deprecated(reason: "Use `settings.audience` input arg.") - Indicates whether the video is created for kids. */
   isCreatedForKids?: InputMaybe<Scalars['Boolean']['input']>;
   /** The language of the video. */
   language?: InputMaybe<Scalars['String']['input']>;
+  /** Indicate whether the video has paid partnership. */
+  paidPartnership?: InputMaybe<Scalars['Boolean']['input']>;
   /** The password of the video. When setting a value on this field, the video visibility changes to `password protected`. */
   password?: InputMaybe<Scalars['String']['input']>;
-  /** Indicates whether the video is private. */
+  /** @deprecated(reason: "Use `settings.visibility` input arg.") - Indicates whether the video is private. */
   private?: InputMaybe<Scalars['Boolean']['input']>;
   /** Indicates whether the video is published. */
   published?: InputMaybe<Scalars['Boolean']['input']>;
+  /** The default settings when creating a video. */
+  settings?: InputMaybe<VideoSettingsInput>;
   /** The list of tags to associate to the video. */
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   /** The URL of the thumbnail image. */
@@ -2096,6 +2893,8 @@ export type CreateVideoInput = {
   title?: InputMaybe<Scalars['String']['input']>;
   /** The URL of the video. */
   url?: InputMaybe<Scalars['String']['input']>;
+  /** @deprecated(reason: "Use `settings.visibility` input arg.") - The visibility of the Video. */
+  visibility?: InputMaybe<Visibility>;
 };
 
 /** The return fields from creating a new Video. */
@@ -2188,7 +2987,7 @@ export type DeleteBehaviorRulePayload = {
 export type DeleteCommentInput = {
   /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
-  /** The ID of the comment to delete. */
+  /** The ID of the Comment to delete. */
   id: Scalars['ID']['input'];
 };
 
@@ -2252,6 +3051,32 @@ export type DeleteVideoPayload = {
   status?: Maybe<Status>;
 };
 
+/**
+ *
+ * The possible values for device authorization consent.
+ *
+ */
+export enum DeviceAuthorizationConsent {
+  /**
+   *
+   *   The authorization for the device has been approved.
+   *
+   */
+  Approved = 'APPROVED',
+  /**
+   *
+   *   The authorization for the device has been denied.
+   *
+   */
+  Denied = 'DENIED',
+  /**
+   *
+   *   The authorization for the device is still pending.
+   *
+   */
+  Pending = 'PENDING'
+}
+
 /** Information about the email change request of the user. */
 export type EmailChangeRequest = Node & {
   __typename?: 'EmailChangeRequest';
@@ -2259,6 +3084,33 @@ export type EmailChangeRequest = Node & {
   id: Scalars['ID']['output'];
   /** The new email the user has requested to change to. */
   newEmail: Scalars['String']['output'];
+};
+
+/** The settings to receive email notifications. */
+export type EmailNotificationSettings = Node & {
+  __typename?: 'EmailNotificationSettings';
+  /** The notifications on activities to receive. */
+  activity?: Maybe<ActivityNotificationSettings>;
+  /** The notifications on announcements to receive. */
+  announcements?: Maybe<AnnouncementNotificationSettings>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The notifications on insights to receive. */
+  insights?: Maybe<InsightNotificationSettings>;
+  /** The notifications on recommendations to receive. */
+  recommendations?: Maybe<RecommendationNotificationSettings>;
+};
+
+/** The notification settings to receive via email. */
+export type EmailNotificationSettingsInput = {
+  /** The notifications on activities to receive. */
+  activity?: InputMaybe<ActivityNotificationSettingsInput>;
+  /** The notifications on announcements to receive. */
+  announcements?: InputMaybe<AnnouncementNotificationSettingsInput>;
+  /** The notifications on insights to receive. */
+  insights?: InputMaybe<InsightNotificationsSettingsInput>;
+  /** The notifications on recommendations to receive. */
+  recommendations?: InputMaybe<RecommendationNotificationSettingsInput>;
 };
 
 /** Represents the details of an embed. */
@@ -2272,13 +3124,121 @@ export type Embed = Node & {
   url?: Maybe<Scalars['String']['output']>;
 };
 
-/** The different types of embeds. */
-export enum EmbedType {
+/** The different embed formats for a Player. */
+export enum EmbedFormat {
+  /** A classic embed which uses a recording. */
+  Classic = 'CLASSIC',
   /** A contextual embed. */
-  Contextual = 'CONTEXTUAL',
-  /** A recording embed. */
-  Recording = 'RECORDING'
+  Contextual = 'CONTEXTUAL'
 }
+
+/** Represents an emoji enriched element */
+export type EmojiEnrichedElement = {
+  __typename?: 'EmojiEnrichedElement';
+  /** The emoji */
+  emoji?: Maybe<Scalars['String']['output']>;
+  /** The highlighted word */
+  highlightedWord?: Maybe<Scalars['String']['output']>;
+};
+
+/** Represents an enriched audio element */
+export type EnrichedAudioElement = {
+  __typename?: 'EnrichedAudioElement';
+  /** The category */
+  category?: Maybe<Scalars['String']['output']>;
+};
+
+/** Represents an enriched broll element url */
+export type EnrichedBRollElementUrl = {
+  __typename?: 'EnrichedBRollElementUrl';
+  /** The landscape url */
+  landscape: Scalars['String']['output'];
+  /** The large url */
+  large: Scalars['String']['output'];
+  /** The large2x url */
+  large2x: Scalars['String']['output'];
+  /** The medium url */
+  medium: Scalars['String']['output'];
+  /** The original url */
+  original: Scalars['String']['output'];
+  /** The portrait url */
+  portrait: Scalars['String']['output'];
+  /** The small url */
+  small: Scalars['String']['output'];
+  /** The tiny url */
+  tiny: Scalars['String']['output'];
+};
+
+/** Represents an enriched broll element */
+export type EnrichedBrollElement = {
+  __typename?: 'EnrichedBrollElement';
+  /**
+   * The highlighted word
+   * @deprecated old broll property
+   */
+  highlightedWord?: Maybe<Scalars['String']['output']>;
+  /** @deprecated old broll property */
+  keywords?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
+  /** The keywords string */
+  keywordsString: Scalars['String']['output'];
+  /** The segment */
+  segment: Scalars['String']['output'];
+  /** The urls */
+  urls: EnrichedBRollElementUrl;
+};
+
+/** Represents an enriched element title */
+export type EnrichedElementTitle = {
+  __typename?: 'EnrichedElementTitle';
+  /** The emoji */
+  emoji?: Maybe<Scalars['String']['output']>;
+  /** The highlighted word */
+  highlightedWord?: Maybe<Scalars['String']['output']>;
+  /** The title */
+  title: Scalars['String']['output'];
+};
+
+/** Represents an enriched element topic */
+export type EnrichedElementTopic = {
+  __typename?: 'EnrichedElementTopic';
+  /** The text section */
+  textSection: Scalars['String']['output'];
+  /** The title */
+  title: Scalars['String']['output'];
+};
+
+/** Represents enriched elements */
+export type EnrichedElements = {
+  __typename?: 'EnrichedElements';
+  /** The bRolls */
+  bRolls?: Maybe<Array<EnrichedBrollElement>>;
+  /** The emojis */
+  emojis?: Maybe<Array<EmojiEnrichedElement>>;
+  /** The sound effects */
+  soundFxs?: Maybe<Array<SoundEffectElement>>;
+};
+
+/** Represents the global context enriched elements */
+export type EnrichedElementsForContext = {
+  __typename?: 'EnrichedElementsForContext';
+  /** The audio */
+  audio?: Maybe<EnrichedAudioElement>;
+  /** The detected data */
+  detectedData?: Maybe<Scalars['String']['output']>;
+  /** The titles */
+  titles: Array<EnrichedElementTitle>;
+  /** The topics */
+  topics?: Maybe<Array<EnrichedElementTopic>>;
+};
+
+/** Represents a response from the get enriched elements for sentences query */
+export type EnrichedElementsForSentences = {
+  __typename?: 'EnrichedElementsForSentences';
+  /** The global context elements */
+  globalContextElements: EnrichedElementsForContext;
+  /** The sentences with enriched elements */
+  sentences: Array<Maybe<SentenceWithEnrichedElements>>;
+};
 
 /** Represents an experiment (A/B testing) matched/enabled for a client. */
 export type ExperimentMatch = Node & {
@@ -2379,6 +3339,19 @@ export type Favorite = Bookmark & History & Node & {
    * @deprecated Not supported.
    */
   rating?: Maybe<LikeRating>;
+};
+
+/** The input fields to add/remove a `Favorite` to/from the favorites list of the connected user. */
+export type FavoriteInput = {
+  /** The Dailymotion ID of the `favorite` to add/remove. */
+  id: Scalars['ID']['input'];
+};
+
+/** The return fields from performing an action on the favorites list of the connected user. */
+export type FavoritePayload = {
+  __typename?: 'FavoritePayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
 };
 
 /** Represents a feature object matched/enabled for a client. */
@@ -2845,6 +3818,11 @@ export type FollowingConnection = {
   totalCount?: Maybe<Scalars['Int']['output']>;
 };
 
+/** The following context of the viewer. */
+export type FollowingContext = {
+  creator?: InputMaybe<IdOperator>;
+};
+
 /** An edge in a connection. */
 export type FollowingEdge = {
   __typename?: 'FollowingEdge';
@@ -2921,6 +3899,21 @@ export enum Gender {
   PreferNotToAnswer = 'prefer_not_to_answer'
 }
 
+/** The input fields to generate a new username for a channel. */
+export type GenerateChannelUsernameInput = {
+  /** Indicate whether to update the channel username with the result. */
+  upsert?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+/** The return fields from generating a channel username. */
+export type GenerateChannelUsernamePayload = {
+  __typename?: 'GenerateChannelUsernamePayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+  /** The generated channel username. */
+  username: Scalars['String']['output'];
+};
+
 /** The input fields to generate a file upload url. */
 export type GenerateFileUploadUrlInput = {
   /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
@@ -2995,6 +3988,14 @@ export type GeoblockingEdge = {
   node?: Maybe<Geoblocking>;
 };
 
+/** The possible values of Hearted. */
+export enum Hearted {
+  /** Indicates that it is boosted. */
+  Boosted = 'BOOSTED',
+  /** Indicates that it is liked. */
+  Liked = 'LIKED'
+}
+
 /** Information of a Hashtag. */
 export type Hashtag = Node & {
   __typename?: 'Hashtag';
@@ -3006,6 +4007,10 @@ export type Hashtag = Node & {
   metrics?: Maybe<HashtagMetrics>;
   /** The name of the hashtag. */
   name: Scalars['String']['output'];
+  /** The share urls of the hashtag. */
+  shareUrls?: Maybe<HashtagShareUrls>;
+  /** The slug of the hashtag. */
+  slug: Scalars['String']['output'];
   /** The Dailymotion ID of the hashtag. */
   xid: Scalars['String']['output'];
 };
@@ -3056,6 +4061,93 @@ export type HashtagMetrics = Node & {
   id: Scalars['ID']['output'];
 };
 
+/** The share urls of the hashtag. */
+export type HashtagShareUrls = Node & ShareUrls & {
+  __typename?: 'HashtagShareUrls';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The permalink share url of the hashtag. */
+  permalink: Scalars['String']['output'];
+};
+
+/** Represents a Heart (an activity). */
+export type Heart = History & Node & {
+  __typename?: 'Heart';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The post watched by the channel. */
+  post: Post;
+};
+
+/** The possible values for a HeartEmoji. */
+export enum HeartEmoji {
+  /** A like rating that represents the emoji ❤️‍🔥. */
+  HeartOnFire = 'HEART_ON_FIRE',
+  /** A like rating that represents the emoji 🩷. */
+  PinkHeart = 'PINK_HEART'
+}
+
+/** The available input fields of a heart emoji operator. */
+export type HeartEmojiOperator = {
+  /** Short for equal, must match the given data exactly. */
+  eq?: InputMaybe<HeartEmoji>;
+};
+
+/** The available input fields for the Heart filter. */
+export type HeartFilter = {
+  /** Filter hearts by the emoji. */
+  emoji?: InputMaybe<HeartEmojiOperator>;
+};
+
+/** The node at the end of a HeartMetricEdge. */
+export type HeartMetric = Metric & Node & {
+  __typename?: 'HeartMetric';
+  /** The emoji metric being measured. */
+  emoji: HeartEmoji;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The total count of the heart metric. A null value indicates that it is hidden or not available. */
+  total?: Maybe<Scalars['Int']['output']>;
+};
+
+/** The connection type for a HeartMetric. */
+export type HeartMetricConnection = {
+  __typename?: 'HeartMetricConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<HeartMetricEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type HeartMetricEdge = {
+  __typename?: 'HeartMetricEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<HeartMetric>;
+};
+
+/** Represents a heart rating. */
+export type HeartRating = Node & {
+  __typename?: 'HeartRating';
+  /** The amount of the heart rating. */
+  amount: Scalars['Int']['output'];
+  /** The emoji of the heart rating. */
+  emoji: HeartEmoji;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+};
+
+export type HeartRatingInput = {
+  /** The number of hearts to use for the rating. */
+  amount: Scalars['Int']['input'];
+  /** The heart emoji to use for the rating. */
+  emoji: HeartEmoji;
+};
+
 /** Represents a History. */
 export type History = {
   /** The post interacted by the channel. */
@@ -3073,6 +4165,11 @@ export type HistoryConnection = {
   pageInfo: PageInfo;
   /** The total number of items. A null value indicates that the information is unavailable for the connection. */
   totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** The history context of the viewer. */
+export type HistoryContext = {
+  watched?: InputMaybe<IdOperator>;
 };
 
 /** An edge in a connection. */
@@ -3106,12 +4203,34 @@ export type HtmlPage = {
 export type IdOperator = {
   /** Short for equal, must match the given data exactly. */
   eq?: InputMaybe<Scalars['ID']['input']>;
-  /** Short for in array, must NOT be an element of the array. */
+  /** Short for in array, must be an element of the array. */
   in?: InputMaybe<Array<Scalars['ID']['input']>>;
   /** Short for not equal, must be different from the given data. */
   ne?: InputMaybe<Scalars['ID']['input']>;
-  /** Short for not in array, must be an element of the array. */
+  /** Short for not in array, must NOT be an element of the array. */
   nin?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+/** Information about an Apple iOS app. */
+export type Ios = Node & {
+  __typename?: 'IOS';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The current minimum version. */
+  minimum_version: Scalars['String']['output'];
+};
+
+/** Information about an iab category. */
+export type IabCategory = Category & Node & {
+  __typename?: 'IabCategory';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The name of the iab category. */
+  name?: Maybe<Scalars['String']['output']>;
+  /** The match percentage of the category to the story. */
+  percentage?: Maybe<Scalars['Int']['output']>;
+  /** The human-readable unique ID of the iab category. */
+  slug: Scalars['String']['output'];
 };
 
 /** Information of an Image. */
@@ -3127,7 +4246,22 @@ export type Image = Node & {
   width?: Maybe<Scalars['Int']['output']>;
 };
 
-/** The available input fields of a int operator. */
+/** The notification settings on insights to receive. */
+export type InsightNotificationSettings = Node & {
+  __typename?: 'InsightNotificationSettings';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** Receive notifications on your monetization insights. */
+  monetization?: Maybe<Scalars['Boolean']['output']>;
+};
+
+/** The notifications settings on insights to receive. */
+export type InsightNotificationsSettingsInput = {
+  /** Indicate whether to Receive notifications on your monetization insights. */
+  monetization?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+/** The available input fields of an int operator. */
 export type IntOperator = {
   /** Short for greater than or equal to. */
   gte?: InputMaybe<Scalars['Int']['input']>;
@@ -3275,6 +4409,11 @@ export type LikePayload = {
 export enum LikeRating {
   /** A like rating that represents the emoji 🎣. */
   FishingPole = 'FISHING_POLE',
+  /**
+   * A like rating that represents the emoji 🩷.
+   * @deprecated No longer supported.
+   */
+  PinkHeart = 'PINK_HEART',
   /** A like rating that represents the emoji 😴. */
   SleepingFace = 'SLEEPING_FACE',
   /** A like rating that represents the emoji 😎. */
@@ -3326,6 +4465,8 @@ export type Live = Content & Node & Recording & {
   allowEmbed?: Maybe<Scalars['Boolean']['output']>;
   /** The aspect ratio of the media (e.g. 1.33333 for 4/3, 1.77777 for 16/9). */
   aspectRatio?: Maybe<Scalars['Float']['output']>;
+  /** Indicates the target audience the live is created for. */
+  audience?: Maybe<AudienceGuide>;
   /**
    * The total number of users currently viewing the live. A null value indicates that it is hidden.
    * @deprecated Use `metrics.engagement.audience` field.
@@ -3422,7 +4563,10 @@ export type Live = Content & Node & Recording & {
   hlsUrl?: Maybe<Scalars['String']['output']>;
   /** The ID of the object. */
   id: Scalars['ID']['output'];
-  /** The interests associated to the live. */
+  /**
+   * The interests associated to the live.
+   * @deprecated No longer supported.
+   */
   interests?: Maybe<InterestConnection>;
   /**
    * Indicates whether the live is bookmarked by the connected user.
@@ -3430,9 +4574,15 @@ export type Live = Content & Node & Recording & {
    * @deprecated Use `viewerEngagement.bookmarked` field.
    */
   isBookmarked?: Maybe<Scalars['Boolean']['output']>;
-  /** Indicates whether the live is "Created for Kids" (intends to target an audience of age 16 and under). */
+  /**
+   * Indicates whether the live is "Created for Kids" (intends to target an audience of age 16 and under).
+   * @deprecated Use `audience` field.
+   */
   isCreatedForKids?: Maybe<Scalars['Boolean']['output']>;
-  /** Indicates whether the live is explicit. */
+  /**
+   * Indicates whether the live is explicit.
+   * @deprecated Use `audience` field.
+   */
   isExplicit?: Maybe<Scalars['Boolean']['output']>;
   /** Indicates whether the live is in the specified collection. */
   isInCollection?: Maybe<Scalars['Boolean']['output']>;
@@ -3451,7 +4601,10 @@ export type Live = Content & Node & Recording & {
   isOnAir?: Maybe<Scalars['Boolean']['output']>;
   /** Indicates whether the live is password-protected. */
   isPasswordProtected?: Maybe<Scalars['Boolean']['output']>;
-  /** Indicates whether the live is private. */
+  /**
+   * Indicates whether the live is private.
+   * @deprecated Use `visibility` field.
+   */
   isPrivate?: Maybe<Scalars['Boolean']['output']>;
   /** Indicates whether the live is published. */
   isPublished?: Maybe<Scalars['Boolean']['output']>;
@@ -3467,6 +4620,10 @@ export type Live = Content & Node & Recording & {
   metrics?: Maybe<LiveMetrics>;
   /** The moderation information of the live. */
   moderation?: Maybe<MediaModeration>;
+  /** Indicates whether the live is on air. */
+  onair?: Maybe<Scalars['Boolean']['output']>;
+  /** Indicates whether the live has paid partnership. */
+  paidPartnership?: Maybe<Scalars['Boolean']['output']>;
   /** The quality of the the live. */
   quality?: Maybe<Quality>;
   /** The reactions created on the live. */
@@ -3514,7 +4671,10 @@ export type Live = Content & Node & Recording & {
   thumbnails?: Maybe<Thumbnails>;
   /** The title of the live. */
   title?: Maybe<Scalars['String']['output']>;
-  /** The topics associated to the live. */
+  /**
+   * The topics associated to the live.
+   * @deprecated No longer supported.
+   */
   topics?: Maybe<TopicConnection>;
   /** The date and time (ISO 8601 format) when the live was updated. */
   updateDate: Scalars['DateTime']['output'];
@@ -3530,6 +4690,8 @@ export type Live = Content & Node & Recording & {
   url?: Maybe<Scalars['String']['output']>;
   /** The viewer engagement information of the live. */
   viewerEngagement?: Maybe<LiveViewerEngagement>;
+  /** The visibility of the Live. */
+  visibility?: Maybe<Visibility>;
   /** The width of the live (px). */
   width?: Maybe<Scalars['Int']['output']>;
   /** The Dailymotion ID of the live. */
@@ -3834,12 +4996,19 @@ export type LiveViewerEngagement = Node & ViewerEngagement & {
   bookmarked?: Maybe<Scalars['Boolean']['output']>;
   /** Indicates whether the viewer has the live in its watch later list. Returns False if the viewer is not connected. */
   favorited?: Maybe<Scalars['Boolean']['output']>;
+  /** Indicates the heart likeness the viewer has given to the Live. */
+  hearted?: Maybe<Hearted>;
   /** The ID of the object. */
   id: Scalars['ID']['output'];
-  /** Indicates the like rating of the live from the viewer. */
+  /**
+   * Indicates the like rating of the live from the viewer.
+   * @deprecated Use `hearted` with `points`.
+   */
   likeRating?: Maybe<LikeRating>;
   /** Indicates whether the viewer has liked the comment. Returns False if the viewer is not connected. */
   liked?: Maybe<Scalars['Boolean']['output']>;
+  /** The amount of points given from the viewer to the Live. */
+  points?: Maybe<Scalars['Int']['output']>;
   /** Indicates whether the viewer has reacted to the live. Returns False if the viewer is not connected. */
   reacted?: Maybe<Scalars['Boolean']['output']>;
   /** Indicates whether the viewer has added the live to one of its collections. Returns False if the viewer is not connected. */
@@ -4072,13 +5241,36 @@ export type MediaUploadInfo = Node & {
   publishing?: Maybe<MediaPublishingInfo>;
 };
 
+/** Body of a message. */
+export type MessageBody = {
+  /** ID of the story to thank. */
+  storyId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+/** The possible values for a Message Subject. */
+export enum MessageSubject {
+  /** A thank you message. */
+  ThankYou = 'THANK_YOU'
+}
+
 /** Information about a metadata. */
 export type Metadata = Node & {
   __typename?: 'Metadata';
   /** Information about the algorithm used to retrieve data. */
-  algorithm?: Maybe<Algorithm>;
+  algorithm?: Maybe<MetadataAlgorithm>;
   /** The ID of the object. */
   id: Scalars['ID']['output'];
+};
+
+/** Information about the metadata algorithm. */
+export type MetadataAlgorithm = Algorithm & {
+  __typename?: 'MetadataAlgorithm';
+  /** The name of the algorithm. */
+  name?: Maybe<Scalars['String']['output']>;
+  /** The unique ID of the algorithm. */
+  uuid?: Maybe<Scalars['String']['output']>;
+  /** The version of the algorithm. */
+  version?: Maybe<Scalars['String']['output']>;
 };
 
 /** Information about a metric. */
@@ -4123,6 +5315,30 @@ export type ModerationActionAppealPayload = {
   status: Status;
 };
 
+/** MojoKit queries for AI-powered content enhancement features. */
+export type MojoKitQueries = {
+  __typename?: 'MojoKitQueries';
+  /** Convert speech from audio to text with timings. */
+  convertSpeechFromAudioToTextWithTimings: ConvertSpeechFromAudioToTextResponse;
+  /** Generate enriched elements for sentences. */
+  generateEnrichedElementsForSentences: EnrichedElementsForSentences;
+};
+
+
+/** MojoKit queries for AI-powered content enhancement features. */
+export type MojoKitQueriesConvertSpeechFromAudioToTextWithTimingsArgs = {
+  input: SpeechAudioInput;
+  timeoutMs?: InputMaybe<Scalars['Int']['input']>;
+  withProvider?: InputMaybe<SpeechToTextProvider>;
+};
+
+
+/** MojoKit queries for AI-powered content enhancement features. */
+export type MojoKitQueriesGenerateEnrichedElementsForSentencesArgs = {
+  sentences: Array<Scalars['String']['input']>;
+  targetLanguage: Scalars['String']['input'];
+};
+
 /** Monetization insights notification settings. */
 export type MonetizationInsights = Node & {
   __typename?: 'MonetizationInsights';
@@ -4140,30 +5356,75 @@ export type Mutation = {
    * @deprecated Use `/oauth/token` endpoint with grant_type `validate_code`.
    */
   activateUser?: Maybe<ActivateUserPayload>;
-  /** Add a video to a collection. */
+  /** Add a creator to the blocklist. */
+  addBlocked?: Maybe<AddBlockedPayload>;
+  /** Add a boost event. */
+  addBoost?: Maybe<AddBoostPayload>;
+  /**
+   * Add a video to a collection.
+   * @deprecated Use mutation `addSave`.
+   */
   addCollectionVideo?: Maybe<AddCollectionVideoPayload>;
+  /** Add a `Favorite` to the favorites list of the connected user. */
+  addFavorite?: Maybe<FavoritePayload>;
   /** Follow a story for the connected creator. */
   addFollowing?: Maybe<FollowingPayload>;
   /** Add a post with a rating to the likes list of the connected user. If the post is already rated, it updates the rating. */
   addLike?: Maybe<LikePayload>;
-  /** Add a video to the `Watch Later` list of the connected user. */
+  /** Save a recording to a collection of the authenticated creator. */
+  addSave?: Maybe<SavePayload>;
+  /**
+   * Add a video to the `Watch Later` list of the connected user.
+   * @deprecated Use mutation `addFavorite`.
+   */
   addWatchLaterVideo?: Maybe<AddWatchLaterVideoPayload>;
+  /** Add a `Watched` to the watched list of the connected user. */
+  addWatched?: Maybe<WatchedPayload>;
   /** Create an analytics report. */
   analyticsReportCreate?: Maybe<AnalyticsReportCreatePayload>;
   /** Ask to generate a custom report. */
   askPartnerReportFile?: Maybe<AskPartnerReportFilePayload>;
+  /**
+   *
+   *   Authorize a device using a user code and consent.
+   *
+   */
+  authorizeDevice?: Maybe<AuthorizeDevicePayload>;
+  /** Request to change the email address of the connected user. */
+  changeEmail?: Maybe<ChangeEmailPayload>;
   /** Create a channel. */
   channelCreate?: Maybe<ChannelCreatePayload>;
-  /** Remove all medias from a collection. */
+  /** Clear (remove all saves from) a collection. */
+  clearCollection?: Maybe<CollectionPayload>;
+  /**
+   * Remove all medias from a collection.
+   * @deprecated Use mutation `clearCollection`.
+   */
   clearCollectionMedias?: Maybe<ClearCollectionMediasPayload>;
+  /** Remove all `Favorites` from the favorites list of the connected user. */
+  clearFavorites?: Maybe<FavoritePayload>;
   /** Removes all the videos the connected user has liked. */
   clearLikedVideos?: Maybe<ClearLikedVideosPayload>;
-  /** Removes all the videos from the `WatchLater` list of the connected user. */
+  /**
+   * Removes all the videos from the `WatchLater` list of the connected user.
+   * @deprecated Use mutation `clearFavorites`.
+   */
   clearWatchLaterVideos?: Maybe<ClearWatchLaterVideosPayload>;
-  /** Removes all the videos from the user `Watched`. */
+  /** Remove all `Watched` from the watched list of the connected user. */
+  clearWatched?: Maybe<WatchedPayload>;
+  /**
+   * Removes all the videos from the user `Watched`.
+   * @deprecated Use mutation `clearWatched`.
+   */
   clearWatchedVideos?: Maybe<ClearWatchedVideosPayload>;
+  /** Confirm the new email address of the connected user. */
+  confirmEmail?: Maybe<ConfirmEmailPayload>;
+  /** Confirm the submission of the report via email. */
+  confirmReport: ConfirmReportPayload;
   /** Create a new rule for feature flipping or AB experiments. */
   createBehaviorRule?: Maybe<CreateBehaviorRulePayload>;
+  /** Create a chatroom. */
+  createChatroom?: Maybe<CreateChatroomPayload>;
   /** Create a collection. */
   createCollection?: Maybe<CreateCollectionPayload>;
   /** Create a comment. */
@@ -4176,6 +5437,8 @@ export type Mutation = {
   createVideo?: Maybe<CreateVideoPayload>;
   /** Delete a rule used for feature flipping or AB experiments. */
   deleteBehaviorRule?: Maybe<DeleteBehaviorRulePayload>;
+  /** Delete a collection. */
+  deleteCollection?: Maybe<CollectionPayload>;
   /** Delete a comment. */
   deleteComment?: Maybe<DeleteCommentPayload>;
   /** Delete a reaction. */
@@ -4194,9 +5457,15 @@ export type Mutation = {
    * @deprecated No longer supported.
    */
   followChannels?: Maybe<FollowChannelsPayload>;
-  /** The topic the user wants to follow. */
+  /**
+   * The topic the user wants to follow.
+   * @deprecated No longer supported.
+   */
   followTopic?: Maybe<FollowTopicPayload>;
-  /** Follow multiple topics for the connected user. */
+  /**
+   * Follow multiple topics for the connected user.
+   * @deprecated No longer supported.
+   */
   followTopics?: Maybe<FollowTopicsPayload>;
   /**
    * Follow a user for the connected user.
@@ -4208,6 +5477,10 @@ export type Mutation = {
    * @deprecated No longer supported.
    */
   followedUserRemove?: Maybe<UnfollowUserPayload>;
+  /** Generate a new username for the channel. */
+  generateChannelUsername?: Maybe<GenerateChannelUsernamePayload>;
+  /** Generate an access token for a chatroom. */
+  generateChatroomToken: ChatroomTokenPayload;
   /** Generate a URL to upload a file. */
   generateFileUploadUrl?: Maybe<GenerateFileUploadUrlPayload>;
   /** Generate a token to request a code to verify the email. */
@@ -4233,6 +5506,8 @@ export type Mutation = {
   notificationFollowedChannelUpdate?: Maybe<NotificationFollowedChannelUpdatePayload>;
   /** Manage poll answer for the connected user. */
   pollAnswer?: Maybe<PollAnswerPayload>;
+  /** Rate a recommendation. */
+  rateRecommendation?: Maybe<RateRecommendationPayload>;
   /**
    * Respond to a video by creating a reaction video.
    * @deprecated Use mutation `createReaction`.
@@ -4250,22 +5525,49 @@ export type Mutation = {
   reactionVideoUpdate?: Maybe<ReactionVideoPayload>;
   /** Request to recover the password of a user. */
   recoverPassword?: Maybe<RecoverPasswordPayload>;
-  /** Delete a collection. */
+  /** Remove a creator from the blocklist. */
+  removeBlocked?: Maybe<RemoveBlockedPayload>;
+  /**
+   * Delete a collection.
+   * @deprecated Use mutation `deleteCollection`.
+   */
   removeCollection?: Maybe<RemoveCollectionPayload>;
-  /** Remove a video from a collection. */
+  /**
+   * Remove a video from a collection.
+   * @deprecated Use mutation `removeSave`.
+   */
   removeCollectionVideo?: Maybe<RemoveCollectionVideoPayload>;
+  /** Remove a `Favorite` from the favorites list of the connected user. */
+  removeFavorite?: Maybe<FavoritePayload>;
   /** Unfollow a story for the connected creator. */
   removeFollowing?: Maybe<FollowingPayload>;
   /** Remove a post from the likes list of the connected user. */
   removeLike?: Maybe<LikePayload>;
-  /** Removes a video from the `WatchLater` list of the connected user. */
+  /** Remove a recording from a collection of the authenticated creator. */
+  removeSave?: Maybe<SavePayload>;
+  /**
+   * Removes a video from the `WatchLater` list of the connected user.
+   * @deprecated Use mutation `removeFavorite`.
+   */
   removeWatchLaterVideo?: Maybe<RemoveWatchLaterVideoPayload>;
-  /** Removes a video from the `Watched` list of the connected user. */
+  /** Remove a `Watched` from the watched list of the connected user. */
+  removeWatched?: Maybe<WatchedPayload>;
+  /**
+   * Removes a video from the `Watched` list of the connected user.
+   * @deprecated Use mutation `removeWatched`.
+   */
   removeWatchedVideo?: Maybe<RemoveWatchedVideoPayload>;
-  /** Reorder a media in a collection. */
+  /**
+   * Reorder a media in a collection.
+   * @deprecated Use mutation `reorderSave`.
+   */
   reorderCollectionMedia?: Maybe<ReorderCollectionMediaPayload>;
+  /** Remove a recording from a collection of the authenticated creator. */
+  reorderSave?: Maybe<SavePayload>;
   /** Report a comment for violating the community guidelines. */
   reportComment: ReportCommentPayload;
+  /** Report content that is violating the community guidelines. */
+  reportContent?: Maybe<ReportStoryPayload>;
   /** Report a creator for violating the community guidelines. */
   reportCreator: ReportCreatorPayload;
   /** Report a Recording (a Video, a Live, or a Reaction) that is violating the community guidelines. */
@@ -4275,7 +5577,10 @@ export type Mutation = {
    * @deprecated Use mutation `reportRecording`.
    */
   reportVideo?: Maybe<ReportVideoPayload>;
-  /** Verify the email of the reporter, if the reporter is not connected. */
+  /**
+   * Verify the email of the reporter, if the reporter is not connected.
+   * @deprecated Use `confirmReport`.
+   */
   reporterEmailVerify: ReporterEmailVerifyPayload;
   /**
    * Generate an activation code by a validation token.
@@ -4284,6 +5589,10 @@ export type Mutation = {
   requestActivationCode?: Maybe<RequestActivationCodePayload>;
   /** Change the password of the user after requesting recover password. */
   resetPassword?: Maybe<ResetPasswordPayload>;
+  /** Request a new email confirmation code. */
+  sendConfirmEmailCode?: Maybe<SendConfirmEmailCodePayload>;
+  /** Send a message. */
+  sendMessage?: Maybe<SendMessagePayload>;
   /** Send a transactional email using an email provider. */
   sendTransactionalEmail?: Maybe<SendTransactionalEmailPayload>;
   /** Request a code to be sent to verify the email. */
@@ -4293,7 +5602,10 @@ export type Mutation = {
    * @deprecated Use mutation `removeFollowing`.
    */
   unfollowChannel?: Maybe<UnfollowChannelPayload>;
-  /** Unfollow a topic for the connected user. */
+  /**
+   * Unfollow a topic for the connected user.
+   * @deprecated No longer supported.
+   */
   unfollowTopic?: Maybe<UnfollowTopicPayload>;
   /**
    * Unlike a video for the connected user.
@@ -4304,11 +5616,19 @@ export type Mutation = {
   updateBehaviorRule?: Maybe<UpdateBehaviorRulePayload>;
   /** Update a channel. */
   updateChannel?: Maybe<UpdateChannelPayload>;
+  /** Update the settings of the connected Channel. */
+  updateChannelSettings?: Maybe<ChannelSettingsPayload>;
   /** Update a collection. */
   updateCollection?: Maybe<UpdateCollectionPayload>;
-  /** Update the email notification settings of the connected user. */
+  /**
+   * Update the email notification settings of the connected user.
+   * @deprecated Use mutation `updateChannelSettings` and input arg `notifications`.
+   */
   updateNotificationSettingsEmail?: Maybe<UpdateNotificationSettingsEmailPayload>;
-  /** Update the push notification settings of the connected user. */
+  /**
+   * Update the push notification settings of the connected user.
+   * @deprecated Use mutation `updateChannelSettings` and input arg `notifications`.
+   */
   updateNotificationSettingsPush?: Maybe<UpdateNotificationSettingsPushPayload>;
   /** Update a reaction. */
   updateReaction?: Maybe<ReactionPayload>;
@@ -4316,26 +5636,50 @@ export type Mutation = {
   updateUser?: Maybe<UpdateUserPayload>;
   /** Update a video. */
   updateVideo?: Maybe<UpdateVideoPayload>;
-  /** Confirm the new email address of the connected user. */
+  /**
+   * Confirm the new email address of the connected user.
+   * @deprecated Use mutation `confirmEmail`.
+   */
   userEmailChangeConfirm?: Maybe<UserEmailChangeConfirmPayload>;
-  /** Request to change the email address of the connected user. */
+  /**
+   * Request to change the email address of the connected user.
+   * @deprecated Use mutation `changeEmail`.
+   */
   userEmailChangeRequest?: Maybe<UserEmailChangeRequestPayload>;
-  /** Request a new email confirmation code. */
+  /**
+   * Request a new email confirmation code.
+   * @deprecated Use mutation `sendConfirmEmailCode`.
+   */
   userEmailConfirmationCodeReset?: Maybe<UserEmailConfirmationCodeResetPayload>;
   /**
    * Generate an email validation token to request an activation code.
    * @deprecated Use `generateVerifyEmailToken`.
    */
   userEmailValidationTokenRequest?: Maybe<UserEmailValidationTokenPayload>;
-  /** Add an interest to user. */
+  /**
+   * Add an interest to user.
+   * @deprecated No longer supported.
+   */
   userInterestAdd?: Maybe<UserInterestAddPayload>;
-  /** Remove an interest from a user. */
+  /**
+   * Remove an interest from a user.
+   * @deprecated No longer supported.
+   */
   userInterestRemove?: Maybe<UserInterestRemovePayload>;
-  /** Replaces the interests of a user with the ids provided. */
+  /**
+   * Replaces the interests of a user with the ids provided.
+   * @deprecated No longer supported.
+   */
   userInterestsUpdate?: Maybe<UserInterestsUpdatePayload>;
-  /** Request a code B from OpenWeb. */
+  /**
+   * Request a code B from OpenWeb.
+   * @deprecated No longer supported.
+   */
   userOpenWebCodeBRequest?: Maybe<UserOpenWebCodeBRequestPayload>;
-  /** Add a video to the `Watched` list of the connected user. */
+  /**
+   * Add a video to the `Watched` list of the connected user.
+   * @deprecated Use mutation `addWatched`.
+   */
   watchedVideoAdd?: Maybe<WatchedVideoAddPayload>;
 };
 
@@ -4347,8 +5691,26 @@ export type MutationActivateUserArgs = {
 
 
 /** The mutation root of Dailymotion's GraphQL API. */
+export type MutationAddBlockedArgs = {
+  input: AddBlockedInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationAddBoostArgs = {
+  input: AddBoostInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
 export type MutationAddCollectionVideoArgs = {
   input: AddCollectionVideoInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationAddFavoriteArgs = {
+  input: FavoriteInput;
 };
 
 
@@ -4365,8 +5727,20 @@ export type MutationAddLikeArgs = {
 
 
 /** The mutation root of Dailymotion's GraphQL API. */
+export type MutationAddSaveArgs = {
+  input: SaveInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
 export type MutationAddWatchLaterVideoArgs = {
   input: AddWatchLaterVideoInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationAddWatchedArgs = {
+  input: AddWatchedInput;
 };
 
 
@@ -4383,8 +5757,26 @@ export type MutationAskPartnerReportFileArgs = {
 
 
 /** The mutation root of Dailymotion's GraphQL API. */
+export type MutationAuthorizeDeviceArgs = {
+  input: AuthorizeDeviceInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationChangeEmailArgs = {
+  input: ChangeEmailInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
 export type MutationChannelCreateArgs = {
   input: ChannelCreateInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationClearCollectionArgs = {
+  input: CollectionInput;
 };
 
 
@@ -4413,8 +5805,26 @@ export type MutationClearWatchedVideosArgs = {
 
 
 /** The mutation root of Dailymotion's GraphQL API. */
+export type MutationConfirmEmailArgs = {
+  input: ConfirmEmailInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationConfirmReportArgs = {
+  input: ConfirmReportInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
 export type MutationCreateBehaviorRuleArgs = {
   input: CreateBehaviorRuleInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationCreateChatroomArgs = {
+  input: CreateChatroomInput;
 };
 
 
@@ -4451,6 +5861,12 @@ export type MutationCreateVideoArgs = {
 /** The mutation root of Dailymotion's GraphQL API. */
 export type MutationDeleteBehaviorRuleArgs = {
   input: DeleteBehaviorRuleInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationDeleteCollectionArgs = {
+  input: CollectionInput;
 };
 
 
@@ -4515,6 +5931,12 @@ export type MutationFollowedUserRemoveArgs = {
 
 
 /** The mutation root of Dailymotion's GraphQL API. */
+export type MutationGenerateChannelUsernameArgs = {
+  input: GenerateChannelUsernameInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
 export type MutationGenerateFileUploadUrlArgs = {
   input: GenerateFileUploadUrlInput;
 };
@@ -4551,6 +5973,12 @@ export type MutationPollAnswerArgs = {
 
 
 /** The mutation root of Dailymotion's GraphQL API. */
+export type MutationRateRecommendationArgs = {
+  input: RateRecommendationInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
 export type MutationReactionVideoCreateArgs = {
   input: ReactionVideoCreateInput;
 };
@@ -4575,6 +6003,12 @@ export type MutationRecoverPasswordArgs = {
 
 
 /** The mutation root of Dailymotion's GraphQL API. */
+export type MutationRemoveBlockedArgs = {
+  input: RemoveBlockedInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
 export type MutationRemoveCollectionArgs = {
   input: RemoveCollectionInput;
 };
@@ -4583,6 +6017,12 @@ export type MutationRemoveCollectionArgs = {
 /** The mutation root of Dailymotion's GraphQL API. */
 export type MutationRemoveCollectionVideoArgs = {
   input: RemoveCollectionVideoInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationRemoveFavoriteArgs = {
+  input: FavoriteInput;
 };
 
 
@@ -4599,8 +6039,20 @@ export type MutationRemoveLikeArgs = {
 
 
 /** The mutation root of Dailymotion's GraphQL API. */
+export type MutationRemoveSaveArgs = {
+  input: SaveInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
 export type MutationRemoveWatchLaterVideoArgs = {
   input: RemoveWatchLaterVideoInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationRemoveWatchedArgs = {
+  input: RemoveWatchedInput;
 };
 
 
@@ -4617,8 +6069,20 @@ export type MutationReorderCollectionMediaArgs = {
 
 
 /** The mutation root of Dailymotion's GraphQL API. */
+export type MutationReorderSaveArgs = {
+  input: ReorderSaveInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
 export type MutationReportCommentArgs = {
   input: ReportCommentInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationReportContentArgs = {
+  input: ReportContentInput;
 };
 
 
@@ -4655,6 +6119,12 @@ export type MutationRequestActivationCodeArgs = {
 /** The mutation root of Dailymotion's GraphQL API. */
 export type MutationResetPasswordArgs = {
   input: ResetPasswordInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationSendMessageArgs = {
+  input: SendMessageInput;
 };
 
 
@@ -4697,6 +6167,12 @@ export type MutationUpdateBehaviorRuleArgs = {
 /** The mutation root of Dailymotion's GraphQL API. */
 export type MutationUpdateChannelArgs = {
   input: UpdateChannelInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationUpdateChannelSettingsArgs = {
+  input: ChannelSettingsInput;
 };
 
 
@@ -4792,12 +6268,27 @@ export type MutationWatchedVideoAddArgs = {
 /** The neon object represents the view of NEON apps. */
 export type Neon = Node & {
   __typename?: 'Neon';
+  android?: Maybe<Android>;
   /** The ID of the object. */
   id: Scalars['ID']['output'];
+  ios?: Maybe<Ios>;
   /** The sections in the neon view. */
   sections?: Maybe<SectionConnection>;
   /** Information about the URI passed as argument. */
   web?: Maybe<Web>;
+};
+
+
+/** The neon object represents the view of NEON apps. */
+export type NeonAndroidArgs = {
+  version: Scalars['String']['input'];
+};
+
+
+/** The neon object represents the view of NEON apps. */
+export type NeonIosArgs = {
+  name: Scalars['String']['input'];
+  version: Scalars['String']['input'];
 };
 
 
@@ -4852,27 +6343,60 @@ export type NotificationFollowedChannelUpdatePayload = {
   status?: Maybe<Status>;
 };
 
-/** The notification settings of the connected user. */
+/** The notification settings. */
 export type NotificationSettings = Node & {
   __typename?: 'NotificationSettings';
-  /** The notification settings to receive when a channel the connected user follows starts a live. */
+  /** The settings to receive email notifications. */
+  email?: Maybe<EmailNotificationSettings>;
+  /**
+   * The notification settings to receive when a channel the connected user follows starts a live.
+   * @deprecated Use `me.channel.settings.notifications.email.activity.followingChannelStartsLive`.
+   */
   followingChannelStartsLive?: Maybe<FollowingChannelStartsLive>;
-  /** The notification settings to receive when a channel the connected user follows uploads a new video. */
+  /**
+   * The notification settings to receive when a channel the connected user follows uploads a new video.
+   * @deprecated Use `me.channel.settings.notifications.email.activity.followingChannelUploadsVideo`.
+   */
   followingChannelUploadsVideo?: Maybe<FollowingChannelUploadsVideo>;
-  /** The notification settings to receive when a channel or topic the connected user follows starts a live. */
+  /**
+   * The notification settings to receive when a channel or topic the connected user follows starts a live.
+   * @deprecated Use `me.channel.settings.notifications.push.activity.followingChannelStartsLive`.
+   */
   followingStartsLive?: Maybe<FollowingStartsLive>;
   /** The ID of the object. */
   id: Scalars['ID']['output'];
-  /** Indicate whether to receive occasionally about monetization insigths. */
+  /** Indicate whether to receive occasionally about monetization insights. */
   monetizationInsights?: Maybe<MonetizationInsights>;
-  /** The notification settings to receive when there are new feature and product updates. */
+  /**
+   * The notification settings to receive when there are new feature and product updates.
+   * @deprecated Use `me.channel.settings.notifications.email.announcements.updates`.
+   */
   productUpdates?: Maybe<ProductUpdates>;
-  /** The notification settings to receive when the connected user has unwatched vidoes in the `WatchLater` list. */
+  /** The settings to receive push notifications. */
+  push?: Maybe<PushNotificationSettings>;
+  /**
+   * The notification settings to receive when the connected user has unwatched vidoes in the `WatchLater` list.
+   * @deprecated Use `me.channel.settings.notifications.< format >.recommendations.bookmarkReminders`.
+   */
   remindUnwatchedVideos?: Maybe<RemindUnwatchedVideos>;
-  /** The notification settings to receive occasionally about `tips and tricks`. */
+  /**
+   * The notification settings to receive occasionally about `tips and tricks`.
+   * @deprecated Use `me.channel.settings.notifications.< format >.announcement.tips`.
+   */
   tips?: Maybe<Tips>;
-  /** The notification settings to receive occasionally about `curated videos for you`. */
+  /**
+   * The notification settings to receive occasionally about `curated videos for you`.
+   * @deprecated Use `me.channel.settings.notifications.< format >.recommendations.personalization`.
+   */
   videoDigest?: Maybe<VideoDigest>;
+};
+
+/** Update the notification settings to receive. */
+export type NotificationSettingsInput = {
+  /** The notification settings to receive via email. */
+  email?: InputMaybe<EmailNotificationSettingsInput>;
+  /** The notification settings to receive via push. */
+  push?: InputMaybe<PushNotificationSettingsInput>;
 };
 
 /** The possible order direction that a `order by` sql can use. */
@@ -5004,12 +6528,16 @@ export type OrganizationStatsChannels = Node & {
 /** Information to aid in pagination. */
 export type PageInfo = {
   __typename?: 'PageInfo';
+  /** The cursor after the last element, for cursor-based pagination. */
+  endCursor?: Maybe<Scalars['String']['output']>;
   /** Indicates whether there are more items in the next page. */
   hasNextPage: Scalars['Boolean']['output'];
   /** Indicates whether there are more items in the previous page. */
   hasPreviousPage: Scalars['Boolean']['output'];
   /** The next page number, if hasNextPage is True. */
   nextPage?: Maybe<Scalars['Int']['output']>;
+  /** The cursor at the first element, for cursor-based pagination. */
+  startCursor?: Maybe<Scalars['String']['output']>;
 };
 
 /** Information about a partner. */
@@ -5017,7 +6545,10 @@ export type Partner = Node & {
   __typename?: 'Partner';
   /** The ID of the object. */
   id: Scalars['ID']['output'];
-  /** The organizations of the partner. */
+  /**
+   * The organizations of the partner.
+   * @deprecated Use `user.organizations`.
+   */
   organizations?: Maybe<OrganizationConnection>;
 };
 
@@ -5044,6 +6575,8 @@ export enum PartnerReportDimension {
   AdErrorReadable = 'AD_ERROR_READABLE',
   /** Aggregate data report by ad format dimension. */
   AdFormat = 'AD_FORMAT',
+  /** Aggregate data report by ai feature name dimension. */
+  AiFeatureName = 'AI_FEATURE_NAME',
   /** Aggregate data report by buyers. */
   Buyer = 'BUYER',
   /** Aggregate data report by buyertypes. */
@@ -5094,6 +6627,8 @@ export enum PartnerReportDimension {
   PlayerSizeBucket = 'PLAYER_SIZE_BUCKET',
   /** Aggregate data report by player title dimension. */
   PlayerTitle = 'PLAYER_TITLE',
+  /** Aggregate data report by player type dimension. */
+  PlayerType = 'PLAYER_TYPE',
   /** Aggregate data report by playlist id dimension. */
   PlaylistId = 'PLAYLIST_ID',
   /** Aggregate data report by playlist title dimension. */
@@ -5102,12 +6637,24 @@ export enum PartnerReportDimension {
   PlaylistType = 'PLAYLIST_TYPE',
   /** Aggregate data report by publisher channel dimension. */
   PublisherChannel = 'PUBLISHER_CHANNEL',
+  /** Aggregate data report by publisher id dimension. */
+  PublisherId = 'PUBLISHER_ID',
   /** Aggregate data report by publisher or parent username dimension. */
   PublisherOrParentUsername = 'PUBLISHER_OR_PARENT_USERNAME',
+  /** Aggregate data report by video rendition format dimension. */
+  RenditionFormat = 'RENDITION_FORMAT',
+  /** Aggregate data report by video rendition fps (Frames Per Second) dimension. */
+  RenditionFps = 'RENDITION_FPS',
+  /** Aggregate data report by video rendition resolution dimension. */
+  RenditionResolution = 'RENDITION_RESOLUTION',
   /** Aggregate data report by video id dimension. */
   VideoId = 'VIDEO_ID',
   /** Aggregate data report by video owner channel slug dimension. */
   VideoOwnerChannelSlug = 'VIDEO_OWNER_CHANNEL_SLUG',
+  /** Aggregate data report by video owner id dimension. */
+  VideoOwnerId = 'VIDEO_OWNER_ID',
+  /** Aggregate data report by video owner username dimension. */
+  VideoOwnerUsername = 'VIDEO_OWNER_USERNAME',
   /** Aggregate data report by video position dimension. */
   VideoPosition = 'VIDEO_POSITION',
   /** Aggregate data report by video title dimension. */
@@ -5193,12 +6740,16 @@ export enum PartnerReportMetric {
   AdViewCompleted = 'AD_VIEW_COMPLETED',
   /** Use ad view not completed metric as report measurement. */
   AdViewNotCompleted = 'AD_VIEW_NOT_COMPLETED',
+  /** Use AI used credits metric as report measurement. */
+  AiUsedCredits = 'AI_USED_CREDITS',
   /** Use bandwidth used live bytes metric as report mesurement. */
   BandwidthUsedLiveBytes = 'BANDWIDTH_USED_LIVE_BYTES',
   /** Use bandwidth used live seconds metric as report mesurement. */
   BandwidthUsedLiveSeconds = 'BANDWIDTH_USED_LIVE_SECONDS',
   /** Use bandwidth used media count metric as report measurement. */
   BandwidthUsedMediaCount = 'BANDWIDTH_USED_MEDIA_COUNT',
+  /** Use bandwidth used bytes metric as report measurement. */
+  BandwidthUsedTotalBytes = 'BANDWIDTH_USED_TOTAL_BYTES',
   /** Use bandwidth used vod bytes metric as report measurement. */
   BandwidthUsedVodBytes = 'BANDWIDTH_USED_VOD_BYTES',
   /** Use bandwidth used vod seconds metric as report measurement. */
@@ -5253,6 +6804,8 @@ export enum PartnerReportMetric {
   NbInventoryGdprMissingFullConsent = 'NB_INVENTORY_GDPR_MISSING_FULL_CONSENT',
   /** Use number of missed impression metric as report measurement. */
   NbMissedImpression = 'NB_MISSED_IMPRESSION',
+  /** Use P1 impressions metric as report measurement. */
+  NbP1Impression = 'NB_P1_IMPRESSION',
   /** Use no_ads metric as report measurement. */
   NoAds = 'NO_ADS',
   /** Use no ads txt inventory metric as report measurement. */
@@ -5293,6 +6846,8 @@ export enum PartnerReportMetric {
   TranscodingUsedLiveMediaCount = 'TRANSCODING_USED_LIVE_MEDIA_COUNT',
   /** Use transcoding used live seconds metric as report measurement. */
   TranscodingUsedLiveSeconds = 'TRANSCODING_USED_LIVE_SECONDS',
+  /** Use transcoding used seconds metric as report measurement. */
+  TranscodingUsedTotalSeconds = 'TRANSCODING_USED_TOTAL_SECONDS',
   /** Use transcoding used vod media count metric as report measurement. */
   TranscodingUsedVodMediaCount = 'TRANSCODING_USED_VOD_MEDIA_COUNT',
   /** Use transcoding used vod seconds metric as report measurement. */
@@ -5350,6 +6905,12 @@ export type PartnerSpaceReportFileArgs = {
   reportToken: Scalars['String']['input'];
 };
 
+/** Represents the payload items used by analytics KPIForList. */
+export type PayloadItemsInput = {
+  field: Scalars['String']['input'];
+  values: Array<Scalars['String']['input']>;
+};
+
 /** Information about a player. */
 export type Player = Node & {
   __typename?: 'Player';
@@ -5395,6 +6956,9 @@ export type PlayerQueue = Node & {
 
 /** Information aboot the player queue. */
 export type PlayerQueueRecordingsArgs = {
+  algorithm?: InputMaybe<RecommendedRecordingAlgorithmName>;
+  fallback?: InputMaybe<Scalars['Boolean']['input']>;
+  filter?: InputMaybe<RecommendedRecordingFilter>;
   first?: InputMaybe<Scalars['Int']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -5422,6 +6986,35 @@ export type PlayerQueueContextArgument = {
   viewId?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** The node at the end of a PointMetricEdge. */
+export type PointMetric = Metric & Node & {
+  __typename?: 'PointMetric';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The sum of the point metrics. */
+  total: Scalars['Int']['output'];
+};
+
+/** The connection type for a Point Metric. */
+export type PointMetricConnection = {
+  __typename?: 'PointMetricConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<PointMetricEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type PointMetricEdge = {
+  __typename?: 'PointMetricEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<PointMetric>;
+};
+
 /** Represents a poll. */
 export type Poll = Node & Thread & {
   __typename?: 'Poll';
@@ -5432,7 +7025,10 @@ export type Poll = Node & Thread & {
   component?: Maybe<Component>;
   /** The ID of the object. */
   id: Scalars['ID']['output'];
-  /** The vote on the poll from the user. */
+  /**
+   * The vote on the poll from the user.
+   * @deprecated Use `voterEngagement`.
+   */
   me?: Maybe<UserPollAnswer>;
   /** The story that elicited a poll. */
   opener?: Maybe<Story>;
@@ -5454,6 +7050,8 @@ export type Poll = Node & Thread & {
   url: Scalars['String']['output'];
   /** The total number of votes for the poll. */
   voterCount: Scalars['Int']['output'];
+  /** The voter engagement information of the Poll. */
+  voterEngagement?: Maybe<VoterEngagement>;
 };
 
 /** The possible actions to a poll answer. */
@@ -5662,6 +7260,63 @@ export enum Promotion {
   Spotlight = 'SPOTLIGHT'
 }
 
+/** Information about a Prompt. */
+export type Prompt = Node & Thread & {
+  __typename?: 'Prompt';
+  /** The chatroom associated with the Prompt. */
+  chatroom?: Maybe<Chatroom>;
+  /** The creation date (DateTime ISO8601) of the Prompt. */
+  createDate: Scalars['DateTime']['output'];
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The story that elicited the Prompt. */
+  opener?: Maybe<Story>;
+  /** The content of the Prompt. */
+  text: Scalars['String']['output'];
+  /** The viewer engagement information of the Prompt. */
+  viewerEngagement?: Maybe<PromptViewerEngagement>;
+};
+
+/** Information about the viewer engagement of a Prompt. */
+export type PromptViewerEngagement = Node & ViewerEngagement & {
+  __typename?: 'PromptViewerEngagement';
+  /** Indicates the heart rating the viewer has given to the Prompt. */
+  hearts?: Maybe<HeartRating>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** Indicates the like rating of the post from the viewer. */
+  likeRating?: Maybe<LikeRating>;
+  /** Indicates whether the viewer has liked the thread. Returns False if the viewer is not connected. */
+  liked?: Maybe<Scalars['Boolean']['output']>;
+};
+
+/** The settings to receive push notifications. */
+export type PushNotificationSettings = Node & {
+  __typename?: 'PushNotificationSettings';
+  /** The notifications on activities to receive. */
+  activity?: Maybe<ActivityNotificationSettings>;
+  /** The notifications on announcements to receive. */
+  announcements?: Maybe<AnnouncementNotificationSettings>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The notifications on insights to receive. */
+  insights?: Maybe<InsightNotificationSettings>;
+  /** The notifications on recommendations to receive. */
+  recommendations?: Maybe<RecommendationNotificationSettings>;
+};
+
+/** The notification settings to receive via push. */
+export type PushNotificationSettingsInput = {
+  /** The notifications on activities to receive. */
+  activity?: InputMaybe<ActivityNotificationSettingsInput>;
+  /** The notifications on announcements to receive. */
+  announcements?: InputMaybe<AnnouncementNotificationSettingsInput>;
+  /** The notifications on insights to receive. */
+  insights?: InputMaybe<InsightNotificationsSettingsInput>;
+  /** The notifications on recommendations to receive. */
+  recommendations?: InputMaybe<RecommendationNotificationSettingsInput>;
+};
+
 /** Represents the quality in a recording. */
 export type Quality = Node & {
   __typename?: 'Quality';
@@ -5721,7 +7376,10 @@ export type Query = {
   feed?: Maybe<PostConnection>;
   /** A hashtag. */
   hashtag?: Maybe<Hashtag>;
-  /** A list of interests. */
+  /**
+   * A list of interests.
+   * @deprecated No longer supported.
+   */
   interests?: Maybe<InterestConnection>;
   /** A live represents a media that is streamed. */
   live?: Maybe<Live>;
@@ -5746,6 +7404,8 @@ export type Query = {
    * @deprecated Use `recording.streamUrls`.
    */
   mediaStreams?: Maybe<MediaStreamsConnection>;
+  /** Access to MojoKit AI-powered content enhancement features. */
+  mojoKit: MojoKitQueries;
   /** Represents a node with an ID. */
   node?: Maybe<Node>;
   /** Access to advanced partner features. */
@@ -5774,9 +7434,15 @@ export type Query = {
   supportedCountries?: Maybe<Array<Maybe<Country>>>;
   /** The threads the story has elicited. */
   threads?: Maybe<ThreadConnection>;
-  /** A topic represents a keyword that is associated to a video. */
+  /**
+   * A topic represents a keyword that is associated to a video.
+   * @deprecated No longer supported.
+   */
   topic?: Maybe<Topic>;
-  /** A list of topics. */
+  /**
+   * A list of topics.
+   * @deprecated No longer supported.
+   */
   topics?: Maybe<TopicConnection>;
   /** Information about the user. */
   user?: Maybe<User>;
@@ -5863,6 +7529,7 @@ export type QueryConversationsArgs = {
   context?: InputMaybe<ConversationContext>;
   filter?: InputMaybe<ConversationFilter>;
   first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<ConversationSort>;
   page?: InputMaybe<Scalars['Int']['input']>;
 };
 
@@ -5880,7 +7547,8 @@ export type QueryFeedArgs = {
 
 /** The query root of Dailymotion's GraphQL API. */
 export type QueryHashtagArgs = {
-  id: Scalars['ID']['input'];
+  id?: InputMaybe<Scalars['ID']['input']>;
+  slug?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -5946,11 +7614,11 @@ export type QueryNodeArgs = {
 export type QueryPlayerArgs = {
   algorithm?: InputMaybe<PlayerAlgorithmName>;
   creatorXid?: InputMaybe<Scalars['String']['input']>;
-  embed?: EmbedType;
-  mediaXid?: InputMaybe<Scalars['String']['input']>;
+  embed?: EmbedFormat;
   page?: InputMaybe<HtmlPage>;
   recordingXid?: InputMaybe<Scalars['String']['input']>;
   videoXid?: InputMaybe<Scalars['String']['input']>;
+  viewId?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -5988,7 +7656,14 @@ export type QueryRecordingArgs = {
 
 
 /** The query root of Dailymotion's GraphQL API. */
+export type QuerySearchArgs = {
+  token?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+/** The query root of Dailymotion's GraphQL API. */
 export type QueryThreadsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<ThreadFilter>;
   first?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -6055,9 +7730,30 @@ export type QueryVideosArgs = {
   videoXids?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
 };
 
+/** The input fields to rate a recommendation. */
+export type RateRecommendationInput = {
+  /** The algorithm used for the recommendation. */
+  algorithm: AlgorithmName;
+  /** The rating percentage of the recommendation. */
+  percentage: Scalars['Int']['input'];
+  /** The source used for the recommendation. */
+  source?: InputMaybe<Scalars['String']['input']>;
+  /** The ID of the story that the recommendation is created for. */
+  storyId: Scalars['ID']['input'];
+};
+
+/** The return fields from rating a recommendation. */
+export type RateRecommendationPayload = {
+  __typename?: 'RateRecommendationPayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
 /** Represents a Reaction in a recording format. */
 export type Reaction = Content & Node & Recording & Thread & {
   __typename?: 'Reaction';
+  /** The chatroom associated with the reaction. */
+  chatroom?: Maybe<Chatroom>;
   /** The date and time (ISO 8601 format) when the reaction was created. */
   createDate: Scalars['DateTime']['output'];
   /**
@@ -6091,14 +7787,22 @@ export type Reaction = Content & Node & Recording & Thread & {
   hlsUrl?: Maybe<Scalars['String']['output']>;
   /** The ID of the object. */
   id: Scalars['ID']['output'];
-  /** Indicates whether the reaction allows comments to be posted. */
+  /**
+   * Indicates whether the reaction allows comments to be posted.
+   * @deprecated No longer supported.
+   */
   isCommentsEnabled?: Maybe<Scalars['Boolean']['output']>;
-  /** Indicates whether the reaction allows reactions to created. */
+  /**
+   * Indicates whether the reaction allows reactions to created.
+   * @deprecated No longer supported.
+   */
   isReactionsEnabled?: Maybe<Scalars['Boolean']['output']>;
   /** The metrics of the reaction. */
   metrics?: Maybe<ReactionMetrics>;
   /** The story that elicited the reaction to be created. */
   opener?: Maybe<Story>;
+  /** Indicates whether the creator of the story has liked the reaction. */
+  openerCreatorLiked: Scalars['Boolean']['output'];
   /**
    * The reactions created on the reaction.
    * @deprecated No longer supported.
@@ -6106,6 +7810,8 @@ export type Reaction = Content & Node & Recording & Thread & {
   reactions?: Maybe<ReactionConnection>;
   /** The share urls of the reaction. */
   shareUrls?: Maybe<ReactionShareUrls>;
+  /** The slug of the reaction. */
+  slug: Scalars['String']['output'];
   /** The stream urls of the reaction. */
   streamUrls?: Maybe<ReactionStreamUrls>;
   /** The subtitles of the reaction. */
@@ -6397,7 +8103,7 @@ export type ReactionVideoCreateInput = {
   /** The URL of the thumbnail image. */
   thumbnailURL?: InputMaybe<Scalars['String']['input']>;
   /** The title of the reaction video. */
-  title: Scalars['String']['input'];
+  title?: InputMaybe<Scalars['String']['input']>;
   /** The URL of the reaction video to get the upload file from. */
   url: Scalars['String']['input'];
   /** The xid of the video that the reaction video is created for. */
@@ -6536,16 +8242,54 @@ export type ReactionViewerEngagement = Node & ViewerEngagement & {
   watchStarted?: Maybe<Scalars['Boolean']['output']>;
 };
 
+/** The notification settings on recommendations to receive. */
+export type RecommendationNotificationSettings = Node & {
+  __typename?: 'RecommendationNotificationSettings';
+  /** Receive notifications to watch unwatched posts in your bookmarks. */
+  bookmarkReminders?: Maybe<Scalars['Boolean']['output']>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** Receive notifications on personalized posts you might like. */
+  personalization?: Maybe<Scalars['Boolean']['output']>;
+};
+
+/** The notifications settings on recommendations to receive. */
+export type RecommendationNotificationSettingsInput = {
+  /** Indicate whether to notifications to watch unwatched posts in your bookmarks. */
+  bookmarkReminders?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Indicate whether to notifications on personalized posts you might like. */
+  personalization?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
 /** Information about a recommended recording. */
 export type RecommendedRecording = Node & {
   __typename?: 'RecommendedRecording';
   /** The algorithm. */
-  algorithm?: Maybe<Algorithm>;
+  algorithm?: Maybe<RecommendedRecordingAlgorithm>;
   /** The ID of the object. */
   id: Scalars['ID']['output'];
   /** The item at the end of the edge. */
   recording?: Maybe<Recording>;
 };
+
+/** Information about the recommendation algorithm. */
+export type RecommendedRecordingAlgorithm = Algorithm & {
+  __typename?: 'RecommendedRecordingAlgorithm';
+  /** The name of the algorithm. */
+  name?: Maybe<RecommendedRecordingAlgorithmName>;
+  /** The version. */
+  version?: Maybe<Scalars['String']['output']>;
+};
+
+/** The possible names for a recommended recording algorithm. */
+export enum RecommendedRecordingAlgorithmName {
+  /** An algorithm to suggest recommendations that encourages engagement. */
+  Engagement = 'ENGAGEMENT',
+  /** An algorithm to suggest recommendations that generate the most revenue. */
+  Monetization = 'MONETIZATION',
+  /** An algorithm to suggest recommendations that attract views. */
+  Views = 'VIEWS'
+}
 
 /** The connection type for Recording. */
 export type RecommendedRecordingConnection = {
@@ -6567,6 +8311,16 @@ export type RecommendedRecordingEdge = {
   node?: Maybe<RecommendedRecording>;
 };
 
+/** The available input fields of a Recommended Recording filter. */
+export type RecommendedRecordingFilter = {
+  /** Filter recommended recordings by create date. */
+  createDate?: InputMaybe<DateTimeOperator>;
+  /** Filter recommended recordings by creator. */
+  creatorXid?: InputMaybe<StringOperator>;
+  /** Filter recommended recordings by organization. */
+  organizationXid?: InputMaybe<StringOperator>;
+};
+
 /** Represents a node with a Recording. */
 export type Recording = {
   /** The date and time (ISO 8601 format) when the recording was created. */
@@ -6576,6 +8330,8 @@ export type Recording = {
    * @deprecated Use `createDate` field.
    */
   createdAt?: Maybe<Scalars['DateTime']['output']>;
+  /** The channel that created the recording. */
+  creator?: Maybe<Channel>;
   /**
    * The URL of the adaptative bitrate manifest using the Apple HTTP Live Streaming
    *   protocol. Without an access token this field contains null, the Dailymotion
@@ -6600,6 +8356,8 @@ export type Recording = {
    * @deprecated Use `shareUrls.permalink` field.
    */
   url?: Maybe<Scalars['String']['output']>;
+  /** The Dailymotion ID of the recording. */
+  xid: Scalars['String']['output'];
 };
 
 
@@ -6687,6 +8445,19 @@ export type RemindUnwatchedVideos = Node & {
   isPushEnabled?: Maybe<Scalars['Boolean']['output']>;
 };
 
+/** The input fields to remove a creator from the blocklist. */
+export type RemoveBlockedInput = {
+  /** The ID of the creator to remove from the blocklist. */
+  id: Scalars['String']['input'];
+};
+
+/** The return fields from removing a creator from the blocklist. */
+export type RemoveBlockedPayload = {
+  __typename?: 'RemoveBlockedPayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
 /** The input fields to remove a collection. */
 export type RemoveCollectionInput = {
   /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
@@ -6740,6 +8511,12 @@ export type RemoveWatchLaterVideoPayload = {
   status?: Maybe<Status>;
 };
 
+/** The input fields to remove a `Watched` from the watched list of the connected user. */
+export type RemoveWatchedInput = {
+  /** "The Dailymotion ID of the `Watched` to remove. */
+  id: Scalars['ID']['input'];
+};
+
 /** The input fields to remove a video from the `Watched` list of the connected user. */
 export type RemoveWatchedVideoInput = {
   /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
@@ -6778,6 +8555,16 @@ export type ReorderCollectionMediaPayload = {
   status?: Maybe<Status>;
 };
 
+/** The input fields to reorder a save in a collection. */
+export type ReorderSaveInput = {
+  /** The ID of the collection. */
+  collectionId: Scalars['ID']['input'];
+  /** The ID of the save to move. */
+  id: Scalars['ID']['input'];
+  /** The target ID of the save to swap with. */
+  targetId: Scalars['ID']['input'];
+};
+
 /** The available input fields to report a `Comment`. */
 export type ReportCommentInput = {
   /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
@@ -6788,7 +8575,7 @@ export type ReportCommentInput = {
   email?: InputMaybe<Scalars['String']['input']>;
   /** The first name of the user making the report. */
   firstName?: InputMaybe<Scalars['String']['input']>;
-  /** The ID of the comment to report. */
+  /** The ID of the Comment to report. */
   id?: InputMaybe<Scalars['ID']['input']>;
   /** Language code used to communicate with the reporter. if null will guess from request header */
   languageCode?: InputMaybe<Scalars['String']['input']>;
@@ -6807,6 +8594,24 @@ export type ReportCommentPayload = {
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The status of the mutation. */
   status?: Maybe<Status>;
+};
+
+/** The input fields to report content. */
+export type ReportContentInput = {
+  /** The consent of acknowledgments for submitting the report. */
+  acknowledgements?: InputMaybe<ReportingAcknowledgements>;
+  /** The action request of the report. */
+  action?: InputMaybe<ReportingAction>;
+  /** The message body of the report. */
+  message?: InputMaybe<Scalars['String']['input']>;
+  /** The original work that is copyrighted. */
+  originalWork?: InputMaybe<CopyrightedContent>;
+  /** The information of the reporter submitting the report. */
+  reporter: ReporterInput;
+  /** The urls of the stories containing the content to report. */
+  urls: Array<Scalars['String']['input']>;
+  /** The violation reason to report the content. */
+  violation: ContentViolation;
 };
 
 /** The available input fields to report a `Creator`. */
@@ -6887,6 +8692,13 @@ export type ReportRecordingPayload = {
   status?: Maybe<Status>;
 };
 
+/** The return fields from reporting a recording. */
+export type ReportStoryPayload = {
+  __typename?: 'ReportStoryPayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
 /** The input fields to report a video. */
 export type ReportVideoInput = {
   /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
@@ -6923,6 +8735,14 @@ export type ReportVideoPayload = {
   status?: Maybe<Status>;
 };
 
+/** Represents the relationship to the owner of the copyrighted work. */
+export enum ReporterClaimant {
+  /** Represents other -- company, entity, or client. */
+  Other = 'OTHER',
+  /** Represents self. */
+  Self = 'SELF'
+}
+
 /** The input to verify user report reporter email */
 export type ReporterEmailVerifyInput = {
   /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
@@ -6933,22 +8753,68 @@ export type ReporterEmailVerifyInput = {
   verificationToken: Scalars['String']['input'];
 };
 
-/**
- *
- * Payload for mutation verifyUserReportReporterEmail
- *
- */
+/** Payload for mutation reporterEmailVerify */
 export type ReporterEmailVerifyPayload = {
   __typename?: 'ReporterEmailVerifyPayload';
   /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: Maybe<Scalars['String']['output']>;
-  /**
-   *
-   *  The status of the mutation.
-   *
-   */
+  /** The status of the mutation. */
   status: Status;
 };
+
+/** The input fields of the reporter submitting the report. */
+export type ReporterInput = {
+  /** The company legal status of the reporter. */
+  companyLegalStatus?: InputMaybe<Scalars['String']['input']>;
+  /** The company name of the reporter. */
+  companyName?: InputMaybe<Scalars['String']['input']>;
+  /** The electronic signature of the reporter. */
+  electronicSignature: Scalars['String']['input'];
+  /** The email address of the reporter. */
+  email: Scalars['String']['input'];
+  /** The first name of the reporter. */
+  firstName?: InputMaybe<Scalars['String']['input']>;
+  /** The last name of the reporter. */
+  lastName?: InputMaybe<Scalars['String']['input']>;
+  /** The legal name of the reporter. */
+  legalName?: InputMaybe<Scalars['String']['input']>;
+  /** The role of the reporter. */
+  role: ReportingRole;
+};
+
+/** The input fields of the acknowledgements for submitting the report. */
+export type ReportingAcknowledgements = {
+  /** I accept service of process from the person who provided notification or an agent of such person. */
+  acceptService?: InputMaybe<Scalars['Boolean']['input']>;
+  /** I certify the accuracy of the report. */
+  accurate: Scalars['Boolean']['input'];
+  /** I state in good faith that the use of the content is unauthorized. */
+  copyrightUnauthorized: Scalars['Boolean']['input'];
+  /** I acknowledge and agree that the report will be processed in accordance to LCEN. */
+  lawConfidenceDigitalEconomy: Scalars['Boolean']['input'];
+  /** I acknowledge that the report may result in civil or criminal penalties. */
+  legalConsequences: Scalars['Boolean']['input'];
+  /** I acknowledge that the report may be used for statistical purposes (including those required by law). */
+  statisticalUsage: Scalars['Boolean']['input'];
+};
+
+/** The possible actions for submitting a report. */
+export enum ReportingAction {
+  /** The action to appeal a report. */
+  Appeal = 'APPEAL',
+  /** The action to submit a report. */
+  Report = 'REPORT'
+}
+
+/** The possible roles of a reporter submitting a report. */
+export enum ReportingRole {
+  /** The representation as a company of the reporter. */
+  Company = 'COMPANY',
+  /** The representation as an individual of the reporter. */
+  Individual = 'INDIVIDUAL',
+  /** The representation as a legal entity of the reporter. */
+  Legal = 'LEGAL'
+}
 
 /** The input fields to request an activation code. */
 export type RequestActivationCodeInput = {
@@ -7006,6 +8872,8 @@ export enum Resolution {
   Sd_240 = 'SD_240',
   /** Resolution in 360p (Standard Definition). */
   Sd_360 = 'SD_360',
+  /** Resolution in 384p (Standard Definition). */
+  Sd_384 = 'SD_384',
   /** Resolution in 480p (Standard Definition). */
   Sd_480 = 'SD_480',
   /** Resolution in 540p (Standard Definition). */
@@ -7137,6 +9005,21 @@ export type RuleEdge = {
   __typename?: 'RuleEdge';
   /** The item at the end of the edge. */
   node?: Maybe<Rule>;
+};
+
+/** The input fields to add/remove a save to/from a collection. */
+export type SaveInput = {
+  /** The ID of the collection. */
+  collectionId: Scalars['ID']['input'];
+  /** The ID to save to the collection. */
+  id: Scalars['ID']['input'];
+};
+
+/** The return fields from modifying a collection. */
+export type SavePayload = {
+  __typename?: 'SavePayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
 };
 
 /** Perform a search across resources. */
@@ -7306,6 +9189,8 @@ export type SectionConnection = {
 
 /** The input fields of a section context argument. */
 export type SectionContextArgument = {
+  /** The action gesture performed by the user. */
+  actionGesture?: InputMaybe<ActionGesture>;
   /** The list of category IDs. */
   categoryIds?: InputMaybe<Array<InputMaybe<Scalars['Int']['input']>>>;
   /** The Dailymotion ID of the collection. */
@@ -7325,6 +9210,28 @@ export type SectionEdge = {
   __typename?: 'SectionEdge';
   /** The item at the end of the edge. */
   node?: Maybe<Section>;
+};
+
+/** The return fields from requesting a new email confirmation code. */
+export type SendConfirmEmailCodePayload = {
+  __typename?: 'SendConfirmEmailCodePayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
+/** The input fields to send a message. */
+export type SendMessageInput = {
+  /** Body of the message. */
+  body: MessageBody;
+  /** Subject of the message. */
+  subject: MessageSubject;
+};
+
+/** The return fields from sending a message. */
+export type SendMessagePayload = {
+  __typename?: 'SendMessagePayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
 };
 
 /** The input fields to send a transactional email. */
@@ -7359,6 +9266,32 @@ export type SendVerifyEmailCodePayload = {
   __typename?: 'SendVerifyEmailCodePayload';
   /** The status of the mutation. */
   status?: Maybe<Status>;
+};
+
+/** Represents a sentence with enriched elements */
+export type SentenceWithEnrichedElements = {
+  __typename?: 'SentenceWithEnrichedElements';
+  /** The elements */
+  elements: EnrichedElements;
+  /** The sentence */
+  sentence: Scalars['String']['output'];
+};
+
+/** Represents a sentence with segments in the context of a speech to text audio */
+export type SentenceWithSegments = {
+  __typename?: 'SentenceWithSegments';
+  /** The matching emoji that represents the best the sentiment/topic of the sentence */
+  emoji?: Maybe<Scalars['String']['output']>;
+  /** The end time of the sentence in the audio */
+  end: Scalars['Float']['output'];
+  /** The important word in the sentence */
+  highlightedWord?: Maybe<Scalars['String']['output']>;
+  /** The start time of the sentence in the audio */
+  start: Scalars['Float']['output'];
+  /** The text of the sentence */
+  text: Scalars['String']['output'];
+  /** The words of the sentence */
+  words: Array<Maybe<TextWithTimings>>;
 };
 
 /** Information about the share urls. */
@@ -7399,6 +9332,82 @@ export type SharingUrlEdge = {
   /** The item at the end of the edge. */
   node?: Maybe<SharingUrl>;
 };
+
+/** Information about the social urls of a Channel. */
+export type SocialUrls = Node & {
+  __typename?: 'SocialUrls';
+  /** The facebook url of the channel. */
+  facebook?: Maybe<Scalars['String']['output']>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The instagram url of the channel. */
+  instagram?: Maybe<Scalars['String']['output']>;
+  /** The pinterest url of the channel. */
+  pinterest?: Maybe<Scalars['String']['output']>;
+  /** The twitter url of the channel. */
+  twitter?: Maybe<Scalars['String']['output']>;
+  /** The website url of the channel. */
+  website?: Maybe<Scalars['String']['output']>;
+};
+
+/** The input fields to update the social urls of a channel. */
+export type SocialUrlsInput = {
+  /** The facebook url of the channel. */
+  facebook?: InputMaybe<Scalars['String']['input']>;
+  /** The instagram url of the channel. */
+  instagram?: InputMaybe<Scalars['String']['input']>;
+  /** The pinterest url of the channel. */
+  pinterest?: InputMaybe<Scalars['String']['input']>;
+  /** The twitter url of the channel. */
+  twitter?: InputMaybe<Scalars['String']['input']>;
+  /** The website url of the channel. */
+  website?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Represents a sound effect element */
+export type SoundEffectElement = {
+  __typename?: 'SoundEffectElement';
+  /** The highlighted word */
+  highlightedWord?: Maybe<Scalars['String']['output']>;
+  /** The url */
+  url: Scalars['String']['output'];
+};
+
+/**
+ *
+ * The input fields for speech audio conversion.
+ *
+ */
+export type SpeechAudioInput = {
+  /**
+   *
+   *   The URL of the audio file to convert to text.
+   *
+   */
+  audioUrl: Scalars['String']['input'];
+  /**
+   *
+   *   Whether to include emojis in the converted text.
+   *
+   */
+  includesEmojis?: InputMaybe<Scalars['Boolean']['input']>;
+  /**
+   *
+   *   The language code for the audio. Use 'auto' for automatic detection.
+   *
+   */
+  languageCode?: Scalars['String']['input'];
+};
+
+/** The possible values for a provider used for speech to text. */
+export enum SpeechToTextProvider {
+  /** A provider that represents Assembly AI. */
+  AssemblyAi = 'ASSEMBLY_AI',
+  /** A provider that represents Gladia. */
+  Gladia = 'GLADIA',
+  /** A provider that represents Speechmatics. */
+  Speechmatics = 'SPEECHMATICS'
+}
 
 /** The possible values for a mutation status. */
 export enum Status {
@@ -7445,7 +9454,7 @@ export type StoryFilter = {
 export type StoryOperator = {
   /** Short for equal, must match the given data exactly. */
   eq?: InputMaybe<StoryTypename>;
-  /** Short for in array, must NOT be an element of the array. */
+  /** Short for in array, must be an element of the array. */
   in?: InputMaybe<Array<StoryTypename>>;
 };
 
@@ -7498,6 +9507,8 @@ export type StreamUrls = {
 export type StringOperator = {
   /** Short for equal, must match the given data exactly. */
   eq?: InputMaybe<Scalars['String']['input']>;
+  /** Short for in array, must be an element of the array. */
+  in?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 /** Information about a Subdivision. */
@@ -7640,6 +9651,17 @@ export type SupportedLanguageEdge = {
   node?: Maybe<SupportedLanguage>;
 };
 
+/** Represents a text with timings in the context of a speech to text audio */
+export type TextWithTimings = {
+  __typename?: 'TextWithTimings';
+  /** The end time of the text in the audio */
+  end: Scalars['Float']['output'];
+  /** The start time of the text in the audio */
+  start: Scalars['Float']['output'];
+  /** The text */
+  text: Scalars['String']['output'];
+};
+
 /** Represents a Thread. */
 export type Thread = {
   /** The story that elicited a response. */
@@ -7676,9 +9698,38 @@ export type ThreadFilter = {
   thread?: InputMaybe<ThreadOperator>;
 };
 
+/** The node at the end of a ThreadMetricEdge. */
+export type ThreadMetric = Metric & Node & {
+  __typename?: 'ThreadMetric';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The total count of the thread metric. A null value indicates that it is hidden or not available. */
+  total?: Maybe<Scalars['Int']['output']>;
+};
+
+/** The connection type for a ThreadMetric. */
+export type ThreadMetricConnection = {
+  __typename?: 'ThreadMetricConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<ThreadMetricEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type ThreadMetricEdge = {
+  __typename?: 'ThreadMetricEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<ThreadMetric>;
+};
+
 /** The available input fields of a story operator. */
 export type ThreadOperator = {
-  /** Short for in array, must NOT be an element of the array. */
+  /** Short for in array, must be an element of the array. */
   in?: InputMaybe<Array<ThreadTypename>>;
 };
 
@@ -7688,8 +9739,12 @@ export enum ThreadTypename {
   Comment = 'COMMENT',
   /** A thread that represents a `poll`. */
   Poll = 'POLL',
+  /** A thread that represents a `Prompt`. */
+  Prompt = 'PROMPT',
   /** A thread that represents a `reaction`. */
-  Reaction = 'REACTION'
+  Reaction = 'REACTION',
+  /** A thread that represents a `Title`. */
+  Title = 'TITLE'
 }
 
 /** The available height sizes for an Thumbnail. */
@@ -7732,6 +9787,60 @@ export type Tips = Node & {
   isEmailEnabled?: Maybe<Scalars['Boolean']['output']>;
   /** Indicates whether the push notification setting is enabled. */
   isPushEnabled?: Maybe<Scalars['Boolean']['output']>;
+};
+
+/** Information about a Title. */
+export type Title = Node & Thread & {
+  __typename?: 'Title';
+  /** The chatroom associated with the Title. */
+  chatroom?: Maybe<Chatroom>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The metrics of the Title. */
+  metrics?: Maybe<TitleMetrics>;
+  /** The story that elicited the Title. */
+  opener?: Maybe<Story>;
+  /** Indicates whether the creator of the story has liked the Title. */
+  openerCreatorLiked: Scalars['Boolean']['output'];
+  /** The content of the Title. */
+  text: Scalars['String']['output'];
+  /** The viewer engagement information of the Title. */
+  viewerEngagement?: Maybe<TitleViewerEngagement>;
+};
+
+/** The engagement metrics of a Title. */
+export type TitleEngagementMetrics = Node & {
+  __typename?: 'TitleEngagementMetrics';
+  /** The bookmark metrics of the Title. */
+  bookmarks?: Maybe<BookmarkMetricConnection>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+};
+
+
+/** The engagement metrics of a Title. */
+export type TitleEngagementMetricsBookmarksArgs = {
+  filter?: InputMaybe<BookmarkFilter>;
+};
+
+/** The metrics of a Title. */
+export type TitleMetrics = Node & {
+  __typename?: 'TitleMetrics';
+  /** The engagement metrics of the Title. */
+  engagement?: Maybe<TitleEngagementMetrics>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+};
+
+/** Information about the viewer engagement of a Title. */
+export type TitleViewerEngagement = Node & ViewerEngagement & {
+  __typename?: 'TitleViewerEngagement';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** Indicates the like rating of the post from the viewer. */
+  likeRating?: Maybe<LikeRating>;
+  /** Indicates whether the viewer has liked the Title. Returns False if the viewer is not connected. */
+  liked?: Maybe<Scalars['Boolean']['output']>;
 };
 
 /** A topic represents a keyword that is associated to a media. */
@@ -8042,12 +10151,18 @@ export type UpdateChannelInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   /** The display name of the channel. */
   displayName?: InputMaybe<Scalars['String']['input']>;
-  /** The external links of the channel. */
+  /** @deprecate(reason: "Use `socialUrls`.") - The external links of the channel. */
   externalLinks?: InputMaybe<ChannelExternalLinksInput>;
   /** The language of the channel. */
   language?: InputMaybe<Scalars['String']['input']>;
-  /** The name of the channel. */
+  /** The username of the channel. */
   name?: InputMaybe<Scalars['String']['input']>;
+  /** @deprecate(reason: "Use `updateChannelSettings`.") - The settings on a channel. */
+  settings?: InputMaybe<ChannelSettingsInput>;
+  /** The social urls of the channel. */
+  socialUrls?: InputMaybe<SocialUrlsInput>;
+  /** The username of the channel. */
+  username?: InputMaybe<Scalars['String']['input']>;
   /** The Dailymotion ID of the channel to update. */
   xid: Scalars['String']['input'];
 };
@@ -8073,8 +10188,10 @@ export type UpdateCollectionInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   /** The name of the collection. */
   name?: InputMaybe<Scalars['String']['input']>;
-  /** Indicate whether the collection is private. */
+  /** @deprecated(reason: "settings.visibility` input arg.") - Indicate whether the collection is private. */
   private?: InputMaybe<Scalars['Boolean']['input']>;
+  /** The settings when updating a collection. */
+  settings?: InputMaybe<CollectionSettingsInput>;
 };
 
 /** The return fields from updating a collection. */
@@ -8214,30 +10331,42 @@ export type UpdateUserPayload = {
 
 /** The input fields to update a video. */
 export type UpdateVideoInput = {
+  /** Whether the video is AI-altered content. */
+  aiAltered?: InputMaybe<Scalars['Boolean']['input']>;
+  /** @deprecated(reason: "Use `settings.audience` input arg.") - Indicates the target audience the video is created for. */
+  audience?: InputMaybe<AudienceGuide>;
   /** The category of the video. */
   category?: InputMaybe<MediaCategory>;
   /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The description of the video. */
   description?: InputMaybe<Scalars['String']['input']>;
+  /** Indicates whether the video is exclusive to Dailymotion. */
+  exclusive?: InputMaybe<Scalars['Boolean']['input']>;
   /** the hashtags of the video */
   hashtags?: InputMaybe<Array<Scalars['String']['input']>>;
-  /** Indicates whether the video is created for kids. */
+  /** @deprecated(reason: "Use `audience` input arg.") - Indicates whether the video is created for kids. */
   isCreatedForKids?: InputMaybe<Scalars['Boolean']['input']>;
   /** The language of the video. */
   language?: InputMaybe<Scalars['String']['input']>;
+  /** Indicate whether the video has paid partnership. */
+  paidPartnership?: InputMaybe<Scalars['Boolean']['input']>;
   /** The password of the video. When setting a value on this field, the video visibility changes to `password protected`. */
   password?: InputMaybe<Scalars['String']['input']>;
-  /** Indicates whether the video is private. */
+  /** @deprecated(reason: "Use `settings.visibility` input arg.") - Indicates whether the video is private. */
   private?: InputMaybe<Scalars['Boolean']['input']>;
   /** Indicates whether the video is published. */
   published?: InputMaybe<Scalars['Boolean']['input']>;
+  /** The settings of the video. */
+  settings?: InputMaybe<VideoSettingsInput>;
   /** The list of tags to associate to the video. */
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   /** The title of the video. */
   title?: InputMaybe<Scalars['String']['input']>;
   /** The URL of the video. */
   url?: InputMaybe<Scalars['String']['input']>;
+  /** @deprecated(reason: "Use `settings.visibility` input arg.")  - The visibility of the Video. */
+  visibility?: InputMaybe<Visibility>;
   /** The Dailymotion ID of the video to update. */
   xid: Scalars['String']['input'];
 };
@@ -8280,7 +10409,10 @@ export type User = Node & {
   avatarURL?: Maybe<Scalars['String']['output']>;
   /** The user's birthday in (DateTime ISO8601). */
   birthday?: Maybe<Scalars['DateTime']['output']>;
-  /** Indicates whether the user can access to partner HQ. */
+  /**
+   * Indicates whether the user can access to partner HQ.
+   * @deprecated Use `organizations`.
+   */
   canAccessPartnerHQ: Scalars['Boolean']['output'];
   /**
    * Indicates whether the user can change its nickname.
@@ -8328,7 +10460,10 @@ export type User = Node & {
    * @deprecated Use `channel.followings` field.
    */
   followedChannels?: Maybe<FollowedChannelConnection>;
-  /** The topics the user is following. */
+  /**
+   * The topics the user is following.
+   * @deprecated No longer supported.
+   */
   followedTopics?: Maybe<FollowedTopicConnection>;
   /**
    * The users that are following the user.
@@ -8367,7 +10502,10 @@ export type User = Node & {
   hasOrganizationMemberships: Scalars['Boolean']['output'];
   /** The ID of the object. */
   id: Scalars['ID']['output'];
-  /** The interests of the user. */
+  /**
+   * The interests of the user.
+   * @deprecated No longer supported.
+   */
   interests?: Maybe<UserInterestConnection>;
   /** Indicates whether the user is an admin. */
   isAdmin: Scalars['Boolean']['output'];
@@ -8409,11 +10547,17 @@ export type User = Node & {
    * @deprecated Use `channel.name`
    */
   nickname?: Maybe<Scalars['String']['output']>;
-  /** The notification settings of the user. */
+  /**
+   * The notification settings of the user.
+   * @deprecated Use `me.channel.settings.notifications`.
+   */
   notificationSettings?: Maybe<NotificationSettings>;
   /** The organizations created by the user. */
   organizations?: Maybe<OrganizationConnection>;
-  /** The advanced data available if the user is a partner. */
+  /**
+   * The advanced data available if the user is a partner.
+   * @deprecated No longer supported.
+   */
   partner?: Maybe<Partner>;
   /**
    * The reaction videos created by the user.
@@ -8448,9 +10592,15 @@ export type User = Node & {
    * @deprecated Use `watchLaterMedias` field.
    */
   watchLater?: Maybe<VideoConnection>;
-  /** The medias the user has saved to watch later. */
+  /**
+   * The medias the user has saved to watch later.
+   * @deprecated Use `channel.bookmarks` with `filter: { bookmark: { eq: FAVORITE }}`.
+   */
   watchLaterMedias?: Maybe<MediaConnection>;
-  /** The medias the user has watched. */
+  /**
+   * The medias the user has watched.
+   * @deprecated Use `channel.history` with `filter: { activity: { eq: WATCHED }}`.
+   */
   watchedMedias?: Maybe<MediaConnection>;
   /**
    * The videos the user has watched.
@@ -8975,6 +11125,8 @@ export enum UserSubscriptionsType {
 /** Information about a video. */
 export type Video = Content & Node & Recording & {
   __typename?: 'Video';
+  /** Indicates whether the video is AI-altered content. */
+  aiAltered?: Maybe<Scalars['Boolean']['output']>;
   /**
    * Indicates whether the video can be embedded outside of Dailymotion.
    * @deprecated Use `settings.embeddable` field.
@@ -8982,6 +11134,8 @@ export type Video = Content & Node & Recording & {
   allowEmbed?: Maybe<Scalars['Boolean']['output']>;
   /** The aspect ratio of the video (e.g. 1.33333 for 4/3, 1.77777 for 16/9). */
   aspectRatio?: Maybe<Scalars['Float']['output']>;
+  /** Indicates the target audience the video is created for. */
+  audience?: Maybe<AudienceGuide>;
   /**
    * The best available quality of the video.
    * @deprecated Use `quality` field.
@@ -9001,6 +11155,8 @@ export type Video = Content & Node & Recording & {
    * @deprecated Use `creator` field.
    */
   channel?: Maybe<Channel>;
+  /** The chapters of the video. */
+  chapters?: Maybe<ChapterConnection>;
   /** The channel claiming revenue sharing on the video. */
   claimer?: Maybe<Channel>;
   /**
@@ -9044,6 +11200,10 @@ export type Video = Content & Node & Recording & {
    * @deprecated Use `embed.url` field.
    */
   embedURL?: Maybe<Scalars['String']['output']>;
+  /** Indicates whether the video is exclusive to Dailymotion. */
+  exclusive?: Maybe<Scalars['Boolean']['output']>;
+  /** The URL of the first frame. */
+  firstFrame?: Maybe<Image>;
   /** The geoblocked countries of the video. */
   geoblockedCountries?: Maybe<GeoblockedCountries>;
   /** The country codes (ISO 3166-1 alpha-2) that are allowed or denied by the video. */
@@ -9076,7 +11236,10 @@ export type Video = Content & Node & Recording & {
   hlsUrl?: Maybe<Scalars['String']['output']>;
   /** The ID of the object. */
   id: Scalars['ID']['output'];
-  /** The interests associated to the video. */
+  /**
+   * The interests associated to the video.
+   * @deprecated No longer supported.
+   */
   interests?: Maybe<InterestConnection>;
   /** Indicates whether the video is 360°. */
   is360?: Maybe<Scalars['Boolean']['output']>;
@@ -9096,14 +11259,20 @@ export type Video = Content & Node & Recording & {
    * @deprecated Use `settings.threadsDisabled` field.
    */
   isCommentsEnabled?: Maybe<Scalars['Boolean']['output']>;
-  /** Indicates whether the video is "Created for Kids" (intends to target an audience of age 16 and under). */
+  /**
+   * Indicates whether the video is "Created for Kids" (intends to target an audience of age 16 and under).
+   * @deprecated Use `audience` field.
+   */
   isCreatedForKids?: Maybe<Scalars['Boolean']['output']>;
   /**
    * Indicates whether the video can be downloaded.
    * @deprecated Use `settings.downloadable` field.
    */
   isDownloadable?: Maybe<Scalars['Boolean']['output']>;
-  /** Indicates whether the video is explicit. */
+  /**
+   * Indicates whether the video is explicit.
+   * @deprecated Use `audience` field.
+   */
   isExplicit?: Maybe<Scalars['Boolean']['output']>;
   /** Indicates whether the video is in the specified collection. */
   isInCollection?: Maybe<Scalars['Boolean']['output']>;
@@ -9120,7 +11289,10 @@ export type Video = Content & Node & Recording & {
   isLiked?: Maybe<Scalars['Boolean']['output']>;
   /** Indicates whether the video is password-protected. */
   isPasswordProtected?: Maybe<Scalars['Boolean']['output']>;
-  /** Indicates whether the video is private. */
+  /**
+   * Indicates whether the video is private.
+   * @deprecated Use `visibility` field.
+   */
   isPrivate?: Maybe<Scalars['Boolean']['output']>;
   /** Indicates whether the video is published. */
   isPublished?: Maybe<Scalars['Boolean']['output']>;
@@ -9151,8 +11323,13 @@ export type Video = Content & Node & Recording & {
   metrics?: Maybe<VideoMetrics>;
   /** The moderation information of the video. */
   moderation?: Maybe<MediaModeration>;
-  /** The next set of videos after the video. */
+  /**
+   * The next set of videos after the video.
+   * @deprecated No longer supported.
+   */
   nextVideos?: Maybe<VideoConnection>;
+  /** Indicates whether the video has paid partnership. */
+  paidPartnership?: Maybe<Scalars['Boolean']['output']>;
   /** The resolution quality of the the video. */
   quality?: Maybe<Quality>;
   /**
@@ -9209,7 +11386,10 @@ export type Video = Content & Node & Recording & {
   thumbnails?: Maybe<Thumbnails>;
   /** The title of the video. */
   title?: Maybe<Scalars['String']['output']>;
-  /** The list of topics related to the media. */
+  /**
+   * The list of topics related to the media.
+   * @deprecated No longer supported.
+   */
   topics?: Maybe<TopicConnection>;
   /** The transcript of the video. */
   transcript?: Maybe<CaptionConnection>;
@@ -9234,6 +11414,8 @@ export type Video = Content & Node & Recording & {
   viewCount?: Maybe<Scalars['Int']['output']>;
   /** The viewer engagement information of the video. */
   viewerEngagement?: Maybe<VideoViewerEngagement>;
+  /** The visibility of the Video. */
+  visibility?: Maybe<Visibility>;
   /** The width of the video (px). */
   width?: Maybe<Scalars['Int']['output']>;
   /** The Dailymotion ID of the video. */
@@ -9244,6 +11426,13 @@ export type Video = Content & Node & Recording & {
 /** Information about a video. */
 export type VideoCategoriesArgs = {
   filter: CategoryFilter;
+};
+
+
+/** Information about a video. */
+export type VideoChaptersArgs = {
+  first?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -9266,6 +11455,12 @@ export type VideoCommentsArgs = {
 export type VideoCuratedCategoriesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/** Information about a video. */
+export type VideoFirstFrameArgs = {
+  height: ThumbnailHeight;
 };
 
 
@@ -9427,12 +11622,24 @@ export type VideoEngagementMetrics = Node & PostEngagementMetrics & {
   bookmarks?: Maybe<BookmarkMetricConnection>;
   /** The comment metrics of the video. */
   comments?: Maybe<CommentMetricConnection>;
+  /** The heart metrics of the video. */
+  hearts?: Maybe<HeartMetricConnection>;
   /** The ID of the object. */
   id: Scalars['ID']['output'];
-  /** The like metrics of the video. */
+  /**
+   * The like metrics of the video.
+   * @deprecated No longer supported.
+   */
   likes?: Maybe<LikeMetricConnection>;
+  /**
+   * The point metrics of the video.
+   * @deprecated Use `metrics.engagement.hearts(filter: { emoji: { eq: PINK_HEART }})`.
+   */
+  points?: Maybe<PointMetricConnection>;
   /** The reaction metrics of the video. */
   reactions?: Maybe<ReactionMetricConnection>;
+  /** The thread metrics of the video. */
+  threads?: Maybe<ThreadMetricConnection>;
 };
 
 
@@ -9443,12 +11650,20 @@ export type VideoEngagementMetricsBookmarksArgs = {
 
 
 /** The engagement metrics of a Video. */
+export type VideoEngagementMetricsHeartsArgs = {
+  filter?: InputMaybe<HeartFilter>;
+};
+
+
+/** The engagement metrics of a Video. */
 export type VideoEngagementMetricsLikesArgs = {
   filter?: InputMaybe<LikeMetricFilter>;
 };
 
 /** The available input fields of a Video filter. */
 export type VideoFilter = {
+  /** Filter videos by its target audience. */
+  audience?: InputMaybe<AudienceGuideOperator>;
   /** Filter videos by categoryId. */
   categoryId?: InputMaybe<IdOperator>;
   /** Filter videos by visibility. */
@@ -9523,6 +11738,16 @@ export type VideoSettings = Node & {
   id: Scalars['ID']['output'];
   /** Indicates whether threads (comments and reactions) are disabled. */
   threadsDisabled?: Maybe<Scalars['Boolean']['output']>;
+};
+
+/** The default settings when creating a video. */
+export type VideoSettingsInput = {
+  /** Indicates the target audience the video is created for. */
+  audience?: InputMaybe<AudienceGuide>;
+  /** Indicate whether responses (comments or reactions) are disabled by default when creating a video. */
+  threadsDisabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Indicates the visibility of the video. */
+  visibility?: InputMaybe<Visibility>;
 };
 
 /** Information about the share urls of a Video. */
@@ -9633,8 +11858,13 @@ export type VideoStatsViews = Node & {
 export enum VideoStatus {
   /** The video has been deleted. */
   Deleted = 'DELETED',
-  /** The video has an encoding error. */
+  /**
+   * The video has an encoding error.
+   * @deprecated Use `ERROR`.
+   */
   EncodingError = 'ENCODING_ERROR',
+  /** The video has an error. */
+  Error = 'ERROR',
   /** The video is processing. */
   Processing = 'PROCESSING',
   /** The video is published. */
@@ -9750,18 +11980,39 @@ export type VideoViewMetrics = Node & {
 /** Information about the viewer engagement of a Video. */
 export type VideoViewerEngagement = Node & ViewerEngagement & {
   __typename?: 'VideoViewerEngagement';
-  /** Indicates whether the video is bookmarked by the viewer. Returns False if the viewer is not connected. */
+  /**
+   * Indicates whether the video is bookmarked by the viewer. Returns False if the viewer is not connected.
+   * @deprecated Use `favorited`, `liked`, or `saved`.
+   */
   bookmarked?: Maybe<Scalars['Boolean']['output']>;
   /** Indicates whether the post is commented by the connected user. Returns False if the user is not connected.  */
   commented?: Maybe<Scalars['Boolean']['output']>;
   /** Indicates whether the viewer has the video in its watch later list. Returns False if the viewer is not connected. */
   favorited?: Maybe<Scalars['Boolean']['output']>;
+  /**
+   * Indicates the heart likeness the viewer has given to the Video.
+   * @deprecated Use `hearts.emoji`.
+   */
+  hearted?: Maybe<Hearted>;
+  /** Indicates the heart rating the viewer has given to the Video. */
+  hearts?: Maybe<HeartRating>;
   /** The ID of the object. */
   id: Scalars['ID']['output'];
-  /** Indicates the like rating of the video from the viewer. */
+  /**
+   * Indicates the like rating of the video from the viewer.
+   * @deprecated No longer supported. Use `hearted`.
+   */
   likeRating?: Maybe<LikeRating>;
-  /** Indicates whether the viewer has liked the comment. Returns False if the viewer is not connected. */
+  /**
+   * Indicates whether the viewer has liked the video. Returns False if the viewer is not connected.
+   * @deprecated No longer supported. Use `hearted`.
+   */
   liked?: Maybe<Scalars['Boolean']['output']>;
+  /**
+   * The amount of points given from the viewer to the Video.
+   * @deprecated Use `hearts.amount`.
+   */
+  points?: Maybe<Scalars['Int']['output']>;
   /** Indicates whether the viewer has reacted to the video. Returns False if the viewer is not connected. */
   reacted?: Maybe<Scalars['Boolean']['output']>;
   /** Indicates whether the viewer has added the video to one of its collections. Returns False if the viewer is not connected. */
@@ -9770,6 +12021,14 @@ export type VideoViewerEngagement = Node & ViewerEngagement & {
   watchCompleted?: Maybe<Scalars['Boolean']['output']>;
   /** Indicates whether the viewer has started watching the video. Returns False if the viewer is not connected. */
   watchStarted?: Maybe<Scalars['Boolean']['output']>;
+};
+
+/** The context of the viewer. */
+export type ViewerContext = {
+  /** The following context of the viewer. */
+  following?: InputMaybe<FollowingContext>;
+  /** The history context of the viewer. */
+  history?: InputMaybe<HistoryContext>;
 };
 
 /** Information about the viewer engagement of a Post. */
@@ -9793,9 +12052,11 @@ export type Views = Node & {
 
 /** The visibility of a content. */
 export enum Visibility {
-  /** Content that is private, viewable to the owner only or with a password. */
+  /** Offsite only - content that is not viewable on dailymotion but on other sites. */
+  Hidden = 'HIDDEN',
+  /** Limited access - content that is viewable by those whom the creator has shared the link with. */
   Private = 'PRIVATE',
-  /** Content that is public, viewable to anyone. */
+  /** Accessible everywhere - content that is viewable and shared by anyone. */
   Public = 'PUBLIC'
 }
 
@@ -9805,6 +12066,15 @@ export type VisibilityOperator = {
   eq: Visibility;
 };
 
+/** Information about the engagement of the voter on a Poll. */
+export type VoterEngagement = Node & {
+  __typename?: 'VoterEngagement';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** Indicates the option the channel has voted on the poll. */
+  option?: Maybe<PollOption>;
+};
+
 /** Represents a Watch (an activity). */
 export type Watch = History & Node & {
   __typename?: 'Watch';
@@ -9812,6 +12082,13 @@ export type Watch = History & Node & {
   id: Scalars['ID']['output'];
   /** The post watched by the channel. */
   post: Post;
+};
+
+/** The return fields from performing an action on the watched list of the connected user. */
+export type WatchedPayload = {
+  __typename?: 'WatchedPayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
 };
 
 /** The input fields to add a video to the `Watched` list of the connected user. */
@@ -9915,8 +12192,14 @@ export type WebMetadataConnectionEdge = {
 export type AddLikeInput = {
   /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
-  /** The ID of the post. */
-  postId: Scalars['ID']['input'];
+  /** The heart rating to give to the post. If not provided, `rating` will be used. */
+  hearts?: InputMaybe<HeartRatingInput>;
+  /** The ID of the story to like. */
+  id?: InputMaybe<Scalars['ID']['input']>;
+  /** The number of points to add to the post. If not provided, defaults to 0. */
+  points?: InputMaybe<Scalars['Int']['input']>;
+  /** @deprecated(reason: "Use `id`".) - The ID of the post. */
+  postId?: InputMaybe<Scalars['ID']['input']>;
   /** The rating to add to the post. If not provided, defaults to STAR_STRUCK */
   rating?: InputMaybe<LikeRating>;
 };
@@ -9925,4961 +12208,8 @@ export type AddLikeInput = {
 export type RemoveLikeInput = {
   /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
-  /** The ID of the post. */
-  postId: Scalars['ID']['input'];
-};
-
-
-
-export type ResolverTypeWrapper<T> = Promise<T> | T;
-
-
-export type ResolverWithResolve<TResult, TParent, TContext, TArgs> = {
-  resolve: ResolverFn<TResult, TParent, TContext, TArgs>;
-};
-export type Resolver<TResult, TParent = {}, TContext = {}, TArgs = {}> = ResolverFn<TResult, TParent, TContext, TArgs> | ResolverWithResolve<TResult, TParent, TContext, TArgs>;
-
-export type ResolverFn<TResult, TParent, TContext, TArgs> = (
-  parent: TParent,
-  args: TArgs,
-  context: TContext,
-  info: GraphQLResolveInfo
-) => Promise<TResult> | TResult;
-
-export type SubscriptionSubscribeFn<TResult, TParent, TContext, TArgs> = (
-  parent: TParent,
-  args: TArgs,
-  context: TContext,
-  info: GraphQLResolveInfo
-) => AsyncIterable<TResult> | Promise<AsyncIterable<TResult>>;
-
-export type SubscriptionResolveFn<TResult, TParent, TContext, TArgs> = (
-  parent: TParent,
-  args: TArgs,
-  context: TContext,
-  info: GraphQLResolveInfo
-) => TResult | Promise<TResult>;
-
-export interface SubscriptionSubscriberObject<TResult, TKey extends string, TParent, TContext, TArgs> {
-  subscribe: SubscriptionSubscribeFn<{ [key in TKey]: TResult }, TParent, TContext, TArgs>;
-  resolve?: SubscriptionResolveFn<TResult, { [key in TKey]: TResult }, TContext, TArgs>;
-}
-
-export interface SubscriptionResolverObject<TResult, TParent, TContext, TArgs> {
-  subscribe: SubscriptionSubscribeFn<any, TParent, TContext, TArgs>;
-  resolve: SubscriptionResolveFn<TResult, any, TContext, TArgs>;
-}
-
-export type SubscriptionObject<TResult, TKey extends string, TParent, TContext, TArgs> =
-  | SubscriptionSubscriberObject<TResult, TKey, TParent, TContext, TArgs>
-  | SubscriptionResolverObject<TResult, TParent, TContext, TArgs>;
-
-export type SubscriptionResolver<TResult, TKey extends string, TParent = {}, TContext = {}, TArgs = {}> =
-  | ((...args: any[]) => SubscriptionObject<TResult, TKey, TParent, TContext, TArgs>)
-  | SubscriptionObject<TResult, TKey, TParent, TContext, TArgs>;
-
-export type TypeResolveFn<TTypes, TParent = {}, TContext = {}> = (
-  parent: TParent,
-  context: TContext,
-  info: GraphQLResolveInfo
-) => Maybe<TTypes> | Promise<Maybe<TTypes>>;
-
-export type IsTypeOfResolverFn<T = {}, TContext = {}> = (obj: T, context: TContext, info: GraphQLResolveInfo) => boolean | Promise<boolean>;
-
-export type NextResolverFn<T> = () => Promise<T>;
-
-export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs = {}> = (
-  next: NextResolverFn<TResult>,
-  parent: TParent,
-  args: TArgs,
-  context: TContext,
-  info: GraphQLResolveInfo
-) => TResult | Promise<TResult>;
-
-/** Mapping of union types */
-export type ResolversUnionTypes<_RefType extends Record<string, unknown>> = {
-  Component: ( Channel ) | ( Collection ) | ( Live ) | ( Omit<Poll, 'component' | 'opener' | 'post'> & { component?: Maybe<_RefType['Component']>, opener?: Maybe<_RefType['Story']>, post?: Maybe<_RefType['Post']> } ) | ( Omit<Reaction, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( ReactionVideo ) | ( Topic ) | ( Video );
-  Interaction: ( Omit<Comment, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( Omit<Reaction, 'opener'> & { opener?: Maybe<_RefType['Story']> } );
-  Media: ( Live ) | ( Video );
-  MediaStreams: ( LiveStreams ) | ( VideoStreams );
-  Post: ( Collection ) | ( Live ) | ( Omit<Reaction, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( ReactionVideo ) | ( Video );
-  PostMetric: ( CollectionMetric ) | ( LiveMetric ) | ( ReactionMetric ) | ( VideoMetric );
-  Story: ( Channel ) | ( Collection ) | ( ContentCategory ) | ( Hashtag ) | ( Live ) | ( Omit<Poll, 'component' | 'opener' | 'post'> & { component?: Maybe<_RefType['Component']>, opener?: Maybe<_RefType['Story']>, post?: Maybe<_RefType['Post']> } ) | ( Omit<Reaction, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( ReactionVideo ) | ( Topic ) | ( Video );
-  VideoOrLive: ( Live ) | ( Video );
-};
-
-/** Mapping of interface types */
-export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> = {
-  AnalyticsPayload: ( AnalyticsFlatPayload ) | ( AnalyticsGroupedPayload );
-  Bookmark: ( Omit<Favorite, 'post'> & { post: _RefType['Post'] } ) | ( Omit<Like, 'post'> & { post: _RefType['Post'] } );
-  Category: ( ContentCategory ) | ( CuratedCategory ) | ( Interest );
-  Content: ( Collection ) | ( Omit<Comment, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( Live ) | ( Omit<Reaction, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( Video );
-  History: ( Omit<Favorite, 'post'> & { post: _RefType['Post'] } ) | ( Omit<Like, 'post'> & { post: _RefType['Post'] } ) | ( Omit<Watch, 'post'> & { post: _RefType['Post'] } );
-  Metric: ( BookmarkMetric ) | ( ChannelMetric ) | ( CollectionMetric ) | ( CommentMetric ) | ( FollowerMetric ) | ( FollowingMetric ) | ( LikeMetric ) | ( LiveMetric ) | ( ReactionMetric ) | ( VideoMetric );
-  Node: ( Omit<Analytics, 'timeSeries' | 'topValues'> & { timeSeries: _RefType['AnalyticsPayload'], topValues: _RefType['AnalyticsPayload'] } ) | ( AnalyticsGroupedPayloadItem ) | ( AnalyticsReport ) | ( Attribute ) | ( Behavior ) | ( BehaviorRuleTag ) | ( BookmarkMetric ) | ( Caption ) | ( Channel ) | ( ChannelEngagementMetrics ) | ( ChannelExternalLinks ) | ( ChannelMetric ) | ( ChannelMetrics ) | ( ChannelShareUrls ) | ( ChannelStats ) | ( ChannelStatsFollowers ) | ( ChannelStatsReactions ) | ( ChannelStatsVideos ) | ( ChannelStatsViews ) | ( ChannelUpdateRequired ) | ( ChannelViewMetrics ) | ( Collection ) | ( CollectionEngagementMetrics ) | ( CollectionMetric ) | ( CollectionMetrics ) | ( CollectionStats ) | ( CollectionStatsVideos ) | ( Omit<Comment, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( CommentEngagementMetrics ) | ( CommentMetric ) | ( CommentMetrics ) | ( CommentViewerEngagement ) | ( ContentCategory ) | ( Omit<Conversation, 'story'> & { story?: Maybe<_RefType['Story']> } ) | ( Country ) | ( CuratedCategory ) | ( DailymotionAd ) | ( EmailChangeRequest ) | ( Embed ) | ( ExperimentMatch ) | ( FallbackCountry ) | ( Omit<Favorite, 'post'> & { post: _RefType['Post'] } ) | ( FeatureMatch ) | ( FeaturedContent ) | ( FileUpload ) | ( FollowedChannel ) | ( FollowedTopic ) | ( Follower ) | ( FollowerEngagement ) | ( FollowerEngagementNotifications ) | ( FollowerMetric ) | ( Omit<Following, 'story'> & { story?: Maybe<_RefType['Story']> } ) | ( FollowingChannelStartsLive ) | ( FollowingChannelUploadsVideo ) | ( FollowingMetric ) | ( FollowingStartsLive ) | ( GeoblockedCountries ) | ( Geoblocking ) | ( Hashtag ) | ( HashtagEngagementMetrics ) | ( HashtagMetrics ) | ( Image ) | ( Interest ) | ( Language ) | ( Omit<Like, 'post'> & { post: _RefType['Post'] } ) | ( LikeMetric ) | ( Live ) | ( LiveEngagementMetrics ) | ( LiveMetric ) | ( LiveMetrics ) | ( LiveShareUrls ) | ( LiveStats ) | ( LiveStatsViews ) | ( LiveStreamUrls ) | ( LiveStreams ) | ( LiveViewerEngagement ) | ( Localization ) | ( LocalizationMe ) | ( MediaModeration ) | ( MediaPublishingInfo ) | ( MediaTag ) | ( MediaUploadInfo ) | ( Metadata ) | ( MonetizationInsights ) | ( Neon ) | ( NotificationSettings ) | ( Organization ) | ( OrganizationAnalysis ) | ( OrganizationStats ) | ( OrganizationStatsChannels ) | ( Partner ) | ( PartnerReportFile ) | ( PartnerSpace ) | ( Player ) | ( PlayerQueue ) | ( Omit<Poll, 'component' | 'opener' | 'post'> & { component?: Maybe<_RefType['Component']>, opener?: Maybe<_RefType['Story']>, post?: Maybe<_RefType['Post']> } ) | ( PollOption ) | ( PollShareUrls ) | ( ProductUpdates ) | ( Quality ) | ( Omit<Reaction, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( ReactionEngagementMetrics ) | ( ReactionMetric ) | ( ReactionMetrics ) | ( ReactionShareUrls ) | ( ReactionStreamUrls ) | ( ReactionVideo ) | ( ReactionVideoStats ) | ( ReactionVideoStatsBookmarks ) | ( ReactionVideoStatsFavorites ) | ( ReactionVideoStatsLikes ) | ( ReactionVideoStatsReactionVideos ) | ( ReactionVideoStatsSaves ) | ( ReactionViewerEngagement ) | ( Omit<RecommendedRecording, 'recording'> & { recording?: Maybe<_RefType['Recording']> } ) | ( RemindUnwatchedVideos ) | ( ReportFileDownloadLink ) | ( Restriction ) | ( Rule ) | ( Search ) | ( Omit<Section, 'relatedComponent'> & { relatedComponent?: Maybe<_RefType['Component']> } ) | ( SharingUrl ) | ( Subdivision ) | ( Subtitle ) | ( Suggestion ) | ( SupportedCountry ) | ( SupportedLanguage ) | ( Thumbnails ) | ( Tips ) | ( Topic ) | ( TopicLabel ) | ( TopicShareUrls ) | ( TopicStats ) | ( TopicStatsFollowers ) | ( TopicStatsVideos ) | ( TopicWhitelistStatus ) | ( User ) | ( UserInterest ) | ( UserPollAnswer ) | ( UserStats ) | ( UserStatsCollections ) | ( UserStatsFollowers ) | ( UserStatsFollowingChannels ) | ( UserStatsFollowingTopics ) | ( UserStatsLikedVideos ) | ( UserStatsReactionVideos ) | ( UserStatsUploadedVideos ) | ( UserStatsVideos ) | ( UserStatsWatchLater ) | ( UserStatsWatchedVideos ) | ( Video ) | ( VideoDigest ) | ( VideoEngagementMetrics ) | ( VideoMetric ) | ( VideoMetrics ) | ( VideoSettings ) | ( VideoShareUrls ) | ( VideoStats ) | ( VideoStatsBookmarks ) | ( VideoStatsFavorites ) | ( VideoStatsLikes ) | ( VideoStatsReactionVideos ) | ( VideoStatsSaves ) | ( VideoStatsViews ) | ( VideoStreamUrls ) | ( VideoStreams ) | ( VideoViewMetrics ) | ( VideoViewerEngagement ) | ( Views ) | ( Omit<Watch, 'post'> & { post: _RefType['Post'] } ) | ( Web ) | ( WebMetadata ) | ( WebMetadataConnection );
-  PostEngagementMetrics: ( LiveEngagementMetrics ) | ( ReactionEngagementMetrics ) | ( VideoEngagementMetrics );
-  PostMetrics: ( LiveMetrics ) | ( ReactionMetrics ) | ( VideoMetrics );
-  Recording: ( Live ) | ( Omit<Reaction, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( Video );
-  ShareUrls: ( ChannelShareUrls ) | ( LiveShareUrls ) | ( PollShareUrls ) | ( ReactionShareUrls ) | ( TopicShareUrls ) | ( VideoShareUrls );
-  StreamUrls: ( LiveStreamUrls ) | ( ReactionStreamUrls ) | ( VideoStreamUrls );
-  Thread: ( Omit<Comment, 'opener'> & { opener?: Maybe<_RefType['Story']> } ) | ( Omit<Poll, 'component' | 'opener' | 'post'> & { component?: Maybe<_RefType['Component']>, opener?: Maybe<_RefType['Story']>, post?: Maybe<_RefType['Post']> } ) | ( Omit<Reaction, 'opener'> & { opener?: Maybe<_RefType['Story']> } );
-  ViewerEngagement: ( CommentViewerEngagement ) | ( LiveViewerEngagement ) | ( ReactionViewerEngagement ) | ( VideoViewerEngagement );
-};
-
-/** Mapping between all available schema types and the resolvers types */
-export type ResolversTypes = {
-  Account: Account;
-  AccountOperator: AccountOperator;
-  AccountType: AccountType;
-  ActivateUserInput: ActivateUserInput;
-  ActivateUserPayload: ResolverTypeWrapper<ActivateUserPayload>;
-  Activity: Activity;
-  ActivityOperator: ActivityOperator;
-  AddCollectionVideoInput: AddCollectionVideoInput;
-  AddCollectionVideoPayload: ResolverTypeWrapper<AddCollectionVideoPayload>;
-  AddWatchLaterVideoInput: AddWatchLaterVideoInput;
-  AddWatchLaterVideoPayload: ResolverTypeWrapper<AddWatchLaterVideoPayload>;
-  Algorithm: ResolverTypeWrapper<Algorithm>;
-  AlgorithmName: AlgorithmName;
-  AlgorithmNameOperator: AlgorithmNameOperator;
-  Analytics: ResolverTypeWrapper<Omit<Analytics, 'timeSeries' | 'topValues'> & { timeSeries: ResolversTypes['AnalyticsPayload'], topValues: ResolversTypes['AnalyticsPayload'] }>;
-  AnalyticsFilter: AnalyticsFilter;
-  AnalyticsFilterOperator: AnalyticsFilterOperator;
-  AnalyticsFlatPayload: ResolverTypeWrapper<AnalyticsFlatPayload>;
-  AnalyticsGroupedPayload: ResolverTypeWrapper<AnalyticsGroupedPayload>;
-  AnalyticsGroupedPayloadItem: ResolverTypeWrapper<AnalyticsGroupedPayloadItem>;
-  AnalyticsMetric: AnalyticsMetric;
-  AnalyticsMetricFunction: AnalyticsMetricFunction;
-  AnalyticsOrderBy: AnalyticsOrderBy;
-  AnalyticsPayload: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['AnalyticsPayload']>;
-  AnalyticsReport: ResolverTypeWrapper<AnalyticsReport>;
-  AnalyticsReportConnection: ResolverTypeWrapper<AnalyticsReportConnection>;
-  AnalyticsReportCreateInput: AnalyticsReportCreateInput;
-  AnalyticsReportCreatePayload: ResolverTypeWrapper<AnalyticsReportCreatePayload>;
-  AnalyticsReportEdge: ResolverTypeWrapper<AnalyticsReportEdge>;
-  AnalyticsReportFilters: AnalyticsReportFilters;
-  AnalyticsReportOrderBy: AnalyticsReportOrderBy;
-  AnalyticsReportStatus: AnalyticsReportStatus;
-  AnalyticsTimePeriod: AnalyticsTimePeriod;
-  Any: ResolverTypeWrapper<Scalars['Any']['output']>;
-  AppealApplication: ResolverTypeWrapper<AppealApplication>;
-  AppealReason: AppealReason;
-  AskPartnerReportFileInput: AskPartnerReportFileInput;
-  AskPartnerReportFilePayload: ResolverTypeWrapper<AskPartnerReportFilePayload>;
-  Attribute: ResolverTypeWrapper<Attribute>;
-  AttributeConnection: ResolverTypeWrapper<AttributeConnection>;
-  AttributeEdge: ResolverTypeWrapper<AttributeEdge>;
-  AutoSuggestionFilter: AutoSuggestionFilter;
-  AvatarHeight: AvatarHeight;
-  BannerHeight: BannerHeight;
-  BannerWidth: BannerWidth;
-  Behavior: ResolverTypeWrapper<Behavior>;
-  BehaviorRuleTag: ResolverTypeWrapper<BehaviorRuleTag>;
-  BehaviorRuleTagConnection: ResolverTypeWrapper<BehaviorRuleTagConnection>;
-  BehaviorRuleTagEdge: ResolverTypeWrapper<BehaviorRuleTagEdge>;
-  BigInt: ResolverTypeWrapper<Scalars['BigInt']['output']>;
-  Bookmark: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Bookmark']>;
-  BookmarkConnection: ResolverTypeWrapper<BookmarkConnection>;
-  BookmarkEdge: ResolverTypeWrapper<Omit<BookmarkEdge, 'node'> & { node?: Maybe<ResolversTypes['Bookmark']> }>;
-  BookmarkFilter: BookmarkFilter;
-  BookmarkMetric: ResolverTypeWrapper<BookmarkMetric>;
-  BookmarkMetricConnection: ResolverTypeWrapper<BookmarkMetricConnection>;
-  BookmarkMetricEdge: ResolverTypeWrapper<BookmarkMetricEdge>;
-  BookmarkOperator: BookmarkOperator;
-  BookmarkTypename: BookmarkTypename;
-  Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
-  BooleanOperator: BooleanOperator;
-  Caption: ResolverTypeWrapper<Caption>;
-  CaptionConnection: ResolverTypeWrapper<CaptionConnection>;
-  CaptionEdge: ResolverTypeWrapper<CaptionEdge>;
-  Category: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Category']>;
-  CategoryConnection: ResolverTypeWrapper<CategoryConnection>;
-  CategoryEdge: ResolverTypeWrapper<Omit<CategoryEdge, 'node'> & { node?: Maybe<ResolversTypes['Category']> }>;
-  CategoryFilter: CategoryFilter;
-  CategoryOperator: CategoryOperator;
-  CategoryTypename: CategoryTypename;
-  Channel: ResolverTypeWrapper<Channel>;
-  ChannelConnection: ResolverTypeWrapper<ChannelConnection>;
-  ChannelCreateInput: ChannelCreateInput;
-  ChannelCreatePayload: ResolverTypeWrapper<ChannelCreatePayload>;
-  ChannelEdge: ResolverTypeWrapper<ChannelEdge>;
-  ChannelEngagementMetrics: ResolverTypeWrapper<ChannelEngagementMetrics>;
-  ChannelExternalLinks: ResolverTypeWrapper<ChannelExternalLinks>;
-  ChannelExternalLinksInput: ChannelExternalLinksInput;
-  ChannelMediasSort: ChannelMediasSort;
-  ChannelMetric: ResolverTypeWrapper<ChannelMetric>;
-  ChannelMetricConnection: ResolverTypeWrapper<ChannelMetricConnection>;
-  ChannelMetricEdge: ResolverTypeWrapper<ChannelMetricEdge>;
-  ChannelMetrics: ResolverTypeWrapper<ChannelMetrics>;
-  ChannelPermission: ResolverTypeWrapper<ChannelPermission>;
-  ChannelPermissionLevel: ChannelPermissionLevel;
-  ChannelShareUrls: ResolverTypeWrapper<ChannelShareUrls>;
-  ChannelStats: ResolverTypeWrapper<ChannelStats>;
-  ChannelStatsFollowers: ResolverTypeWrapper<ChannelStatsFollowers>;
-  ChannelStatsReactions: ResolverTypeWrapper<ChannelStatsReactions>;
-  ChannelStatsVideos: ResolverTypeWrapper<ChannelStatsVideos>;
-  ChannelStatsViews: ResolverTypeWrapper<ChannelStatsViews>;
-  ChannelUpdateRequired: ResolverTypeWrapper<ChannelUpdateRequired>;
-  ChannelViewMetrics: ResolverTypeWrapper<ChannelViewMetrics>;
-  ChannelsSort: ChannelsSort;
-  ClearCollectionMediasInput: ClearCollectionMediasInput;
-  ClearCollectionMediasPayload: ResolverTypeWrapper<ClearCollectionMediasPayload>;
-  ClearLikedVideosInput: ClearLikedVideosInput;
-  ClearLikedVideosPayload: ResolverTypeWrapper<ClearLikedVideosPayload>;
-  ClearWatchLaterVideosInput: ClearWatchLaterVideosInput;
-  ClearWatchLaterVideosPayload: ResolverTypeWrapper<ClearWatchLaterVideosPayload>;
-  ClearWatchedVideosInput: ClearWatchedVideosInput;
-  ClearWatchedVideosPayload: ResolverTypeWrapper<ClearWatchedVideosPayload>;
-  Collection: ResolverTypeWrapper<Collection>;
-  CollectionConnection: ResolverTypeWrapper<CollectionConnection>;
-  CollectionEdge: ResolverTypeWrapper<CollectionEdge>;
-  CollectionEngagementMetrics: ResolverTypeWrapper<CollectionEngagementMetrics>;
-  CollectionFilter: CollectionFilter;
-  CollectionMetric: ResolverTypeWrapper<CollectionMetric>;
-  CollectionMetricConnection: ResolverTypeWrapper<CollectionMetricConnection>;
-  CollectionMetricEdge: ResolverTypeWrapper<CollectionMetricEdge>;
-  CollectionMetrics: ResolverTypeWrapper<CollectionMetrics>;
-  CollectionStats: ResolverTypeWrapper<CollectionStats>;
-  CollectionStatsVideos: ResolverTypeWrapper<CollectionStatsVideos>;
-  Comment: ResolverTypeWrapper<Omit<Comment, 'opener'> & { opener?: Maybe<ResolversTypes['Story']> }>;
-  CommentConnection: ResolverTypeWrapper<CommentConnection>;
-  CommentEdge: ResolverTypeWrapper<CommentEdge>;
-  CommentEngagementMetrics: ResolverTypeWrapper<CommentEngagementMetrics>;
-  CommentMetric: ResolverTypeWrapper<CommentMetric>;
-  CommentMetricConnection: ResolverTypeWrapper<CommentMetricConnection>;
-  CommentMetricEdge: ResolverTypeWrapper<CommentMetricEdge>;
-  CommentMetrics: ResolverTypeWrapper<CommentMetrics>;
-  CommentSort: CommentSort;
-  CommentViewerEngagement: ResolverTypeWrapper<CommentViewerEngagement>;
-  CommentViolation: CommentViolation;
-  Component: ResolverTypeWrapper<ResolversUnionTypes<ResolversTypes>['Component']>;
-  ComponentConnection: ResolverTypeWrapper<ComponentConnection>;
-  ComponentEdge: ResolverTypeWrapper<Omit<ComponentEdge, 'node'> & { node?: Maybe<ResolversTypes['Component']> }>;
-  Content: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Content']>;
-  ContentCategory: ResolverTypeWrapper<ContentCategory>;
-  Conversation: ResolverTypeWrapper<Omit<Conversation, 'story'> & { story?: Maybe<ResolversTypes['Story']> }>;
-  ConversationConnection: ResolverTypeWrapper<ConversationConnection>;
-  ConversationContext: ConversationContext;
-  ConversationEdge: ResolverTypeWrapper<ConversationEdge>;
-  ConversationFilter: ConversationFilter;
-  Country: ResolverTypeWrapper<Country>;
-  CountryConnection: ResolverTypeWrapper<CountryConnection>;
-  CountryEdge: ResolverTypeWrapper<CountryEdge>;
-  CreateBehaviorRuleInput: CreateBehaviorRuleInput;
-  CreateBehaviorRulePayload: ResolverTypeWrapper<CreateBehaviorRulePayload>;
-  CreateCollectionInput: CreateCollectionInput;
-  CreateCollectionPayload: ResolverTypeWrapper<CreateCollectionPayload>;
-  CreateCommentInput: CreateCommentInput;
-  CreateCommentPayload: ResolverTypeWrapper<CreateCommentPayload>;
-  CreateReactionInput: CreateReactionInput;
-  CreateUserInput: CreateUserInput;
-  CreateUserPayload: ResolverTypeWrapper<CreateUserPayload>;
-  CreateVideoInput: CreateVideoInput;
-  CreateVideoPayload: ResolverTypeWrapper<CreateVideoPayload>;
-  CreatorViolation: CreatorViolation;
-  CuratedCategory: ResolverTypeWrapper<CuratedCategory>;
-  CuratedCategoryConnection: ResolverTypeWrapper<CuratedCategoryConnection>;
-  CuratedCategoryEdge: ResolverTypeWrapper<CuratedCategoryEdge>;
-  DailymotionAd: ResolverTypeWrapper<DailymotionAd>;
-  Date: ResolverTypeWrapper<Scalars['Date']['output']>;
-  DateTime: ResolverTypeWrapper<Scalars['DateTime']['output']>;
-  DateTimeOperator: DateTimeOperator;
-  DeleteBehaviorRuleInput: DeleteBehaviorRuleInput;
-  DeleteBehaviorRulePayload: ResolverTypeWrapper<DeleteBehaviorRulePayload>;
-  DeleteCommentInput: DeleteCommentInput;
-  DeleteCommentPayload: ResolverTypeWrapper<DeleteCommentPayload>;
-  DeleteReactionInput: DeleteReactionInput;
-  DeleteReactionPayload: ResolverTypeWrapper<DeleteReactionPayload>;
-  DeleteUserInput: DeleteUserInput;
-  DeleteUserPayload: ResolverTypeWrapper<DeleteUserPayload>;
-  DeleteVideoInput: DeleteVideoInput;
-  DeleteVideoPayload: ResolverTypeWrapper<DeleteVideoPayload>;
-  EmailChangeRequest: ResolverTypeWrapper<EmailChangeRequest>;
-  Embed: ResolverTypeWrapper<Embed>;
-  EmbedType: EmbedType;
-  ExperimentMatch: ResolverTypeWrapper<ExperimentMatch>;
-  ExperimentMatchConnection: ResolverTypeWrapper<ExperimentMatchConnection>;
-  ExperimentMatchEdge: ResolverTypeWrapper<ExperimentMatchEdge>;
-  FallbackCountry: ResolverTypeWrapper<FallbackCountry>;
-  FallbackCountryConnection: ResolverTypeWrapper<FallbackCountryConnection>;
-  FallbackCountryEdge: ResolverTypeWrapper<FallbackCountryEdge>;
-  Favorite: ResolverTypeWrapper<Omit<Favorite, 'post'> & { post: ResolversTypes['Post'] }>;
-  FeatureMatch: ResolverTypeWrapper<FeatureMatch>;
-  FeatureMatchConnection: ResolverTypeWrapper<FeatureMatchConnection>;
-  FeatureMatchEdge: ResolverTypeWrapper<FeatureMatchEdge>;
-  FeaturedContent: ResolverTypeWrapper<FeaturedContent>;
-  FeaturedContentCategory: FeaturedContentCategory;
-  FeedFilter: FeedFilter;
-  FeedName: FeedName;
-  FeedPost: ResolverTypeWrapper<Omit<FeedPost, 'post'> & { post?: Maybe<ResolversTypes['Post']> }>;
-  FeedPostConnection: ResolverTypeWrapper<FeedPostConnection>;
-  FeedPostEdge: ResolverTypeWrapper<FeedPostEdge>;
-  FeedSort: FeedSort;
-  FileUpload: ResolverTypeWrapper<FileUpload>;
-  Float: ResolverTypeWrapper<Scalars['Float']['output']>;
-  FollowChannelInput: FollowChannelInput;
-  FollowChannelPayload: ResolverTypeWrapper<FollowChannelPayload>;
-  FollowChannelsInput: FollowChannelsInput;
-  FollowChannelsPayload: ResolverTypeWrapper<FollowChannelsPayload>;
-  FollowTopicInput: FollowTopicInput;
-  FollowTopicPayload: ResolverTypeWrapper<FollowTopicPayload>;
-  FollowTopicsInput: FollowTopicsInput;
-  FollowTopicsPayload: ResolverTypeWrapper<FollowTopicsPayload>;
-  FollowUserInput: FollowUserInput;
-  FollowUserPayload: ResolverTypeWrapper<FollowUserPayload>;
-  FollowedChannel: ResolverTypeWrapper<FollowedChannel>;
-  FollowedChannelConnection: ResolverTypeWrapper<FollowedChannelConnection>;
-  FollowedChannelEdge: ResolverTypeWrapper<FollowedChannelEdge>;
-  FollowedChannelsSort: FollowedChannelsSort;
-  FollowedTopic: ResolverTypeWrapper<FollowedTopic>;
-  FollowedTopicConnection: ResolverTypeWrapper<FollowedTopicConnection>;
-  FollowedTopicEdge: ResolverTypeWrapper<FollowedTopicEdge>;
-  FollowedTopicsSort: FollowedTopicsSort;
-  Follower: ResolverTypeWrapper<Follower>;
-  FollowerConnection: ResolverTypeWrapper<FollowerConnection>;
-  FollowerEdge: ResolverTypeWrapper<FollowerEdge>;
-  FollowerEngagement: ResolverTypeWrapper<FollowerEngagement>;
-  FollowerEngagementNotifications: ResolverTypeWrapper<FollowerEngagementNotifications>;
-  FollowerMetric: ResolverTypeWrapper<FollowerMetric>;
-  FollowerMetricConnection: ResolverTypeWrapper<FollowerMetricConnection>;
-  FollowerMetricEdge: ResolverTypeWrapper<FollowerMetricEdge>;
-  Following: ResolverTypeWrapper<Omit<Following, 'story'> & { story?: Maybe<ResolversTypes['Story']> }>;
-  FollowingChannelStartsLive: ResolverTypeWrapper<FollowingChannelStartsLive>;
-  FollowingChannelUploadsVideo: ResolverTypeWrapper<FollowingChannelUploadsVideo>;
-  FollowingConnection: ResolverTypeWrapper<FollowingConnection>;
-  FollowingEdge: ResolverTypeWrapper<FollowingEdge>;
-  FollowingFilter: FollowingFilter;
-  FollowingInput: FollowingInput;
-  FollowingMetric: ResolverTypeWrapper<FollowingMetric>;
-  FollowingMetricConnection: ResolverTypeWrapper<FollowingMetricConnection>;
-  FollowingMetricEdge: ResolverTypeWrapper<FollowingMetricEdge>;
-  FollowingPayload: ResolverTypeWrapper<FollowingPayload>;
-  FollowingStartsLive: ResolverTypeWrapper<FollowingStartsLive>;
-  Gender: Gender;
-  GenerateFileUploadUrlInput: GenerateFileUploadUrlInput;
-  GenerateFileUploadUrlPayload: ResolverTypeWrapper<GenerateFileUploadUrlPayload>;
-  GenerateVerifyEmailTokenInput: GenerateVerifyEmailTokenInput;
-  GenerateVerifyEmailTokenPayload: ResolverTypeWrapper<GenerateVerifyEmailTokenPayload>;
-  GeoblockedCountries: ResolverTypeWrapper<GeoblockedCountries>;
-  Geoblocking: ResolverTypeWrapper<Geoblocking>;
-  GeoblockingConnection: ResolverTypeWrapper<GeoblockingConnection>;
-  GeoblockingEdge: ResolverTypeWrapper<GeoblockingEdge>;
-  Hashtag: ResolverTypeWrapper<Hashtag>;
-  HashtagConnection: ResolverTypeWrapper<HashtagConnection>;
-  HashtagEdge: ResolverTypeWrapper<HashtagEdge>;
-  HashtagEngagementMetrics: ResolverTypeWrapper<HashtagEngagementMetrics>;
-  HashtagMetrics: ResolverTypeWrapper<HashtagMetrics>;
-  History: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['History']>;
-  HistoryConnection: ResolverTypeWrapper<HistoryConnection>;
-  HistoryEdge: ResolverTypeWrapper<Omit<HistoryEdge, 'node'> & { node?: Maybe<ResolversTypes['History']> }>;
-  HistoryFilter: HistoryFilter;
-  HtmlPage: HtmlPage;
-  ID: ResolverTypeWrapper<Scalars['ID']['output']>;
-  IDOperator: IdOperator;
-  Image: ResolverTypeWrapper<Image>;
-  Int: ResolverTypeWrapper<Scalars['Int']['output']>;
-  IntOperator: IntOperator;
-  Interaction: ResolverTypeWrapper<ResolversUnionTypes<ResolversTypes>['Interaction']>;
-  InteractionConnection: ResolverTypeWrapper<InteractionConnection>;
-  InteractionEdge: ResolverTypeWrapper<Omit<InteractionEdge, 'node'> & { node?: Maybe<ResolversTypes['Interaction']> }>;
-  Interest: ResolverTypeWrapper<Interest>;
-  InterestConnection: ResolverTypeWrapper<InterestConnection>;
-  InterestEdge: ResolverTypeWrapper<InterestEdge>;
-  Language: ResolverTypeWrapper<Language>;
-  LanguageSource: LanguageSource;
-  Like: ResolverTypeWrapper<Omit<Like, 'post'> & { post: ResolversTypes['Post'] }>;
-  LikeMetric: ResolverTypeWrapper<LikeMetric>;
-  LikeMetricConnection: ResolverTypeWrapper<LikeMetricConnection>;
-  LikeMetricEdge: ResolverTypeWrapper<LikeMetricEdge>;
-  LikeMetricFilter: LikeMetricFilter;
-  LikePayload: ResolverTypeWrapper<LikePayload>;
-  LikeRating: LikeRating;
-  LikeRatingOperator: LikeRatingOperator;
-  LikeVideoInput: LikeVideoInput;
-  LikeVideoPayload: ResolverTypeWrapper<LikeVideoPayload>;
-  LikedMediaSort: LikedMediaSort;
-  Live: ResolverTypeWrapper<Live>;
-  LiveConnection: ResolverTypeWrapper<LiveConnection>;
-  LiveEdge: ResolverTypeWrapper<LiveEdge>;
-  LiveEngagementMetrics: ResolverTypeWrapper<LiveEngagementMetrics>;
-  LiveFilter: LiveFilter;
-  LiveMetric: ResolverTypeWrapper<LiveMetric>;
-  LiveMetricConnection: ResolverTypeWrapper<LiveMetricConnection>;
-  LiveMetricEdge: ResolverTypeWrapper<LiveMetricEdge>;
-  LiveMetrics: ResolverTypeWrapper<LiveMetrics>;
-  LiveSettings: ResolverTypeWrapper<LiveSettings>;
-  LiveShareUrls: ResolverTypeWrapper<LiveShareUrls>;
-  LiveStats: ResolverTypeWrapper<LiveStats>;
-  LiveStatsViews: ResolverTypeWrapper<LiveStatsViews>;
-  LiveStreamUrls: ResolverTypeWrapper<LiveStreamUrls>;
-  LiveStreams: ResolverTypeWrapper<LiveStreams>;
-  LiveStreamsConnection: ResolverTypeWrapper<LiveStreamsConnection>;
-  LiveStreamsEdge: ResolverTypeWrapper<LiveStreamsEdge>;
-  LiveViewerEngagement: ResolverTypeWrapper<LiveViewerEngagement>;
-  Localization: ResolverTypeWrapper<Localization>;
-  LocalizationMe: ResolverTypeWrapper<LocalizationMe>;
-  Media: ResolverTypeWrapper<ResolversUnionTypes<ResolversTypes>['Media']>;
-  MediaCategory: MediaCategory;
-  MediaConnection: ResolverTypeWrapper<MediaConnection>;
-  MediaEdge: ResolverTypeWrapper<Omit<MediaEdge, 'node'> & { node?: Maybe<ResolversTypes['Media']> }>;
-  MediaModeration: ResolverTypeWrapper<MediaModeration>;
-  MediaPublishingInfo: ResolverTypeWrapper<MediaPublishingInfo>;
-  MediaQuality: MediaQuality;
-  MediaStreams: ResolverTypeWrapper<ResolversUnionTypes<ResolversTypes>['MediaStreams']>;
-  MediaStreamsConnection: ResolverTypeWrapper<MediaStreamsConnection>;
-  MediaStreamsEdge: ResolverTypeWrapper<Omit<MediaStreamsEdge, 'node'> & { node?: Maybe<ResolversTypes['MediaStreams']> }>;
-  MediaTag: ResolverTypeWrapper<MediaTag>;
-  MediaTagConnection: ResolverTypeWrapper<MediaTagConnection>;
-  MediaTagEdge: ResolverTypeWrapper<MediaTagEdge>;
-  MediaType: MediaType;
-  MediaUploadInfo: ResolverTypeWrapper<MediaUploadInfo>;
-  Metadata: ResolverTypeWrapper<Metadata>;
-  Metric: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Metric']>;
-  ModerationAction: ResolverTypeWrapper<ModerationAction>;
-  ModerationActionAppealInput: ModerationActionAppealInput;
-  ModerationActionAppealPayload: ResolverTypeWrapper<ModerationActionAppealPayload>;
-  MonetizationInsights: ResolverTypeWrapper<MonetizationInsights>;
-  Mutation: ResolverTypeWrapper<{}>;
-  Neon: ResolverTypeWrapper<Neon>;
-  NetworkChannelsSort: NetworkChannelsSort;
-  Node: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Node']>;
-  NotificationFollowedChannelUpdateInput: NotificationFollowedChannelUpdateInput;
-  NotificationFollowedChannelUpdatePayload: ResolverTypeWrapper<NotificationFollowedChannelUpdatePayload>;
-  NotificationSettings: ResolverTypeWrapper<NotificationSettings>;
-  OrderDirection: OrderDirection;
-  Organization: ResolverTypeWrapper<Organization>;
-  OrganizationAnalysis: ResolverTypeWrapper<OrganizationAnalysis>;
-  OrganizationCategory: OrganizationCategory;
-  OrganizationConnection: ResolverTypeWrapper<OrganizationConnection>;
-  OrganizationEdge: ResolverTypeWrapper<OrganizationEdge>;
-  OrganizationPermission: ResolverTypeWrapper<OrganizationPermission>;
-  OrganizationRole: OrganizationRole;
-  OrganizationStats: ResolverTypeWrapper<OrganizationStats>;
-  OrganizationStatsChannels: ResolverTypeWrapper<OrganizationStatsChannels>;
-  PageInfo: ResolverTypeWrapper<PageInfo>;
-  Partner: ResolverTypeWrapper<Partner>;
-  PartnerReportDimension: PartnerReportDimension;
-  PartnerReportFile: ResolverTypeWrapper<PartnerReportFile>;
-  PartnerReportFilterMediaType: PartnerReportFilterMediaType;
-  PartnerReportFilterMonetizationType: PartnerReportFilterMonetizationType;
-  PartnerReportFilters: PartnerReportFilters;
-  PartnerReportMetric: PartnerReportMetric;
-  PartnerReportProduct: PartnerReportProduct;
-  PartnerReportStatus: PartnerReportStatus;
-  PartnerSpace: ResolverTypeWrapper<PartnerSpace>;
-  Player: ResolverTypeWrapper<Player>;
-  PlayerAlgorithmName: PlayerAlgorithmName;
-  PlayerQueue: ResolverTypeWrapper<PlayerQueue>;
-  PlayerQueueAlgorithmName: PlayerQueueAlgorithmName;
-  PlayerQueueContextArgument: PlayerQueueContextArgument;
-  Poll: ResolverTypeWrapper<Omit<Poll, 'component' | 'opener' | 'post'> & { component?: Maybe<ResolversTypes['Component']>, opener?: Maybe<ResolversTypes['Story']>, post?: Maybe<ResolversTypes['Post']> }>;
-  PollAnswerAction: PollAnswerAction;
-  PollAnswerInput: PollAnswerInput;
-  PollAnswerPayload: ResolverTypeWrapper<PollAnswerPayload>;
-  PollConnection: ResolverTypeWrapper<PollConnection>;
-  PollEdge: ResolverTypeWrapper<PollEdge>;
-  PollFilter: PollFilter;
-  PollOption: ResolverTypeWrapper<PollOption>;
-  PollShareUrls: ResolverTypeWrapper<PollShareUrls>;
-  Post: ResolverTypeWrapper<ResolversUnionTypes<ResolversTypes>['Post']>;
-  PostConnection: ResolverTypeWrapper<PostConnection>;
-  PostEdge: ResolverTypeWrapper<Omit<PostEdge, 'node'> & { node?: Maybe<ResolversTypes['Post']> }>;
-  PostEngagementMetrics: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['PostEngagementMetrics']>;
-  PostMetric: ResolverTypeWrapper<ResolversUnionTypes<ResolversTypes>['PostMetric']>;
-  PostMetricConnection: ResolverTypeWrapper<PostMetricConnection>;
-  PostMetricEdge: ResolverTypeWrapper<Omit<PostMetricEdge, 'node'> & { node?: Maybe<ResolversTypes['PostMetric']> }>;
-  PostMetrics: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['PostMetrics']>;
-  PostOperator: PostOperator;
-  PostStatus: PostStatus;
-  PostStatusOperator: PostStatusOperator;
-  PostTypename: PostTypename;
-  ProductUpdates: ResolverTypeWrapper<ProductUpdates>;
-  Promotion: Promotion;
-  Quality: ResolverTypeWrapper<Quality>;
-  Query: ResolverTypeWrapper<{}>;
-  Reaction: ResolverTypeWrapper<Omit<Reaction, 'opener'> & { opener?: Maybe<ResolversTypes['Story']> }>;
-  ReactionConnection: ResolverTypeWrapper<ReactionConnection>;
-  ReactionEdge: ResolverTypeWrapper<ReactionEdge>;
-  ReactionEngagementMetrics: ResolverTypeWrapper<ReactionEngagementMetrics>;
-  ReactionMetric: ResolverTypeWrapper<ReactionMetric>;
-  ReactionMetricConnection: ResolverTypeWrapper<ReactionMetricConnection>;
-  ReactionMetricEdge: ResolverTypeWrapper<ReactionMetricEdge>;
-  ReactionMetrics: ResolverTypeWrapper<ReactionMetrics>;
-  ReactionPayload: ResolverTypeWrapper<ReactionPayload>;
-  ReactionShareUrls: ResolverTypeWrapper<ReactionShareUrls>;
-  ReactionStreamUrls: ResolverTypeWrapper<ReactionStreamUrls>;
-  ReactionVideo: ResolverTypeWrapper<ReactionVideo>;
-  ReactionVideoConnection: ResolverTypeWrapper<ReactionVideoConnection>;
-  ReactionVideoCreateInput: ReactionVideoCreateInput;
-  ReactionVideoDeleteInput: ReactionVideoDeleteInput;
-  ReactionVideoDeletePayload: ResolverTypeWrapper<ReactionVideoDeletePayload>;
-  ReactionVideoEdge: ResolverTypeWrapper<ReactionVideoEdge>;
-  ReactionVideoPayload: ResolverTypeWrapper<ReactionVideoPayload>;
-  ReactionVideoStats: ResolverTypeWrapper<ReactionVideoStats>;
-  ReactionVideoStatsBookmarks: ResolverTypeWrapper<ReactionVideoStatsBookmarks>;
-  ReactionVideoStatsFavorites: ResolverTypeWrapper<ReactionVideoStatsFavorites>;
-  ReactionVideoStatsLikes: ResolverTypeWrapper<ReactionVideoStatsLikes>;
-  ReactionVideoStatsReactionVideos: ResolverTypeWrapper<ReactionVideoStatsReactionVideos>;
-  ReactionVideoStatsSaves: ResolverTypeWrapper<ReactionVideoStatsSaves>;
-  ReactionVideoUpdateInput: ReactionVideoUpdateInput;
-  ReactionViewerEngagement: ResolverTypeWrapper<ReactionViewerEngagement>;
-  RecommendedRecording: ResolverTypeWrapper<Omit<RecommendedRecording, 'recording'> & { recording?: Maybe<ResolversTypes['Recording']> }>;
-  RecommendedRecordingConnection: ResolverTypeWrapper<RecommendedRecordingConnection>;
-  RecommendedRecordingEdge: ResolverTypeWrapper<RecommendedRecordingEdge>;
-  Recording: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Recording']>;
-  RecordingPrivacy: RecordingPrivacy;
-  RecordingViolation: RecordingViolation;
-  RecoverPasswordInput: RecoverPasswordInput;
-  RecoverPasswordPayload: ResolverTypeWrapper<RecoverPasswordPayload>;
-  RelatedVideoContext: RelatedVideoContext;
-  RemindUnwatchedVideos: ResolverTypeWrapper<RemindUnwatchedVideos>;
-  RemoveCollectionInput: RemoveCollectionInput;
-  RemoveCollectionPayload: ResolverTypeWrapper<RemoveCollectionPayload>;
-  RemoveCollectionVideoInput: RemoveCollectionVideoInput;
-  RemoveCollectionVideoPayload: ResolverTypeWrapper<RemoveCollectionVideoPayload>;
-  RemoveWatchLaterVideoInput: RemoveWatchLaterVideoInput;
-  RemoveWatchLaterVideoPayload: ResolverTypeWrapper<RemoveWatchLaterVideoPayload>;
-  RemoveWatchedVideoInput: RemoveWatchedVideoInput;
-  RemoveWatchedVideoPayload: ResolverTypeWrapper<RemoveWatchedVideoPayload>;
-  ReorderCollectionMediaInput: ReorderCollectionMediaInput;
-  ReorderCollectionMediaPayload: ResolverTypeWrapper<ReorderCollectionMediaPayload>;
-  ReportCommentInput: ReportCommentInput;
-  ReportCommentPayload: ResolverTypeWrapper<ReportCommentPayload>;
-  ReportCreatorInput: ReportCreatorInput;
-  ReportCreatorPayload: ResolverTypeWrapper<ReportCreatorPayload>;
-  ReportFileDownloadLink: ResolverTypeWrapper<ReportFileDownloadLink>;
-  ReportFileDownloadLinkConnection: ResolverTypeWrapper<ReportFileDownloadLinkConnection>;
-  ReportFileDownloadLinkEdge: ResolverTypeWrapper<ReportFileDownloadLinkEdge>;
-  ReportRecordingInput: ReportRecordingInput;
-  ReportRecordingPayload: ResolverTypeWrapper<ReportRecordingPayload>;
-  ReportVideoInput: ReportVideoInput;
-  ReportVideoPayload: ResolverTypeWrapper<ReportVideoPayload>;
-  ReporterEmailVerifyInput: ReporterEmailVerifyInput;
-  ReporterEmailVerifyPayload: ResolverTypeWrapper<ReporterEmailVerifyPayload>;
-  RequestActivationCodeInput: RequestActivationCodeInput;
-  RequestActivationCodePayload: ResolverTypeWrapper<RequestActivationCodePayload>;
-  ResetPasswordInput: ResetPasswordInput;
-  ResetPasswordPayload: ResolverTypeWrapper<ResetPasswordPayload>;
-  Resolution: Resolution;
-  Restriction: ResolverTypeWrapper<Restriction>;
-  RestrictionCode: RestrictionCode;
-  Role: Role;
-  RolePermission: RolePermission;
-  Rule: ResolverTypeWrapper<Rule>;
-  RuleConnection: ResolverTypeWrapper<RuleConnection>;
-  RuleEdge: ResolverTypeWrapper<RuleEdge>;
-  Search: ResolverTypeWrapper<Search>;
-  SearchVideoSort: SearchVideoSort;
-  Section: ResolverTypeWrapper<Omit<Section, 'relatedComponent'> & { relatedComponent?: Maybe<ResolversTypes['Component']> }>;
-  SectionConnection: ResolverTypeWrapper<SectionConnection>;
-  SectionContextArgument: SectionContextArgument;
-  SectionEdge: ResolverTypeWrapper<SectionEdge>;
-  SendTransactionalEmailInput: SendTransactionalEmailInput;
-  SendTransactionalEmailPayload: ResolverTypeWrapper<SendTransactionalEmailPayload>;
-  SendVerifyEmailCodeInput: SendVerifyEmailCodeInput;
-  SendVerifyEmailCodePayload: ResolverTypeWrapper<SendVerifyEmailCodePayload>;
-  ShareUrls: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['ShareUrls']>;
-  SharingURL: ResolverTypeWrapper<SharingUrl>;
-  SharingURLConnection: ResolverTypeWrapper<SharingUrlConnection>;
-  SharingURLEdge: ResolverTypeWrapper<SharingUrlEdge>;
-  Status: Status;
-  Story: ResolverTypeWrapper<ResolversUnionTypes<ResolversTypes>['Story']>;
-  StoryConnection: ResolverTypeWrapper<StoryConnection>;
-  StoryEdge: ResolverTypeWrapper<Omit<StoryEdge, 'node'> & { node?: Maybe<ResolversTypes['Story']> }>;
-  StoryFilter: StoryFilter;
-  StoryOperator: StoryOperator;
-  StorySort: StorySort;
-  StoryTypename: StoryTypename;
-  StreamUrls: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['StreamUrls']>;
-  String: ResolverTypeWrapper<Scalars['String']['output']>;
-  StringOperator: StringOperator;
-  Subdivision: ResolverTypeWrapper<Subdivision>;
-  Subtitle: ResolverTypeWrapper<Subtitle>;
-  SubtitleConnection: ResolverTypeWrapper<SubtitleConnection>;
-  SubtitleEdge: ResolverTypeWrapper<SubtitleEdge>;
-  Suggestion: ResolverTypeWrapper<Suggestion>;
-  SuggestionConnection: ResolverTypeWrapper<SuggestionConnection>;
-  SuggestionEdge: ResolverTypeWrapper<SuggestionEdge>;
-  SupportedCountry: ResolverTypeWrapper<SupportedCountry>;
-  SupportedCountryConnection: ResolverTypeWrapper<SupportedCountryConnection>;
-  SupportedCountryEdge: ResolverTypeWrapper<SupportedCountryEdge>;
-  SupportedLanguage: ResolverTypeWrapper<SupportedLanguage>;
-  SupportedLanguageConnection: ResolverTypeWrapper<SupportedLanguageConnection>;
-  SupportedLanguageEdge: ResolverTypeWrapper<SupportedLanguageEdge>;
-  Thread: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Thread']>;
-  ThreadConnection: ResolverTypeWrapper<ThreadConnection>;
-  ThreadEdge: ResolverTypeWrapper<Omit<ThreadEdge, 'node'> & { node?: Maybe<ResolversTypes['Thread']> }>;
-  ThreadFilter: ThreadFilter;
-  ThreadOperator: ThreadOperator;
-  ThreadTypename: ThreadTypename;
-  ThumbnailHeight: ThumbnailHeight;
-  Thumbnails: ResolverTypeWrapper<Thumbnails>;
-  Time: ResolverTypeWrapper<Scalars['Time']['output']>;
-  Tips: ResolverTypeWrapper<Tips>;
-  Topic: ResolverTypeWrapper<Topic>;
-  TopicConnection: ResolverTypeWrapper<TopicConnection>;
-  TopicEdge: ResolverTypeWrapper<TopicEdge>;
-  TopicLabel: ResolverTypeWrapper<TopicLabel>;
-  TopicLabelConnection: ResolverTypeWrapper<TopicLabelConnection>;
-  TopicLabelEdge: ResolverTypeWrapper<TopicLabelEdge>;
-  TopicShareUrls: ResolverTypeWrapper<TopicShareUrls>;
-  TopicStats: ResolverTypeWrapper<TopicStats>;
-  TopicStatsFollowers: ResolverTypeWrapper<TopicStatsFollowers>;
-  TopicStatsVideos: ResolverTypeWrapper<TopicStatsVideos>;
-  TopicWhitelistStatus: ResolverTypeWrapper<TopicWhitelistStatus>;
-  TopicWhitelistStatusMode: TopicWhitelistStatusMode;
-  UnfollowChannelInput: UnfollowChannelInput;
-  UnfollowChannelPayload: ResolverTypeWrapper<UnfollowChannelPayload>;
-  UnfollowTopicInput: UnfollowTopicInput;
-  UnfollowTopicPayload: ResolverTypeWrapper<UnfollowTopicPayload>;
-  UnfollowUserInput: UnfollowUserInput;
-  UnfollowUserPayload: ResolverTypeWrapper<UnfollowUserPayload>;
-  UnlikeVideoInput: UnlikeVideoInput;
-  UnlikeVideoPayload: ResolverTypeWrapper<UnlikeVideoPayload>;
-  UpdateBehaviorRuleInput: UpdateBehaviorRuleInput;
-  UpdateBehaviorRulePayload: ResolverTypeWrapper<UpdateBehaviorRulePayload>;
-  UpdateChannelInput: UpdateChannelInput;
-  UpdateChannelPayload: ResolverTypeWrapper<UpdateChannelPayload>;
-  UpdateCollectionInput: UpdateCollectionInput;
-  UpdateCollectionPayload: ResolverTypeWrapper<UpdateCollectionPayload>;
-  UpdateNotificationSettingsEmailInput: UpdateNotificationSettingsEmailInput;
-  UpdateNotificationSettingsEmailPayload: ResolverTypeWrapper<UpdateNotificationSettingsEmailPayload>;
-  UpdateNotificationSettingsPushInput: UpdateNotificationSettingsPushInput;
-  UpdateNotificationSettingsPushPayload: ResolverTypeWrapper<UpdateNotificationSettingsPushPayload>;
-  UpdateReactionInput: UpdateReactionInput;
-  UpdateUserInput: UpdateUserInput;
-  UpdateUserPayload: ResolverTypeWrapper<UpdateUserPayload>;
-  UpdateVideoInput: UpdateVideoInput;
-  UpdateVideoPayload: ResolverTypeWrapper<UpdateVideoPayload>;
-  UploadedVideoSort: UploadedVideoSort;
-  User: ResolverTypeWrapper<User>;
-  UserActivationCodeAccountType: UserActivationCodeAccountType;
-  UserCollectionsSort: UserCollectionsSort;
-  UserEmailChangeConfirmInput: UserEmailChangeConfirmInput;
-  UserEmailChangeConfirmPayload: ResolverTypeWrapper<UserEmailChangeConfirmPayload>;
-  UserEmailChangeRequestInput: UserEmailChangeRequestInput;
-  UserEmailChangeRequestPayload: ResolverTypeWrapper<UserEmailChangeRequestPayload>;
-  UserEmailConfirmationCodeResetInput: UserEmailConfirmationCodeResetInput;
-  UserEmailConfirmationCodeResetPayload: ResolverTypeWrapper<UserEmailConfirmationCodeResetPayload>;
-  UserEmailValidationTokenInput: UserEmailValidationTokenInput;
-  UserEmailValidationTokenPayload: ResolverTypeWrapper<UserEmailValidationTokenPayload>;
-  UserFollowingChannelsSort: UserFollowingChannelsSort;
-  UserFollowingTopicsSort: UserFollowingTopicsSort;
-  UserInterest: ResolverTypeWrapper<UserInterest>;
-  UserInterestAddInput: UserInterestAddInput;
-  UserInterestAddPayload: ResolverTypeWrapper<UserInterestAddPayload>;
-  UserInterestConnection: ResolverTypeWrapper<UserInterestConnection>;
-  UserInterestEdge: ResolverTypeWrapper<UserInterestEdge>;
-  UserInterestRemoveInput: UserInterestRemoveInput;
-  UserInterestRemovePayload: ResolverTypeWrapper<UserInterestRemovePayload>;
-  UserInterestsUpdateInput: UserInterestsUpdateInput;
-  UserInterestsUpdatePayload: ResolverTypeWrapper<UserInterestsUpdatePayload>;
-  UserOpenWebCodeBRequestInput: UserOpenWebCodeBRequestInput;
-  UserOpenWebCodeBRequestPayload: ResolverTypeWrapper<UserOpenWebCodeBRequestPayload>;
-  UserPollAnswer: ResolverTypeWrapper<UserPollAnswer>;
-  UserStats: ResolverTypeWrapper<UserStats>;
-  UserStatsCollections: ResolverTypeWrapper<UserStatsCollections>;
-  UserStatsFollowers: ResolverTypeWrapper<UserStatsFollowers>;
-  UserStatsFollowingChannels: ResolverTypeWrapper<UserStatsFollowingChannels>;
-  UserStatsFollowingTopics: ResolverTypeWrapper<UserStatsFollowingTopics>;
-  UserStatsLikedVideos: ResolverTypeWrapper<UserStatsLikedVideos>;
-  UserStatsReactionVideos: ResolverTypeWrapper<UserStatsReactionVideos>;
-  UserStatsUploadedVideos: ResolverTypeWrapper<UserStatsUploadedVideos>;
-  UserStatsVideos: ResolverTypeWrapper<UserStatsVideos>;
-  UserStatsWatchLater: ResolverTypeWrapper<UserStatsWatchLater>;
-  UserStatsWatchedVideos: ResolverTypeWrapper<UserStatsWatchedVideos>;
-  UserSubscriptionsType: UserSubscriptionsType;
-  Video: ResolverTypeWrapper<Video>;
-  VideoConnection: ResolverTypeWrapper<VideoConnection>;
-  VideoDigest: ResolverTypeWrapper<VideoDigest>;
-  VideoEdge: ResolverTypeWrapper<VideoEdge>;
-  VideoEngagementMetrics: ResolverTypeWrapper<VideoEngagementMetrics>;
-  VideoFilter: VideoFilter;
-  VideoMetric: ResolverTypeWrapper<VideoMetric>;
-  VideoMetricConnection: ResolverTypeWrapper<VideoMetricConnection>;
-  VideoMetricEdge: ResolverTypeWrapper<VideoMetricEdge>;
-  VideoMetrics: ResolverTypeWrapper<VideoMetrics>;
-  VideoOrLive: ResolverTypeWrapper<ResolversUnionTypes<ResolversTypes>['VideoOrLive']>;
-  VideoRelatedAlgo: VideoRelatedAlgo;
-  VideoSettings: ResolverTypeWrapper<VideoSettings>;
-  VideoShareUrls: ResolverTypeWrapper<VideoShareUrls>;
-  VideoStats: ResolverTypeWrapper<VideoStats>;
-  VideoStatsBookmarks: ResolverTypeWrapper<VideoStatsBookmarks>;
-  VideoStatsFavorites: ResolverTypeWrapper<VideoStatsFavorites>;
-  VideoStatsLikes: ResolverTypeWrapper<VideoStatsLikes>;
-  VideoStatsReactionVideos: ResolverTypeWrapper<VideoStatsReactionVideos>;
-  VideoStatsSaves: ResolverTypeWrapper<VideoStatsSaves>;
-  VideoStatsViews: ResolverTypeWrapper<VideoStatsViews>;
-  VideoStatus: VideoStatus;
-  VideoStreamUrls: ResolverTypeWrapper<VideoStreamUrls>;
-  VideoStreams: ResolverTypeWrapper<VideoStreams>;
-  VideoStreamsConnection: ResolverTypeWrapper<VideoStreamsConnection>;
-  VideoStreamsEdge: ResolverTypeWrapper<VideoStreamsEdge>;
-  VideoViewMetrics: ResolverTypeWrapper<VideoViewMetrics>;
-  VideoViewerEngagement: ResolverTypeWrapper<VideoViewerEngagement>;
-  ViewerEngagement: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['ViewerEngagement']>;
-  Views: ResolverTypeWrapper<Views>;
-  Visibility: Visibility;
-  VisibilityOperator: VisibilityOperator;
-  Watch: ResolverTypeWrapper<Omit<Watch, 'post'> & { post: ResolversTypes['Post'] }>;
-  WatchedVideoAddInput: WatchedVideoAddInput;
-  WatchedVideoAddPayload: ResolverTypeWrapper<WatchedVideoAddPayload>;
-  Web: ResolverTypeWrapper<Web>;
-  WebMetadata: ResolverTypeWrapper<WebMetadata>;
-  WebMetadataConnection: ResolverTypeWrapper<WebMetadataConnection>;
-  WebMetadataConnectionConnection: ResolverTypeWrapper<WebMetadataConnectionConnection>;
-  WebMetadataConnectionEdge: ResolverTypeWrapper<WebMetadataConnectionEdge>;
-  addLikeInput: AddLikeInput;
-  removeLikeInput: RemoveLikeInput;
-};
-
-/** Mapping between all available schema types and the resolvers parents */
-export type ResolversParentTypes = {
-  AccountOperator: AccountOperator;
-  ActivateUserInput: ActivateUserInput;
-  ActivateUserPayload: ActivateUserPayload;
-  ActivityOperator: ActivityOperator;
-  AddCollectionVideoInput: AddCollectionVideoInput;
-  AddCollectionVideoPayload: AddCollectionVideoPayload;
-  AddWatchLaterVideoInput: AddWatchLaterVideoInput;
-  AddWatchLaterVideoPayload: AddWatchLaterVideoPayload;
-  Algorithm: Algorithm;
-  AlgorithmNameOperator: AlgorithmNameOperator;
-  Analytics: Omit<Analytics, 'timeSeries' | 'topValues'> & { timeSeries: ResolversParentTypes['AnalyticsPayload'], topValues: ResolversParentTypes['AnalyticsPayload'] };
-  AnalyticsFilter: AnalyticsFilter;
-  AnalyticsFlatPayload: AnalyticsFlatPayload;
-  AnalyticsGroupedPayload: AnalyticsGroupedPayload;
-  AnalyticsGroupedPayloadItem: AnalyticsGroupedPayloadItem;
-  AnalyticsMetric: AnalyticsMetric;
-  AnalyticsOrderBy: AnalyticsOrderBy;
-  AnalyticsPayload: ResolversInterfaceTypes<ResolversParentTypes>['AnalyticsPayload'];
-  AnalyticsReport: AnalyticsReport;
-  AnalyticsReportConnection: AnalyticsReportConnection;
-  AnalyticsReportCreateInput: AnalyticsReportCreateInput;
-  AnalyticsReportCreatePayload: AnalyticsReportCreatePayload;
-  AnalyticsReportEdge: AnalyticsReportEdge;
-  AnalyticsReportFilters: AnalyticsReportFilters;
-  AnalyticsReportOrderBy: AnalyticsReportOrderBy;
-  AnalyticsTimePeriod: AnalyticsTimePeriod;
-  Any: Scalars['Any']['output'];
-  AppealApplication: AppealApplication;
-  AskPartnerReportFileInput: AskPartnerReportFileInput;
-  AskPartnerReportFilePayload: AskPartnerReportFilePayload;
-  Attribute: Attribute;
-  AttributeConnection: AttributeConnection;
-  AttributeEdge: AttributeEdge;
-  AutoSuggestionFilter: AutoSuggestionFilter;
-  Behavior: Behavior;
-  BehaviorRuleTag: BehaviorRuleTag;
-  BehaviorRuleTagConnection: BehaviorRuleTagConnection;
-  BehaviorRuleTagEdge: BehaviorRuleTagEdge;
-  BigInt: Scalars['BigInt']['output'];
-  Bookmark: ResolversInterfaceTypes<ResolversParentTypes>['Bookmark'];
-  BookmarkConnection: BookmarkConnection;
-  BookmarkEdge: Omit<BookmarkEdge, 'node'> & { node?: Maybe<ResolversParentTypes['Bookmark']> };
-  BookmarkFilter: BookmarkFilter;
-  BookmarkMetric: BookmarkMetric;
-  BookmarkMetricConnection: BookmarkMetricConnection;
-  BookmarkMetricEdge: BookmarkMetricEdge;
-  BookmarkOperator: BookmarkOperator;
-  Boolean: Scalars['Boolean']['output'];
-  BooleanOperator: BooleanOperator;
-  Caption: Caption;
-  CaptionConnection: CaptionConnection;
-  CaptionEdge: CaptionEdge;
-  Category: ResolversInterfaceTypes<ResolversParentTypes>['Category'];
-  CategoryConnection: CategoryConnection;
-  CategoryEdge: Omit<CategoryEdge, 'node'> & { node?: Maybe<ResolversParentTypes['Category']> };
-  CategoryFilter: CategoryFilter;
-  CategoryOperator: CategoryOperator;
-  Channel: Channel;
-  ChannelConnection: ChannelConnection;
-  ChannelCreateInput: ChannelCreateInput;
-  ChannelCreatePayload: ChannelCreatePayload;
-  ChannelEdge: ChannelEdge;
-  ChannelEngagementMetrics: ChannelEngagementMetrics;
-  ChannelExternalLinks: ChannelExternalLinks;
-  ChannelExternalLinksInput: ChannelExternalLinksInput;
-  ChannelMetric: ChannelMetric;
-  ChannelMetricConnection: ChannelMetricConnection;
-  ChannelMetricEdge: ChannelMetricEdge;
-  ChannelMetrics: ChannelMetrics;
-  ChannelPermission: ChannelPermission;
-  ChannelShareUrls: ChannelShareUrls;
-  ChannelStats: ChannelStats;
-  ChannelStatsFollowers: ChannelStatsFollowers;
-  ChannelStatsReactions: ChannelStatsReactions;
-  ChannelStatsVideos: ChannelStatsVideos;
-  ChannelStatsViews: ChannelStatsViews;
-  ChannelUpdateRequired: ChannelUpdateRequired;
-  ChannelViewMetrics: ChannelViewMetrics;
-  ClearCollectionMediasInput: ClearCollectionMediasInput;
-  ClearCollectionMediasPayload: ClearCollectionMediasPayload;
-  ClearLikedVideosInput: ClearLikedVideosInput;
-  ClearLikedVideosPayload: ClearLikedVideosPayload;
-  ClearWatchLaterVideosInput: ClearWatchLaterVideosInput;
-  ClearWatchLaterVideosPayload: ClearWatchLaterVideosPayload;
-  ClearWatchedVideosInput: ClearWatchedVideosInput;
-  ClearWatchedVideosPayload: ClearWatchedVideosPayload;
-  Collection: Collection;
-  CollectionConnection: CollectionConnection;
-  CollectionEdge: CollectionEdge;
-  CollectionEngagementMetrics: CollectionEngagementMetrics;
-  CollectionFilter: CollectionFilter;
-  CollectionMetric: CollectionMetric;
-  CollectionMetricConnection: CollectionMetricConnection;
-  CollectionMetricEdge: CollectionMetricEdge;
-  CollectionMetrics: CollectionMetrics;
-  CollectionStats: CollectionStats;
-  CollectionStatsVideos: CollectionStatsVideos;
-  Comment: Omit<Comment, 'opener'> & { opener?: Maybe<ResolversParentTypes['Story']> };
-  CommentConnection: CommentConnection;
-  CommentEdge: CommentEdge;
-  CommentEngagementMetrics: CommentEngagementMetrics;
-  CommentMetric: CommentMetric;
-  CommentMetricConnection: CommentMetricConnection;
-  CommentMetricEdge: CommentMetricEdge;
-  CommentMetrics: CommentMetrics;
-  CommentSort: CommentSort;
-  CommentViewerEngagement: CommentViewerEngagement;
-  Component: ResolversUnionTypes<ResolversParentTypes>['Component'];
-  ComponentConnection: ComponentConnection;
-  ComponentEdge: Omit<ComponentEdge, 'node'> & { node?: Maybe<ResolversParentTypes['Component']> };
-  Content: ResolversInterfaceTypes<ResolversParentTypes>['Content'];
-  ContentCategory: ContentCategory;
-  Conversation: Omit<Conversation, 'story'> & { story?: Maybe<ResolversParentTypes['Story']> };
-  ConversationConnection: ConversationConnection;
-  ConversationContext: ConversationContext;
-  ConversationEdge: ConversationEdge;
-  ConversationFilter: ConversationFilter;
-  Country: Country;
-  CountryConnection: CountryConnection;
-  CountryEdge: CountryEdge;
-  CreateBehaviorRuleInput: CreateBehaviorRuleInput;
-  CreateBehaviorRulePayload: CreateBehaviorRulePayload;
-  CreateCollectionInput: CreateCollectionInput;
-  CreateCollectionPayload: CreateCollectionPayload;
-  CreateCommentInput: CreateCommentInput;
-  CreateCommentPayload: CreateCommentPayload;
-  CreateReactionInput: CreateReactionInput;
-  CreateUserInput: CreateUserInput;
-  CreateUserPayload: CreateUserPayload;
-  CreateVideoInput: CreateVideoInput;
-  CreateVideoPayload: CreateVideoPayload;
-  CuratedCategory: CuratedCategory;
-  CuratedCategoryConnection: CuratedCategoryConnection;
-  CuratedCategoryEdge: CuratedCategoryEdge;
-  DailymotionAd: DailymotionAd;
-  Date: Scalars['Date']['output'];
-  DateTime: Scalars['DateTime']['output'];
-  DateTimeOperator: DateTimeOperator;
-  DeleteBehaviorRuleInput: DeleteBehaviorRuleInput;
-  DeleteBehaviorRulePayload: DeleteBehaviorRulePayload;
-  DeleteCommentInput: DeleteCommentInput;
-  DeleteCommentPayload: DeleteCommentPayload;
-  DeleteReactionInput: DeleteReactionInput;
-  DeleteReactionPayload: DeleteReactionPayload;
-  DeleteUserInput: DeleteUserInput;
-  DeleteUserPayload: DeleteUserPayload;
-  DeleteVideoInput: DeleteVideoInput;
-  DeleteVideoPayload: DeleteVideoPayload;
-  EmailChangeRequest: EmailChangeRequest;
-  Embed: Embed;
-  ExperimentMatch: ExperimentMatch;
-  ExperimentMatchConnection: ExperimentMatchConnection;
-  ExperimentMatchEdge: ExperimentMatchEdge;
-  FallbackCountry: FallbackCountry;
-  FallbackCountryConnection: FallbackCountryConnection;
-  FallbackCountryEdge: FallbackCountryEdge;
-  Favorite: Omit<Favorite, 'post'> & { post: ResolversParentTypes['Post'] };
-  FeatureMatch: FeatureMatch;
-  FeatureMatchConnection: FeatureMatchConnection;
-  FeatureMatchEdge: FeatureMatchEdge;
-  FeaturedContent: FeaturedContent;
-  FeedFilter: FeedFilter;
-  FeedPost: Omit<FeedPost, 'post'> & { post?: Maybe<ResolversParentTypes['Post']> };
-  FeedPostConnection: FeedPostConnection;
-  FeedPostEdge: FeedPostEdge;
-  FeedSort: FeedSort;
-  FileUpload: FileUpload;
-  Float: Scalars['Float']['output'];
-  FollowChannelInput: FollowChannelInput;
-  FollowChannelPayload: FollowChannelPayload;
-  FollowChannelsInput: FollowChannelsInput;
-  FollowChannelsPayload: FollowChannelsPayload;
-  FollowTopicInput: FollowTopicInput;
-  FollowTopicPayload: FollowTopicPayload;
-  FollowTopicsInput: FollowTopicsInput;
-  FollowTopicsPayload: FollowTopicsPayload;
-  FollowUserInput: FollowUserInput;
-  FollowUserPayload: FollowUserPayload;
-  FollowedChannel: FollowedChannel;
-  FollowedChannelConnection: FollowedChannelConnection;
-  FollowedChannelEdge: FollowedChannelEdge;
-  FollowedTopic: FollowedTopic;
-  FollowedTopicConnection: FollowedTopicConnection;
-  FollowedTopicEdge: FollowedTopicEdge;
-  Follower: Follower;
-  FollowerConnection: FollowerConnection;
-  FollowerEdge: FollowerEdge;
-  FollowerEngagement: FollowerEngagement;
-  FollowerEngagementNotifications: FollowerEngagementNotifications;
-  FollowerMetric: FollowerMetric;
-  FollowerMetricConnection: FollowerMetricConnection;
-  FollowerMetricEdge: FollowerMetricEdge;
-  Following: Omit<Following, 'story'> & { story?: Maybe<ResolversParentTypes['Story']> };
-  FollowingChannelStartsLive: FollowingChannelStartsLive;
-  FollowingChannelUploadsVideo: FollowingChannelUploadsVideo;
-  FollowingConnection: FollowingConnection;
-  FollowingEdge: FollowingEdge;
-  FollowingFilter: FollowingFilter;
-  FollowingInput: FollowingInput;
-  FollowingMetric: FollowingMetric;
-  FollowingMetricConnection: FollowingMetricConnection;
-  FollowingMetricEdge: FollowingMetricEdge;
-  FollowingPayload: FollowingPayload;
-  FollowingStartsLive: FollowingStartsLive;
-  GenerateFileUploadUrlInput: GenerateFileUploadUrlInput;
-  GenerateFileUploadUrlPayload: GenerateFileUploadUrlPayload;
-  GenerateVerifyEmailTokenInput: GenerateVerifyEmailTokenInput;
-  GenerateVerifyEmailTokenPayload: GenerateVerifyEmailTokenPayload;
-  GeoblockedCountries: GeoblockedCountries;
-  Geoblocking: Geoblocking;
-  GeoblockingConnection: GeoblockingConnection;
-  GeoblockingEdge: GeoblockingEdge;
-  Hashtag: Hashtag;
-  HashtagConnection: HashtagConnection;
-  HashtagEdge: HashtagEdge;
-  HashtagEngagementMetrics: HashtagEngagementMetrics;
-  HashtagMetrics: HashtagMetrics;
-  History: ResolversInterfaceTypes<ResolversParentTypes>['History'];
-  HistoryConnection: HistoryConnection;
-  HistoryEdge: Omit<HistoryEdge, 'node'> & { node?: Maybe<ResolversParentTypes['History']> };
-  HistoryFilter: HistoryFilter;
-  HtmlPage: HtmlPage;
-  ID: Scalars['ID']['output'];
-  IDOperator: IdOperator;
-  Image: Image;
-  Int: Scalars['Int']['output'];
-  IntOperator: IntOperator;
-  Interaction: ResolversUnionTypes<ResolversParentTypes>['Interaction'];
-  InteractionConnection: InteractionConnection;
-  InteractionEdge: Omit<InteractionEdge, 'node'> & { node?: Maybe<ResolversParentTypes['Interaction']> };
-  Interest: Interest;
-  InterestConnection: InterestConnection;
-  InterestEdge: InterestEdge;
-  Language: Language;
-  Like: Omit<Like, 'post'> & { post: ResolversParentTypes['Post'] };
-  LikeMetric: LikeMetric;
-  LikeMetricConnection: LikeMetricConnection;
-  LikeMetricEdge: LikeMetricEdge;
-  LikeMetricFilter: LikeMetricFilter;
-  LikePayload: LikePayload;
-  LikeRatingOperator: LikeRatingOperator;
-  LikeVideoInput: LikeVideoInput;
-  LikeVideoPayload: LikeVideoPayload;
-  Live: Live;
-  LiveConnection: LiveConnection;
-  LiveEdge: LiveEdge;
-  LiveEngagementMetrics: LiveEngagementMetrics;
-  LiveFilter: LiveFilter;
-  LiveMetric: LiveMetric;
-  LiveMetricConnection: LiveMetricConnection;
-  LiveMetricEdge: LiveMetricEdge;
-  LiveMetrics: LiveMetrics;
-  LiveSettings: LiveSettings;
-  LiveShareUrls: LiveShareUrls;
-  LiveStats: LiveStats;
-  LiveStatsViews: LiveStatsViews;
-  LiveStreamUrls: LiveStreamUrls;
-  LiveStreams: LiveStreams;
-  LiveStreamsConnection: LiveStreamsConnection;
-  LiveStreamsEdge: LiveStreamsEdge;
-  LiveViewerEngagement: LiveViewerEngagement;
-  Localization: Localization;
-  LocalizationMe: LocalizationMe;
-  Media: ResolversUnionTypes<ResolversParentTypes>['Media'];
-  MediaConnection: MediaConnection;
-  MediaEdge: Omit<MediaEdge, 'node'> & { node?: Maybe<ResolversParentTypes['Media']> };
-  MediaModeration: MediaModeration;
-  MediaPublishingInfo: MediaPublishingInfo;
-  MediaStreams: ResolversUnionTypes<ResolversParentTypes>['MediaStreams'];
-  MediaStreamsConnection: MediaStreamsConnection;
-  MediaStreamsEdge: Omit<MediaStreamsEdge, 'node'> & { node?: Maybe<ResolversParentTypes['MediaStreams']> };
-  MediaTag: MediaTag;
-  MediaTagConnection: MediaTagConnection;
-  MediaTagEdge: MediaTagEdge;
-  MediaUploadInfo: MediaUploadInfo;
-  Metadata: Metadata;
-  Metric: ResolversInterfaceTypes<ResolversParentTypes>['Metric'];
-  ModerationAction: ModerationAction;
-  ModerationActionAppealInput: ModerationActionAppealInput;
-  ModerationActionAppealPayload: ModerationActionAppealPayload;
-  MonetizationInsights: MonetizationInsights;
-  Mutation: {};
-  Neon: Neon;
-  Node: ResolversInterfaceTypes<ResolversParentTypes>['Node'];
-  NotificationFollowedChannelUpdateInput: NotificationFollowedChannelUpdateInput;
-  NotificationFollowedChannelUpdatePayload: NotificationFollowedChannelUpdatePayload;
-  NotificationSettings: NotificationSettings;
-  Organization: Organization;
-  OrganizationAnalysis: OrganizationAnalysis;
-  OrganizationConnection: OrganizationConnection;
-  OrganizationEdge: OrganizationEdge;
-  OrganizationPermission: OrganizationPermission;
-  OrganizationStats: OrganizationStats;
-  OrganizationStatsChannels: OrganizationStatsChannels;
-  PageInfo: PageInfo;
-  Partner: Partner;
-  PartnerReportFile: PartnerReportFile;
-  PartnerReportFilters: PartnerReportFilters;
-  PartnerSpace: PartnerSpace;
-  Player: Player;
-  PlayerQueue: PlayerQueue;
-  PlayerQueueContextArgument: PlayerQueueContextArgument;
-  Poll: Omit<Poll, 'component' | 'opener' | 'post'> & { component?: Maybe<ResolversParentTypes['Component']>, opener?: Maybe<ResolversParentTypes['Story']>, post?: Maybe<ResolversParentTypes['Post']> };
-  PollAnswerInput: PollAnswerInput;
-  PollAnswerPayload: PollAnswerPayload;
-  PollConnection: PollConnection;
-  PollEdge: PollEdge;
-  PollFilter: PollFilter;
-  PollOption: PollOption;
-  PollShareUrls: PollShareUrls;
-  Post: ResolversUnionTypes<ResolversParentTypes>['Post'];
-  PostConnection: PostConnection;
-  PostEdge: Omit<PostEdge, 'node'> & { node?: Maybe<ResolversParentTypes['Post']> };
-  PostEngagementMetrics: ResolversInterfaceTypes<ResolversParentTypes>['PostEngagementMetrics'];
-  PostMetric: ResolversUnionTypes<ResolversParentTypes>['PostMetric'];
-  PostMetricConnection: PostMetricConnection;
-  PostMetricEdge: Omit<PostMetricEdge, 'node'> & { node?: Maybe<ResolversParentTypes['PostMetric']> };
-  PostMetrics: ResolversInterfaceTypes<ResolversParentTypes>['PostMetrics'];
-  PostOperator: PostOperator;
-  PostStatusOperator: PostStatusOperator;
-  ProductUpdates: ProductUpdates;
-  Quality: Quality;
-  Query: {};
-  Reaction: Omit<Reaction, 'opener'> & { opener?: Maybe<ResolversParentTypes['Story']> };
-  ReactionConnection: ReactionConnection;
-  ReactionEdge: ReactionEdge;
-  ReactionEngagementMetrics: ReactionEngagementMetrics;
-  ReactionMetric: ReactionMetric;
-  ReactionMetricConnection: ReactionMetricConnection;
-  ReactionMetricEdge: ReactionMetricEdge;
-  ReactionMetrics: ReactionMetrics;
-  ReactionPayload: ReactionPayload;
-  ReactionShareUrls: ReactionShareUrls;
-  ReactionStreamUrls: ReactionStreamUrls;
-  ReactionVideo: ReactionVideo;
-  ReactionVideoConnection: ReactionVideoConnection;
-  ReactionVideoCreateInput: ReactionVideoCreateInput;
-  ReactionVideoDeleteInput: ReactionVideoDeleteInput;
-  ReactionVideoDeletePayload: ReactionVideoDeletePayload;
-  ReactionVideoEdge: ReactionVideoEdge;
-  ReactionVideoPayload: ReactionVideoPayload;
-  ReactionVideoStats: ReactionVideoStats;
-  ReactionVideoStatsBookmarks: ReactionVideoStatsBookmarks;
-  ReactionVideoStatsFavorites: ReactionVideoStatsFavorites;
-  ReactionVideoStatsLikes: ReactionVideoStatsLikes;
-  ReactionVideoStatsReactionVideos: ReactionVideoStatsReactionVideos;
-  ReactionVideoStatsSaves: ReactionVideoStatsSaves;
-  ReactionVideoUpdateInput: ReactionVideoUpdateInput;
-  ReactionViewerEngagement: ReactionViewerEngagement;
-  RecommendedRecording: Omit<RecommendedRecording, 'recording'> & { recording?: Maybe<ResolversParentTypes['Recording']> };
-  RecommendedRecordingConnection: RecommendedRecordingConnection;
-  RecommendedRecordingEdge: RecommendedRecordingEdge;
-  Recording: ResolversInterfaceTypes<ResolversParentTypes>['Recording'];
-  RecoverPasswordInput: RecoverPasswordInput;
-  RecoverPasswordPayload: RecoverPasswordPayload;
-  RelatedVideoContext: RelatedVideoContext;
-  RemindUnwatchedVideos: RemindUnwatchedVideos;
-  RemoveCollectionInput: RemoveCollectionInput;
-  RemoveCollectionPayload: RemoveCollectionPayload;
-  RemoveCollectionVideoInput: RemoveCollectionVideoInput;
-  RemoveCollectionVideoPayload: RemoveCollectionVideoPayload;
-  RemoveWatchLaterVideoInput: RemoveWatchLaterVideoInput;
-  RemoveWatchLaterVideoPayload: RemoveWatchLaterVideoPayload;
-  RemoveWatchedVideoInput: RemoveWatchedVideoInput;
-  RemoveWatchedVideoPayload: RemoveWatchedVideoPayload;
-  ReorderCollectionMediaInput: ReorderCollectionMediaInput;
-  ReorderCollectionMediaPayload: ReorderCollectionMediaPayload;
-  ReportCommentInput: ReportCommentInput;
-  ReportCommentPayload: ReportCommentPayload;
-  ReportCreatorInput: ReportCreatorInput;
-  ReportCreatorPayload: ReportCreatorPayload;
-  ReportFileDownloadLink: ReportFileDownloadLink;
-  ReportFileDownloadLinkConnection: ReportFileDownloadLinkConnection;
-  ReportFileDownloadLinkEdge: ReportFileDownloadLinkEdge;
-  ReportRecordingInput: ReportRecordingInput;
-  ReportRecordingPayload: ReportRecordingPayload;
-  ReportVideoInput: ReportVideoInput;
-  ReportVideoPayload: ReportVideoPayload;
-  ReporterEmailVerifyInput: ReporterEmailVerifyInput;
-  ReporterEmailVerifyPayload: ReporterEmailVerifyPayload;
-  RequestActivationCodeInput: RequestActivationCodeInput;
-  RequestActivationCodePayload: RequestActivationCodePayload;
-  ResetPasswordInput: ResetPasswordInput;
-  ResetPasswordPayload: ResetPasswordPayload;
-  Restriction: Restriction;
-  Rule: Rule;
-  RuleConnection: RuleConnection;
-  RuleEdge: RuleEdge;
-  Search: Search;
-  Section: Omit<Section, 'relatedComponent'> & { relatedComponent?: Maybe<ResolversParentTypes['Component']> };
-  SectionConnection: SectionConnection;
-  SectionContextArgument: SectionContextArgument;
-  SectionEdge: SectionEdge;
-  SendTransactionalEmailInput: SendTransactionalEmailInput;
-  SendTransactionalEmailPayload: SendTransactionalEmailPayload;
-  SendVerifyEmailCodeInput: SendVerifyEmailCodeInput;
-  SendVerifyEmailCodePayload: SendVerifyEmailCodePayload;
-  ShareUrls: ResolversInterfaceTypes<ResolversParentTypes>['ShareUrls'];
-  SharingURL: SharingUrl;
-  SharingURLConnection: SharingUrlConnection;
-  SharingURLEdge: SharingUrlEdge;
-  Story: ResolversUnionTypes<ResolversParentTypes>['Story'];
-  StoryConnection: StoryConnection;
-  StoryEdge: Omit<StoryEdge, 'node'> & { node?: Maybe<ResolversParentTypes['Story']> };
-  StoryFilter: StoryFilter;
-  StoryOperator: StoryOperator;
-  StorySort: StorySort;
-  StreamUrls: ResolversInterfaceTypes<ResolversParentTypes>['StreamUrls'];
-  String: Scalars['String']['output'];
-  StringOperator: StringOperator;
-  Subdivision: Subdivision;
-  Subtitle: Subtitle;
-  SubtitleConnection: SubtitleConnection;
-  SubtitleEdge: SubtitleEdge;
-  Suggestion: Suggestion;
-  SuggestionConnection: SuggestionConnection;
-  SuggestionEdge: SuggestionEdge;
-  SupportedCountry: SupportedCountry;
-  SupportedCountryConnection: SupportedCountryConnection;
-  SupportedCountryEdge: SupportedCountryEdge;
-  SupportedLanguage: SupportedLanguage;
-  SupportedLanguageConnection: SupportedLanguageConnection;
-  SupportedLanguageEdge: SupportedLanguageEdge;
-  Thread: ResolversInterfaceTypes<ResolversParentTypes>['Thread'];
-  ThreadConnection: ThreadConnection;
-  ThreadEdge: Omit<ThreadEdge, 'node'> & { node?: Maybe<ResolversParentTypes['Thread']> };
-  ThreadFilter: ThreadFilter;
-  ThreadOperator: ThreadOperator;
-  Thumbnails: Thumbnails;
-  Time: Scalars['Time']['output'];
-  Tips: Tips;
-  Topic: Topic;
-  TopicConnection: TopicConnection;
-  TopicEdge: TopicEdge;
-  TopicLabel: TopicLabel;
-  TopicLabelConnection: TopicLabelConnection;
-  TopicLabelEdge: TopicLabelEdge;
-  TopicShareUrls: TopicShareUrls;
-  TopicStats: TopicStats;
-  TopicStatsFollowers: TopicStatsFollowers;
-  TopicStatsVideos: TopicStatsVideos;
-  TopicWhitelistStatus: TopicWhitelistStatus;
-  UnfollowChannelInput: UnfollowChannelInput;
-  UnfollowChannelPayload: UnfollowChannelPayload;
-  UnfollowTopicInput: UnfollowTopicInput;
-  UnfollowTopicPayload: UnfollowTopicPayload;
-  UnfollowUserInput: UnfollowUserInput;
-  UnfollowUserPayload: UnfollowUserPayload;
-  UnlikeVideoInput: UnlikeVideoInput;
-  UnlikeVideoPayload: UnlikeVideoPayload;
-  UpdateBehaviorRuleInput: UpdateBehaviorRuleInput;
-  UpdateBehaviorRulePayload: UpdateBehaviorRulePayload;
-  UpdateChannelInput: UpdateChannelInput;
-  UpdateChannelPayload: UpdateChannelPayload;
-  UpdateCollectionInput: UpdateCollectionInput;
-  UpdateCollectionPayload: UpdateCollectionPayload;
-  UpdateNotificationSettingsEmailInput: UpdateNotificationSettingsEmailInput;
-  UpdateNotificationSettingsEmailPayload: UpdateNotificationSettingsEmailPayload;
-  UpdateNotificationSettingsPushInput: UpdateNotificationSettingsPushInput;
-  UpdateNotificationSettingsPushPayload: UpdateNotificationSettingsPushPayload;
-  UpdateReactionInput: UpdateReactionInput;
-  UpdateUserInput: UpdateUserInput;
-  UpdateUserPayload: UpdateUserPayload;
-  UpdateVideoInput: UpdateVideoInput;
-  UpdateVideoPayload: UpdateVideoPayload;
-  User: User;
-  UserEmailChangeConfirmInput: UserEmailChangeConfirmInput;
-  UserEmailChangeConfirmPayload: UserEmailChangeConfirmPayload;
-  UserEmailChangeRequestInput: UserEmailChangeRequestInput;
-  UserEmailChangeRequestPayload: UserEmailChangeRequestPayload;
-  UserEmailConfirmationCodeResetInput: UserEmailConfirmationCodeResetInput;
-  UserEmailConfirmationCodeResetPayload: UserEmailConfirmationCodeResetPayload;
-  UserEmailValidationTokenInput: UserEmailValidationTokenInput;
-  UserEmailValidationTokenPayload: UserEmailValidationTokenPayload;
-  UserInterest: UserInterest;
-  UserInterestAddInput: UserInterestAddInput;
-  UserInterestAddPayload: UserInterestAddPayload;
-  UserInterestConnection: UserInterestConnection;
-  UserInterestEdge: UserInterestEdge;
-  UserInterestRemoveInput: UserInterestRemoveInput;
-  UserInterestRemovePayload: UserInterestRemovePayload;
-  UserInterestsUpdateInput: UserInterestsUpdateInput;
-  UserInterestsUpdatePayload: UserInterestsUpdatePayload;
-  UserOpenWebCodeBRequestInput: UserOpenWebCodeBRequestInput;
-  UserOpenWebCodeBRequestPayload: UserOpenWebCodeBRequestPayload;
-  UserPollAnswer: UserPollAnswer;
-  UserStats: UserStats;
-  UserStatsCollections: UserStatsCollections;
-  UserStatsFollowers: UserStatsFollowers;
-  UserStatsFollowingChannels: UserStatsFollowingChannels;
-  UserStatsFollowingTopics: UserStatsFollowingTopics;
-  UserStatsLikedVideos: UserStatsLikedVideos;
-  UserStatsReactionVideos: UserStatsReactionVideos;
-  UserStatsUploadedVideos: UserStatsUploadedVideos;
-  UserStatsVideos: UserStatsVideos;
-  UserStatsWatchLater: UserStatsWatchLater;
-  UserStatsWatchedVideos: UserStatsWatchedVideos;
-  Video: Video;
-  VideoConnection: VideoConnection;
-  VideoDigest: VideoDigest;
-  VideoEdge: VideoEdge;
-  VideoEngagementMetrics: VideoEngagementMetrics;
-  VideoFilter: VideoFilter;
-  VideoMetric: VideoMetric;
-  VideoMetricConnection: VideoMetricConnection;
-  VideoMetricEdge: VideoMetricEdge;
-  VideoMetrics: VideoMetrics;
-  VideoOrLive: ResolversUnionTypes<ResolversParentTypes>['VideoOrLive'];
-  VideoSettings: VideoSettings;
-  VideoShareUrls: VideoShareUrls;
-  VideoStats: VideoStats;
-  VideoStatsBookmarks: VideoStatsBookmarks;
-  VideoStatsFavorites: VideoStatsFavorites;
-  VideoStatsLikes: VideoStatsLikes;
-  VideoStatsReactionVideos: VideoStatsReactionVideos;
-  VideoStatsSaves: VideoStatsSaves;
-  VideoStatsViews: VideoStatsViews;
-  VideoStreamUrls: VideoStreamUrls;
-  VideoStreams: VideoStreams;
-  VideoStreamsConnection: VideoStreamsConnection;
-  VideoStreamsEdge: VideoStreamsEdge;
-  VideoViewMetrics: VideoViewMetrics;
-  VideoViewerEngagement: VideoViewerEngagement;
-  ViewerEngagement: ResolversInterfaceTypes<ResolversParentTypes>['ViewerEngagement'];
-  Views: Views;
-  VisibilityOperator: VisibilityOperator;
-  Watch: Omit<Watch, 'post'> & { post: ResolversParentTypes['Post'] };
-  WatchedVideoAddInput: WatchedVideoAddInput;
-  WatchedVideoAddPayload: WatchedVideoAddPayload;
-  Web: Web;
-  WebMetadata: WebMetadata;
-  WebMetadataConnection: WebMetadataConnection;
-  WebMetadataConnectionConnection: WebMetadataConnectionConnection;
-  WebMetadataConnectionEdge: WebMetadataConnectionEdge;
-  addLikeInput: AddLikeInput;
-  removeLikeInput: RemoveLikeInput;
-};
-
-export type ActAsPyEnumDirectiveArgs = {
-  name: Scalars['String']['input'];
-};
-
-export type ActAsPyEnumDirectiveResolver<Result, Parent, ContextType = any, Args = ActAsPyEnumDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
-
-export type AuthDirectiveArgs = {
-  accounts?: Maybe<Array<AccountType>>;
-  dailyteam?: Maybe<Scalars['Boolean']['input']>;
-  permissions?: Maybe<Array<RolePermission>>;
-  roles?: Maybe<Array<Role>>;
-};
-
-export type AuthDirectiveResolver<Result, Parent, ContextType = any, Args = AuthDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
-
-export type BetaDirectiveArgs = {
-  reason?: Scalars['String']['input'];
-};
-
-export type BetaDirectiveResolver<Result, Parent, ContextType = any, Args = BetaDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
-
-export type ConstraintDirectiveArgs = {
-  fieldName?: Maybe<Scalars['String']['input']>;
-  filterOperators?: Maybe<Array<Scalars['String']['input']>>;
-  filterValues?: Maybe<Array<Scalars['String']['input']>>;
-  format?: Maybe<Scalars['String']['input']>;
-  id?: Maybe<Array<Scalars['String']['input']>>;
-  max?: Maybe<Scalars['Int']['input']>;
-  maxItems?: Maybe<Scalars['Int']['input']>;
-  maxLength?: Maybe<Scalars['Int']['input']>;
-  min?: Maybe<Scalars['Int']['input']>;
-  minItems?: Maybe<Scalars['Int']['input']>;
-  minLength?: Maybe<Scalars['Int']['input']>;
-  oneOf?: Maybe<Array<Scalars['String']['input']>>;
-  pattern?: Maybe<Scalars['String']['input']>;
-};
-
-export type ConstraintDirectiveResolver<Result, Parent, ContextType = any, Args = ConstraintDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
-
-export type DepthLimitDirectiveArgs = {
-  int: Scalars['Int']['input'];
-};
-
-export type DepthLimitDirectiveResolver<Result, Parent, ContextType = any, Args = DepthLimitDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
-
-export type HiddenDirectiveArgs = { };
-
-export type HiddenDirectiveResolver<Result, Parent, ContextType = any, Args = HiddenDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
-
-export type NonIntrospectableDirectiveArgs = { };
-
-export type NonIntrospectableDirectiveResolver<Result, Parent, ContextType = any, Args = NonIntrospectableDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
-
-export type ResetSecondsDirectiveArgs = { };
-
-export type ResetSecondsDirectiveResolver<Result, Parent, ContextType = any, Args = ResetSecondsDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
-
-export type SkipResolveDirectiveArgs = {
-  paths: Array<Scalars['String']['input']>;
-};
-
-export type SkipResolveDirectiveResolver<Result, Parent, ContextType = any, Args = SkipResolveDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
-
-export type ValidateChoicesDirectiveArgs = {
-  argumentName?: Maybe<Scalars['String']['input']>;
-  choices?: Maybe<Array<Maybe<Scalars['String']['input']>>>;
-  fieldName?: Maybe<Scalars['String']['input']>;
-  message?: Maybe<Scalars['String']['input']>;
-};
-
-export type ValidateChoicesDirectiveResolver<Result, Parent, ContextType = any, Args = ValidateChoicesDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
-
-export type ValidateTimePeriodFrequencyDirectiveArgs = {
-  argumentName?: Maybe<Scalars['String']['input']>;
-  fieldName?: Maybe<Scalars['String']['input']>;
-  message?: Maybe<Scalars['String']['input']>;
-};
-
-export type ValidateTimePeriodFrequencyDirectiveResolver<Result, Parent, ContextType = any, Args = ValidateTimePeriodFrequencyDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
-
-export type ValidateVideoTimeCodeDirectiveArgs = {
-  argumentName?: Maybe<Scalars['String']['input']>;
-  fieldName?: Maybe<Scalars['String']['input']>;
-  message?: Maybe<Scalars['String']['input']>;
-};
-
-export type ValidateVideoTimeCodeDirectiveResolver<Result, Parent, ContextType = any, Args = ValidateVideoTimeCodeDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
-
-export type ActivateUserPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['ActivateUserPayload'] = ResolversParentTypes['ActivateUserPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type AddCollectionVideoPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['AddCollectionVideoPayload'] = ResolversParentTypes['AddCollectionVideoPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type AddWatchLaterVideoPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['AddWatchLaterVideoPayload'] = ResolversParentTypes['AddWatchLaterVideoPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type AlgorithmResolvers<ContextType = any, ParentType extends ResolversParentTypes['Algorithm'] = ResolversParentTypes['Algorithm']> = {
-  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  uuid?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  version?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type AnalyticsResolvers<ContextType = any, ParentType extends ResolversParentTypes['Analytics'] = ResolversParentTypes['Analytics']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  kpi?: Resolver<ResolversTypes['AnalyticsFlatPayload'], ParentType, ContextType, RequireFields<AnalyticsKpiArgs, 'filter' | 'metric' | 'timePeriod'>>;
-  timeSeries?: Resolver<ResolversTypes['AnalyticsPayload'], ParentType, ContextType, RequireFields<AnalyticsTimeSeriesArgs, 'filter' | 'metrics' | 'timePeriod'>>;
-  topValues?: Resolver<ResolversTypes['AnalyticsPayload'], ParentType, ContextType, RequireFields<AnalyticsTopValuesArgs, 'dimensions' | 'filter' | 'limit' | 'metrics' | 'timePeriod'>>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type AnalyticsFlatPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['AnalyticsFlatPayload'] = ResolversParentTypes['AnalyticsFlatPayload']> = {
-  fields?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  values?: Resolver<Array<Maybe<Array<Maybe<ResolversTypes['Any']>>>>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type AnalyticsGroupedPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['AnalyticsGroupedPayload'] = ResolversParentTypes['AnalyticsGroupedPayload']> = {
-  fields?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  values?: Resolver<Array<ResolversTypes['AnalyticsGroupedPayloadItem']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type AnalyticsGroupedPayloadItemResolvers<ContextType = any, ParentType extends ResolversParentTypes['AnalyticsGroupedPayloadItem'] = ResolversParentTypes['AnalyticsGroupedPayloadItem']> = {
-  field?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  values?: Resolver<Array<Maybe<Array<Maybe<ResolversTypes['Any']>>>>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type AnalyticsPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['AnalyticsPayload'] = ResolversParentTypes['AnalyticsPayload']> = {
-  __resolveType: TypeResolveFn<'AnalyticsFlatPayload' | 'AnalyticsGroupedPayload', ParentType, ContextType>;
-  fields?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-};
-
-export type AnalyticsReportResolvers<ContextType = any, ParentType extends ResolversParentTypes['AnalyticsReport'] = ResolversParentTypes['AnalyticsReport']> = {
-  channelXid?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  createDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  createdAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
-  creator?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
-  downloadLinks?: Resolver<Maybe<ResolversTypes['ReportFileDownloadLinkConnection']>, ParentType, ContextType, RequireFields<AnalyticsReportDownloadLinksArgs, 'page'>>;
-  endDate?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
-  hasRevenueInfo?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  organizationXid?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  reportToken?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  startDate?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['AnalyticsReportStatus']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type AnalyticsReportConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['AnalyticsReportConnection'] = ResolversParentTypes['AnalyticsReportConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['AnalyticsReportEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type AnalyticsReportCreatePayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['AnalyticsReportCreatePayload'] = ResolversParentTypes['AnalyticsReportCreatePayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  report?: Resolver<Maybe<ResolversTypes['AnalyticsReport']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type AnalyticsReportEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['AnalyticsReportEdge'] = ResolversParentTypes['AnalyticsReportEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['AnalyticsReport']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export interface AnyScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Any'], any> {
-  name: 'Any';
-}
-
-export type AppealApplicationResolvers<ContextType = any, ParentType extends ResolversParentTypes['AppealApplication'] = ResolversParentTypes['AppealApplication']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  moderationAction?: Resolver<ResolversTypes['ModerationAction'], ParentType, ContextType>;
-  reasons?: Resolver<Array<ResolversTypes['AppealReason']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type AskPartnerReportFilePayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['AskPartnerReportFilePayload'] = ResolversParentTypes['AskPartnerReportFilePayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  reportFile?: Resolver<Maybe<ResolversTypes['PartnerReportFile']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type AttributeResolvers<ContextType = any, ParentType extends ResolversParentTypes['Attribute'] = ResolversParentTypes['Attribute']> = {
-  content?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type AttributeConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['AttributeConnection'] = ResolversParentTypes['AttributeConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['AttributeEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type AttributeEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['AttributeEdge'] = ResolversParentTypes['AttributeEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Attribute']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type BehaviorResolvers<ContextType = any, ParentType extends ResolversParentTypes['Behavior'] = ResolversParentTypes['Behavior']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  matchedExperiments?: Resolver<Maybe<ResolversTypes['ExperimentMatchConnection']>, ParentType, ContextType, RequireFields<BehaviorMatchedExperimentsArgs, 'page'>>;
-  matchedFeatures?: Resolver<Maybe<ResolversTypes['FeatureMatchConnection']>, ParentType, ContextType, RequireFields<BehaviorMatchedFeaturesArgs, 'page'>>;
-  rules?: Resolver<Maybe<ResolversTypes['RuleConnection']>, ParentType, ContextType, RequireFields<BehaviorRulesArgs, 'page'>>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type BehaviorRuleTagResolvers<ContextType = any, ParentType extends ResolversParentTypes['BehaviorRuleTag'] = ResolversParentTypes['BehaviorRuleTag']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  label?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type BehaviorRuleTagConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['BehaviorRuleTagConnection'] = ResolversParentTypes['BehaviorRuleTagConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['BehaviorRuleTagEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type BehaviorRuleTagEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['BehaviorRuleTagEdge'] = ResolversParentTypes['BehaviorRuleTagEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['BehaviorRuleTag']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export interface BigIntScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['BigInt'], any> {
-  name: 'BigInt';
-}
-
-export type BookmarkResolvers<ContextType = any, ParentType extends ResolversParentTypes['Bookmark'] = ResolversParentTypes['Bookmark']> = {
-  __resolveType: TypeResolveFn<'Favorite' | 'Like', ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  post?: Resolver<ResolversTypes['Post'], ParentType, ContextType>;
-  rating?: Resolver<Maybe<ResolversTypes['LikeRating']>, ParentType, ContextType>;
-};
-
-export type BookmarkConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['BookmarkConnection'] = ResolversParentTypes['BookmarkConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['BookmarkEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type BookmarkEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['BookmarkEdge'] = ResolversParentTypes['BookmarkEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Bookmark']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type BookmarkMetricResolvers<ContextType = any, ParentType extends ResolversParentTypes['BookmarkMetric'] = ResolversParentTypes['BookmarkMetric']> = {
-  bookmark?: Resolver<ResolversTypes['BookmarkTypename'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type BookmarkMetricConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['BookmarkMetricConnection'] = ResolversParentTypes['BookmarkMetricConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['BookmarkMetricEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type BookmarkMetricEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['BookmarkMetricEdge'] = ResolversParentTypes['BookmarkMetricEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['BookmarkMetric']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CaptionResolvers<ContextType = any, ParentType extends ResolversParentTypes['Caption'] = ResolversParentTypes['Caption']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  text?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  timecode?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CaptionConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['CaptionConnection'] = ResolversParentTypes['CaptionConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['CaptionEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CaptionEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['CaptionEdge'] = ResolversParentTypes['CaptionEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Caption']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CategoryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Category'] = ResolversParentTypes['Category']> = {
-  __resolveType: TypeResolveFn<'ContentCategory' | 'CuratedCategory' | 'Interest', ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  slug?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-};
-
-export type CategoryConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['CategoryConnection'] = ResolversParentTypes['CategoryConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['CategoryEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CategoryEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['CategoryEdge'] = ResolversParentTypes['CategoryEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Category']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ChannelResolvers<ContextType = any, ParentType extends ResolversParentTypes['Channel'] = ResolversParentTypes['Channel']> = {
-  account?: Resolver<Maybe<ResolversTypes['Account']>, ParentType, ContextType>;
-  accountType?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  avatar?: Resolver<Maybe<ResolversTypes['Image']>, ParentType, ContextType, RequireFields<ChannelAvatarArgs, 'height'>>;
-  banner?: Resolver<Maybe<ResolversTypes['Image']>, ParentType, ContextType, Partial<ChannelBannerArgs>>;
-  bookmarks?: Resolver<Maybe<ResolversTypes['BookmarkConnection']>, ParentType, ContextType, RequireFields<ChannelBookmarksArgs, 'first' | 'page'>>;
-  canChangeName?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  collections?: Resolver<Maybe<ResolversTypes['CollectionConnection']>, ParentType, ContextType, RequireFields<ChannelCollectionsArgs, 'first' | 'hasPublicVideos' | 'page'>>;
-  comments?: Resolver<Maybe<ResolversTypes['CommentConnection']>, ParentType, ContextType, RequireFields<ChannelCommentsArgs, 'first' | 'page'>>;
-  country?: Resolver<Maybe<ResolversTypes['Country']>, ParentType, ContextType>;
-  coverURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType, RequireFields<ChannelCoverUrlArgs, 'size'>>;
-  createDate?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  displayName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  externalLinks?: Resolver<Maybe<ResolversTypes['ChannelExternalLinks']>, ParentType, ContextType>;
-  followerEngagement?: Resolver<Maybe<ResolversTypes['FollowerEngagement']>, ParentType, ContextType>;
-  followers?: Resolver<Maybe<ResolversTypes['FollowerConnection']>, ParentType, ContextType, RequireFields<ChannelFollowersArgs, 'first' | 'page'>>;
-  followings?: Resolver<Maybe<ResolversTypes['FollowingConnection']>, ParentType, ContextType, RequireFields<ChannelFollowingsArgs, 'first' | 'page'>>;
-  history?: Resolver<Maybe<ResolversTypes['HistoryConnection']>, ParentType, ContextType, RequireFields<ChannelHistoryArgs, 'filter' | 'first' | 'page'>>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  isArtist?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isAvailable?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isFollowed?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isNotificationEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  language?: Resolver<Maybe<ResolversTypes['Language']>, ParentType, ContextType>;
-  lives?: Resolver<Maybe<ResolversTypes['LiveConnection']>, ParentType, ContextType, RequireFields<ChannelLivesArgs, 'first' | 'page'>>;
-  loginDate?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  logoURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType, RequireFields<ChannelLogoUrlArgs, 'size'>>;
-  medias?: Resolver<Maybe<ResolversTypes['MediaConnection']>, ParentType, ContextType, RequireFields<ChannelMediasArgs, 'first' | 'page'>>;
-  metabaseIframeURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType, RequireFields<ChannelMetabaseIframeUrlArgs, 'dashboardId'>>;
-  metrics?: Resolver<Maybe<ResolversTypes['ChannelMetrics']>, ParentType, ContextType>;
-  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  networkChannels?: Resolver<Maybe<ResolversTypes['ChannelConnection']>, ParentType, ContextType, RequireFields<ChannelNetworkChannelsArgs, 'first' | 'hasPublicVideos' | 'page'>>;
-  organization?: Resolver<Maybe<ResolversTypes['Organization']>, ParentType, ContextType>;
-  reactions?: Resolver<Maybe<ResolversTypes['ReactionConnection']>, ParentType, ContextType, RequireFields<ChannelReactionsArgs, 'first' | 'page'>>;
-  shareUrls?: Resolver<Maybe<ResolversTypes['ChannelShareUrls']>, ParentType, ContextType>;
-  stats?: Resolver<Maybe<ResolversTypes['ChannelStats']>, ParentType, ContextType>;
-  tagline?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  thumbnails?: Resolver<Maybe<ResolversTypes['Thumbnails']>, ParentType, ContextType>;
-  updateRequired?: Resolver<Maybe<ResolversTypes['ChannelUpdateRequired']>, ParentType, ContextType>;
-  videos?: Resolver<Maybe<ResolversTypes['VideoConnection']>, ParentType, ContextType, RequireFields<ChannelVideosArgs, 'first' | 'page'>>;
-  viewCount?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
-  xid?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ChannelConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['ChannelConnection'] = ResolversParentTypes['ChannelConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['ChannelEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ChannelCreatePayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['ChannelCreatePayload'] = ResolversParentTypes['ChannelCreatePayload']> = {
-  channel?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ChannelEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['ChannelEdge'] = ResolversParentTypes['ChannelEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
-  permission?: Resolver<Maybe<ResolversTypes['ChannelPermission']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ChannelEngagementMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['ChannelEngagementMetrics'] = ResolversParentTypes['ChannelEngagementMetrics']> = {
-  bookmarks?: Resolver<Maybe<ResolversTypes['BookmarkMetricConnection']>, ParentType, ContextType, Partial<ChannelEngagementMetricsBookmarksArgs>>;
-  collections?: Resolver<Maybe<ResolversTypes['CollectionMetricConnection']>, ParentType, ContextType, Partial<ChannelEngagementMetricsCollectionsArgs>>;
-  followers?: Resolver<Maybe<ResolversTypes['FollowerMetricConnection']>, ParentType, ContextType>;
-  followings?: Resolver<Maybe<ResolversTypes['FollowingMetricConnection']>, ParentType, ContextType, Partial<ChannelEngagementMetricsFollowingsArgs>>;
-  history?: Resolver<Maybe<ResolversTypes['PostMetricConnection']>, ParentType, ContextType, RequireFields<ChannelEngagementMetricsHistoryArgs, 'filter'>>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  lives?: Resolver<Maybe<ResolversTypes['LiveMetricConnection']>, ParentType, ContextType, Partial<ChannelEngagementMetricsLivesArgs>>;
-  reactions?: Resolver<Maybe<ResolversTypes['ReactionMetricConnection']>, ParentType, ContextType>;
-  videos?: Resolver<Maybe<ResolversTypes['VideoMetricConnection']>, ParentType, ContextType, Partial<ChannelEngagementMetricsVideosArgs>>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ChannelExternalLinksResolvers<ContextType = any, ParentType extends ResolversParentTypes['ChannelExternalLinks'] = ResolversParentTypes['ChannelExternalLinks']> = {
-  facebookURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  instagramURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  pinterestURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  twitterURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  websiteURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ChannelMetricResolvers<ContextType = any, ParentType extends ResolversParentTypes['ChannelMetric'] = ResolversParentTypes['ChannelMetric']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ChannelMetricConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['ChannelMetricConnection'] = ResolversParentTypes['ChannelMetricConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['ChannelMetricEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ChannelMetricEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['ChannelMetricEdge'] = ResolversParentTypes['ChannelMetricEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['ChannelMetric']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ChannelMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['ChannelMetrics'] = ResolversParentTypes['ChannelMetrics']> = {
-  engagement?: Resolver<Maybe<ResolversTypes['ChannelEngagementMetrics']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  views?: Resolver<Maybe<ResolversTypes['ChannelViewMetrics']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ChannelPermissionResolvers<ContextType = any, ParentType extends ResolversParentTypes['ChannelPermission'] = ResolversParentTypes['ChannelPermission']> = {
-  level?: Resolver<Maybe<ResolversTypes['ChannelPermissionLevel']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ChannelShareUrlsResolvers<ContextType = any, ParentType extends ResolversParentTypes['ChannelShareUrls'] = ResolversParentTypes['ChannelShareUrls']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  permalink?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ChannelStatsResolvers<ContextType = any, ParentType extends ResolversParentTypes['ChannelStats'] = ResolversParentTypes['ChannelStats']> = {
-  followers?: Resolver<Maybe<ResolversTypes['ChannelStatsFollowers']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  reactions?: Resolver<Maybe<ResolversTypes['ChannelStatsReactions']>, ParentType, ContextType>;
-  videos?: Resolver<Maybe<ResolversTypes['ChannelStatsVideos']>, ParentType, ContextType>;
-  views?: Resolver<Maybe<ResolversTypes['ChannelStatsViews']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ChannelStatsFollowersResolvers<ContextType = any, ParentType extends ResolversParentTypes['ChannelStatsFollowers'] = ResolversParentTypes['ChannelStatsFollowers']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ChannelStatsReactionsResolvers<ContextType = any, ParentType extends ResolversParentTypes['ChannelStatsReactions'] = ResolversParentTypes['ChannelStatsReactions']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ChannelStatsVideosResolvers<ContextType = any, ParentType extends ResolversParentTypes['ChannelStatsVideos'] = ResolversParentTypes['ChannelStatsVideos']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ChannelStatsViewsResolvers<ContextType = any, ParentType extends ResolversParentTypes['ChannelStatsViews'] = ResolversParentTypes['ChannelStatsViews']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ChannelUpdateRequiredResolvers<ContextType = any, ParentType extends ResolversParentTypes['ChannelUpdateRequired'] = ResolversParentTypes['ChannelUpdateRequired']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  name?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ChannelViewMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['ChannelViewMetrics'] = ResolversParentTypes['ChannelViewMetrics']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  visits?: Resolver<Maybe<ResolversTypes['ChannelMetricConnection']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ClearCollectionMediasPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['ClearCollectionMediasPayload'] = ResolversParentTypes['ClearCollectionMediasPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ClearLikedVideosPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['ClearLikedVideosPayload'] = ResolversParentTypes['ClearLikedVideosPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ClearWatchLaterVideosPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['ClearWatchLaterVideosPayload'] = ResolversParentTypes['ClearWatchLaterVideosPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ClearWatchedVideosPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['ClearWatchedVideosPayload'] = ResolversParentTypes['ClearWatchedVideosPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CollectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['Collection'] = ResolversParentTypes['Collection']> = {
-  channel?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
-  createDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  createdAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  creator?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
-  description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  hashtags?: Resolver<Maybe<ResolversTypes['HashtagConnection']>, ParentType, ContextType, RequireFields<CollectionHashtagsArgs, 'first' | 'page'>>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  isFeatured?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isPrivate?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  medias?: Resolver<Maybe<ResolversTypes['MediaConnection']>, ParentType, ContextType, RequireFields<CollectionMediasArgs, 'first' | 'page'>>;
-  metrics?: Resolver<Maybe<ResolversTypes['CollectionMetrics']>, ParentType, ContextType>;
-  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  stats?: Resolver<Maybe<ResolversTypes['CollectionStats']>, ParentType, ContextType>;
-  thumbnail?: Resolver<Maybe<ResolversTypes['Image']>, ParentType, ContextType, RequireFields<CollectionThumbnailArgs, 'height'>>;
-  thumbnailURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType, RequireFields<CollectionThumbnailUrlArgs, 'size'>>;
-  thumbnails?: Resolver<Maybe<ResolversTypes['Thumbnails']>, ParentType, ContextType>;
-  updateDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  updatedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  videos?: Resolver<Maybe<ResolversTypes['VideoConnection']>, ParentType, ContextType, RequireFields<CollectionVideosArgs, 'first' | 'page'>>;
-  xid?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CollectionConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['CollectionConnection'] = ResolversParentTypes['CollectionConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['CollectionEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CollectionEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['CollectionEdge'] = ResolversParentTypes['CollectionEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Collection']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CollectionEngagementMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['CollectionEngagementMetrics'] = ResolversParentTypes['CollectionEngagementMetrics']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  videos?: Resolver<Maybe<ResolversTypes['VideoMetricConnection']>, ParentType, ContextType, Partial<CollectionEngagementMetricsVideosArgs>>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CollectionMetricResolvers<ContextType = any, ParentType extends ResolversParentTypes['CollectionMetric'] = ResolversParentTypes['CollectionMetric']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CollectionMetricConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['CollectionMetricConnection'] = ResolversParentTypes['CollectionMetricConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['CollectionMetricEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CollectionMetricEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['CollectionMetricEdge'] = ResolversParentTypes['CollectionMetricEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['CollectionMetric']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CollectionMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['CollectionMetrics'] = ResolversParentTypes['CollectionMetrics']> = {
-  engagement?: Resolver<Maybe<ResolversTypes['CollectionEngagementMetrics']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CollectionStatsResolvers<ContextType = any, ParentType extends ResolversParentTypes['CollectionStats'] = ResolversParentTypes['CollectionStats']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  videos?: Resolver<Maybe<ResolversTypes['CollectionStatsVideos']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CollectionStatsVideosResolvers<ContextType = any, ParentType extends ResolversParentTypes['CollectionStatsVideos'] = ResolversParentTypes['CollectionStatsVideos']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CommentResolvers<ContextType = any, ParentType extends ResolversParentTypes['Comment'] = ResolversParentTypes['Comment']> = {
-  createDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  creator?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  metrics?: Resolver<Maybe<ResolversTypes['CommentMetrics']>, ParentType, ContextType>;
-  opener?: Resolver<Maybe<ResolversTypes['Story']>, ParentType, ContextType>;
-  text?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  updateDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  viewerEngagement?: Resolver<Maybe<ResolversTypes['CommentViewerEngagement']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CommentConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['CommentConnection'] = ResolversParentTypes['CommentConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['CommentEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CommentEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['CommentEdge'] = ResolversParentTypes['CommentEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Comment']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CommentEngagementMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['CommentEngagementMetrics'] = ResolversParentTypes['CommentEngagementMetrics']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  likes?: Resolver<Maybe<ResolversTypes['LikeMetricConnection']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CommentMetricResolvers<ContextType = any, ParentType extends ResolversParentTypes['CommentMetric'] = ResolversParentTypes['CommentMetric']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CommentMetricConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['CommentMetricConnection'] = ResolversParentTypes['CommentMetricConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['CommentMetricEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CommentMetricEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['CommentMetricEdge'] = ResolversParentTypes['CommentMetricEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['CommentMetric']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CommentMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['CommentMetrics'] = ResolversParentTypes['CommentMetrics']> = {
-  engagement?: Resolver<Maybe<ResolversTypes['CommentEngagementMetrics']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CommentViewerEngagementResolvers<ContextType = any, ParentType extends ResolversParentTypes['CommentViewerEngagement'] = ResolversParentTypes['CommentViewerEngagement']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  likeRating?: Resolver<Maybe<ResolversTypes['LikeRating']>, ParentType, ContextType>;
-  liked?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ComponentResolvers<ContextType = any, ParentType extends ResolversParentTypes['Component'] = ResolversParentTypes['Component']> = {
-  __resolveType: TypeResolveFn<'Channel' | 'Collection' | 'Live' | 'Poll' | 'Reaction' | 'ReactionVideo' | 'Topic' | 'Video', ParentType, ContextType>;
-};
-
-export type ComponentConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['ComponentConnection'] = ResolversParentTypes['ComponentConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['ComponentEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ComponentEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['ComponentEdge'] = ResolversParentTypes['ComponentEdge']> = {
-  metadata?: Resolver<Maybe<ResolversTypes['Metadata']>, ParentType, ContextType>;
-  node?: Resolver<Maybe<ResolversTypes['Component']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ContentResolvers<ContextType = any, ParentType extends ResolversParentTypes['Content'] = ResolversParentTypes['Content']> = {
-  __resolveType: TypeResolveFn<'Collection' | 'Comment' | 'Live' | 'Reaction' | 'Video', ParentType, ContextType>;
-  creator?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
-};
-
-export type ContentCategoryResolvers<ContextType = any, ParentType extends ResolversParentTypes['ContentCategory'] = ResolversParentTypes['ContentCategory']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  slug?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ConversationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Conversation'] = ResolversParentTypes['Conversation']> = {
-  algorithm?: Resolver<Maybe<ResolversTypes['AlgorithmName']>, ParentType, ContextType>;
-  dailymotionAd?: Resolver<Maybe<ResolversTypes['DailymotionAd']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  interactions?: Resolver<Maybe<ResolversTypes['InteractionConnection']>, ParentType, ContextType>;
-  story?: Resolver<Maybe<ResolversTypes['Story']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ConversationConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['ConversationConnection'] = ResolversParentTypes['ConversationConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['ConversationEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ConversationEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['ConversationEdge'] = ResolversParentTypes['ConversationEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Conversation']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CountryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Country'] = ResolversParentTypes['Country']> = {
-  code?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  codeAlpha2?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CountryConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['CountryConnection'] = ResolversParentTypes['CountryConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['CountryEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CountryEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['CountryEdge'] = ResolversParentTypes['CountryEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Country']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CreateBehaviorRulePayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['CreateBehaviorRulePayload'] = ResolversParentTypes['CreateBehaviorRulePayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  rule?: Resolver<Maybe<ResolversTypes['Rule']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CreateCollectionPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['CreateCollectionPayload'] = ResolversParentTypes['CreateCollectionPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  collection?: Resolver<Maybe<ResolversTypes['Collection']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CreateCommentPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['CreateCommentPayload'] = ResolversParentTypes['CreateCommentPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  comment?: Resolver<Maybe<ResolversTypes['Comment']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CreateUserPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['CreateUserPayload'] = ResolversParentTypes['CreateUserPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CreateVideoPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['CreateVideoPayload'] = ResolversParentTypes['CreateVideoPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  video?: Resolver<Maybe<ResolversTypes['Video']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CuratedCategoryResolvers<ContextType = any, ParentType extends ResolversParentTypes['CuratedCategory'] = ResolversParentTypes['CuratedCategory']> = {
-  categoryId?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  slug?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CuratedCategoryConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['CuratedCategoryConnection'] = ResolversParentTypes['CuratedCategoryConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['CuratedCategoryEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CuratedCategoryEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['CuratedCategoryEdge'] = ResolversParentTypes['CuratedCategoryEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['CuratedCategory']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type DailymotionAdResolvers<ContextType = any, ParentType extends ResolversParentTypes['DailymotionAd'] = ResolversParentTypes['DailymotionAd']> = {
-  channel?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  promotion?: Resolver<ResolversTypes['Promotion'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export interface DateScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Date'], any> {
-  name: 'Date';
-}
-
-export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['DateTime'], any> {
-  name: 'DateTime';
-}
-
-export type DeleteBehaviorRulePayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['DeleteBehaviorRulePayload'] = ResolversParentTypes['DeleteBehaviorRulePayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  success?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type DeleteCommentPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['DeleteCommentPayload'] = ResolversParentTypes['DeleteCommentPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type DeleteReactionPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['DeleteReactionPayload'] = ResolversParentTypes['DeleteReactionPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type DeleteUserPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['DeleteUserPayload'] = ResolversParentTypes['DeleteUserPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type DeleteVideoPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['DeleteVideoPayload'] = ResolversParentTypes['DeleteVideoPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type EmailChangeRequestResolvers<ContextType = any, ParentType extends ResolversParentTypes['EmailChangeRequest'] = ResolversParentTypes['EmailChangeRequest']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  newEmail?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type EmbedResolvers<ContextType = any, ParentType extends ResolversParentTypes['Embed'] = ResolversParentTypes['Embed']> = {
-  html?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ExperimentMatchResolvers<ContextType = any, ParentType extends ResolversParentTypes['ExperimentMatch'] = ResolversParentTypes['ExperimentMatch']> = {
-  endDate?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  endingAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  matched?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  reviewedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  tags?: Resolver<Maybe<ResolversTypes['BehaviorRuleTagConnection']>, ParentType, ContextType, RequireFields<ExperimentMatchTagsArgs, 'page'>>;
-  uuid?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  variation?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ExperimentMatchConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['ExperimentMatchConnection'] = ResolversParentTypes['ExperimentMatchConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['ExperimentMatchEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ExperimentMatchEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['ExperimentMatchEdge'] = ResolversParentTypes['ExperimentMatchEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['ExperimentMatch']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FallbackCountryResolvers<ContextType = any, ParentType extends ResolversParentTypes['FallbackCountry'] = ResolversParentTypes['FallbackCountry']> = {
-  country?: Resolver<Maybe<ResolversTypes['Country']>, ParentType, ContextType>;
-  fallbackCountry?: Resolver<Maybe<ResolversTypes['Country']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FallbackCountryConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['FallbackCountryConnection'] = ResolversParentTypes['FallbackCountryConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['FallbackCountryEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FallbackCountryEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['FallbackCountryEdge'] = ResolversParentTypes['FallbackCountryEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['FallbackCountry']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FavoriteResolvers<ContextType = any, ParentType extends ResolversParentTypes['Favorite'] = ResolversParentTypes['Favorite']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  post?: Resolver<ResolversTypes['Post'], ParentType, ContextType>;
-  rating?: Resolver<Maybe<ResolversTypes['LikeRating']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FeatureMatchResolvers<ContextType = any, ParentType extends ResolversParentTypes['FeatureMatch'] = ResolversParentTypes['FeatureMatch']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  matched?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  tags?: Resolver<Maybe<ResolversTypes['BehaviorRuleTagConnection']>, ParentType, ContextType, RequireFields<FeatureMatchTagsArgs, 'page'>>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FeatureMatchConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['FeatureMatchConnection'] = ResolversParentTypes['FeatureMatchConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['FeatureMatchEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FeatureMatchEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['FeatureMatchEdge'] = ResolversParentTypes['FeatureMatchEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['FeatureMatch']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FeaturedContentResolvers<ContextType = any, ParentType extends ResolversParentTypes['FeaturedContent'] = ResolversParentTypes['FeaturedContent']> = {
-  channels?: Resolver<Maybe<ResolversTypes['ChannelConnection']>, ParentType, ContextType, RequireFields<FeaturedContentChannelsArgs, 'first' | 'page'>>;
-  collections?: Resolver<Maybe<ResolversTypes['CollectionConnection']>, ParentType, ContextType, RequireFields<FeaturedContentCollectionsArgs, 'first' | 'page'>>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  medias?: Resolver<Maybe<ResolversTypes['MediaConnection']>, ParentType, ContextType, RequireFields<FeaturedContentMediasArgs, 'first' | 'page'>>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FeedPostResolvers<ContextType = any, ParentType extends ResolversParentTypes['FeedPost'] = ResolversParentTypes['FeedPost']> = {
-  featured?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  post?: Resolver<Maybe<ResolversTypes['Post']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FeedPostConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['FeedPostConnection'] = ResolversParentTypes['FeedPostConnection']> = {
-  edges?: Resolver<Maybe<Array<Maybe<ResolversTypes['FeedPostEdge']>>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FeedPostEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['FeedPostEdge'] = ResolversParentTypes['FeedPostEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['FeedPost']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FileUploadResolvers<ContextType = any, ParentType extends ResolversParentTypes['FileUpload'] = ResolversParentTypes['FileUpload']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  progressURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  uploadURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowChannelPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowChannelPayload'] = ResolversParentTypes['FollowChannelPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowChannelsPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowChannelsPayload'] = ResolversParentTypes['FollowChannelsPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowTopicPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowTopicPayload'] = ResolversParentTypes['FollowTopicPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowTopicsPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowTopicsPayload'] = ResolversParentTypes['FollowTopicsPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowUserPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowUserPayload'] = ResolversParentTypes['FollowUserPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowedChannelResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowedChannel'] = ResolversParentTypes['FollowedChannel']> = {
-  channel?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
-  followDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  followedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  isNotificationEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowedChannelConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowedChannelConnection'] = ResolversParentTypes['FollowedChannelConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['FollowedChannelEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowedChannelEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowedChannelEdge'] = ResolversParentTypes['FollowedChannelEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['FollowedChannel']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowedTopicResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowedTopic'] = ResolversParentTypes['FollowedTopic']> = {
-  followDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  followedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  topic?: Resolver<Maybe<ResolversTypes['Topic']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowedTopicConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowedTopicConnection'] = ResolversParentTypes['FollowedTopicConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['FollowedTopicEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowedTopicEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowedTopicEdge'] = ResolversParentTypes['FollowedTopicEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['FollowedTopic']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowerResolvers<ContextType = any, ParentType extends ResolversParentTypes['Follower'] = ResolversParentTypes['Follower']> = {
-  creator?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowerConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowerConnection'] = ResolversParentTypes['FollowerConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['FollowerEdge']>>, ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowerEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowerEdge'] = ResolversParentTypes['FollowerEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Follower']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowerEngagementResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowerEngagement'] = ResolversParentTypes['FollowerEngagement']> = {
-  followDate?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  notifications?: Resolver<Maybe<ResolversTypes['FollowerEngagementNotifications']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowerEngagementNotificationsResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowerEngagementNotifications'] = ResolversParentTypes['FollowerEngagementNotifications']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  uploads?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowerMetricResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowerMetric'] = ResolversParentTypes['FollowerMetric']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowerMetricConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowerMetricConnection'] = ResolversParentTypes['FollowerMetricConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['FollowerMetricEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowerMetricEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowerMetricEdge'] = ResolversParentTypes['FollowerMetricEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['FollowerMetric']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowingResolvers<ContextType = any, ParentType extends ResolversParentTypes['Following'] = ResolversParentTypes['Following']> = {
-  creator?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  story?: Resolver<Maybe<ResolversTypes['Story']>, ParentType, ContextType>;
-  user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowingChannelStartsLiveResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowingChannelStartsLive'] = ResolversParentTypes['FollowingChannelStartsLive']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  isEmailEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowingChannelUploadsVideoResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowingChannelUploadsVideo'] = ResolversParentTypes['FollowingChannelUploadsVideo']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  isEmailEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowingConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowingConnection'] = ResolversParentTypes['FollowingConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['FollowingEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowingEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowingEdge'] = ResolversParentTypes['FollowingEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Following']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowingMetricResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowingMetric'] = ResolversParentTypes['FollowingMetric']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowingMetricConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowingMetricConnection'] = ResolversParentTypes['FollowingMetricConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['FollowingMetricEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowingMetricEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowingMetricEdge'] = ResolversParentTypes['FollowingMetricEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['FollowingMetric']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowingPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowingPayload'] = ResolversParentTypes['FollowingPayload']> = {
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type FollowingStartsLiveResolvers<ContextType = any, ParentType extends ResolversParentTypes['FollowingStartsLive'] = ResolversParentTypes['FollowingStartsLive']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  isPushEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type GenerateFileUploadUrlPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['GenerateFileUploadUrlPayload'] = ResolversParentTypes['GenerateFileUploadUrlPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  fileUpload?: Resolver<Maybe<ResolversTypes['FileUpload']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type GenerateVerifyEmailTokenPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['GenerateVerifyEmailTokenPayload'] = ResolversParentTypes['GenerateVerifyEmailTokenPayload']> = {
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  token?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type GeoblockedCountriesResolvers<ContextType = any, ParentType extends ResolversParentTypes['GeoblockedCountries'] = ResolversParentTypes['GeoblockedCountries']> = {
-  allowed?: Resolver<Maybe<Array<ResolversTypes['String']>>, ParentType, ContextType>;
-  denied?: Resolver<Maybe<Array<ResolversTypes['String']>>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type GeoblockingResolvers<ContextType = any, ParentType extends ResolversParentTypes['Geoblocking'] = ResolversParentTypes['Geoblocking']> = {
-  country?: Resolver<Maybe<ResolversTypes['Country']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  isAllowed?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type GeoblockingConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['GeoblockingConnection'] = ResolversParentTypes['GeoblockingConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['GeoblockingEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type GeoblockingEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['GeoblockingEdge'] = ResolversParentTypes['GeoblockingEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Geoblocking']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type HashtagResolvers<ContextType = any, ParentType extends ResolversParentTypes['Hashtag'] = ResolversParentTypes['Hashtag']> = {
-  followerEngagement?: Resolver<Maybe<ResolversTypes['FollowerEngagement']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  metrics?: Resolver<Maybe<ResolversTypes['HashtagMetrics']>, ParentType, ContextType>;
-  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  xid?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type HashtagConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['HashtagConnection'] = ResolversParentTypes['HashtagConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['HashtagEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type HashtagEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['HashtagEdge'] = ResolversParentTypes['HashtagEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Hashtag']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type HashtagEngagementMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['HashtagEngagementMetrics'] = ResolversParentTypes['HashtagEngagementMetrics']> = {
-  followers?: Resolver<Maybe<ResolversTypes['ChannelMetricConnection']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  videos?: Resolver<Maybe<ResolversTypes['VideoMetricConnection']>, ParentType, ContextType, Partial<HashtagEngagementMetricsVideosArgs>>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type HashtagMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['HashtagMetrics'] = ResolversParentTypes['HashtagMetrics']> = {
-  engagement?: Resolver<Maybe<ResolversTypes['HashtagEngagementMetrics']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type HistoryResolvers<ContextType = any, ParentType extends ResolversParentTypes['History'] = ResolversParentTypes['History']> = {
-  __resolveType: TypeResolveFn<'Favorite' | 'Like' | 'Watch', ParentType, ContextType>;
-  post?: Resolver<ResolversTypes['Post'], ParentType, ContextType>;
-};
-
-export type HistoryConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['HistoryConnection'] = ResolversParentTypes['HistoryConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['HistoryEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type HistoryEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['HistoryEdge'] = ResolversParentTypes['HistoryEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['History']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ImageResolvers<ContextType = any, ParentType extends ResolversParentTypes['Image'] = ResolversParentTypes['Image']> = {
-  height?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  width?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type InteractionResolvers<ContextType = any, ParentType extends ResolversParentTypes['Interaction'] = ResolversParentTypes['Interaction']> = {
-  __resolveType: TypeResolveFn<'Comment' | 'Reaction', ParentType, ContextType>;
-};
-
-export type InteractionConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['InteractionConnection'] = ResolversParentTypes['InteractionConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['InteractionEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type InteractionEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['InteractionEdge'] = ResolversParentTypes['InteractionEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Interaction']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type InterestResolvers<ContextType = any, ParentType extends ResolversParentTypes['Interest'] = ResolversParentTypes['Interest']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  interestId?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  isEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  slug?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type InterestConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['InterestConnection'] = ResolversParentTypes['InterestConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['InterestEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type InterestEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['InterestEdge'] = ResolversParentTypes['InterestEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Interest']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LanguageResolvers<ContextType = any, ParentType extends ResolversParentTypes['Language'] = ResolversParentTypes['Language']> = {
-  codeAlpha2?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  codeAlpha3?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LikeResolvers<ContextType = any, ParentType extends ResolversParentTypes['Like'] = ResolversParentTypes['Like']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  post?: Resolver<ResolversTypes['Post'], ParentType, ContextType>;
-  rating?: Resolver<Maybe<ResolversTypes['LikeRating']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LikeMetricResolvers<ContextType = any, ParentType extends ResolversParentTypes['LikeMetric'] = ResolversParentTypes['LikeMetric']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  rating?: Resolver<ResolversTypes['LikeRating'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LikeMetricConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['LikeMetricConnection'] = ResolversParentTypes['LikeMetricConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['LikeMetricEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LikeMetricEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['LikeMetricEdge'] = ResolversParentTypes['LikeMetricEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['LikeMetric']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LikePayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['LikePayload'] = ResolversParentTypes['LikePayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LikeVideoPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['LikeVideoPayload'] = ResolversParentTypes['LikeVideoPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LiveResolvers<ContextType = any, ParentType extends ResolversParentTypes['Live'] = ResolversParentTypes['Live']> = {
-  allowEmbed?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  aspectRatio?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
-  audienceCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  bestAvailableQuality?: Resolver<Maybe<ResolversTypes['MediaQuality']>, ParentType, ContextType>;
-  canDisplayAds?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  canDisplayAudience?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  categories?: Resolver<Maybe<ResolversTypes['CategoryConnection']>, ParentType, ContextType, RequireFields<LiveCategoriesArgs, 'filter'>>;
-  category?: Resolver<Maybe<ResolversTypes['MediaCategory']>, ParentType, ContextType>;
-  channel?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
-  claimer?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
-  createDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  createdAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  creator?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
-  curatedCategories?: Resolver<Maybe<ResolversTypes['CuratedCategoryConnection']>, ParentType, ContextType, RequireFields<LiveCuratedCategoriesArgs, 'page'>>;
-  description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  embed?: Resolver<Maybe<ResolversTypes['Embed']>, ParentType, ContextType>;
-  embedHtml?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  embedURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  endAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  endDate?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  geoblockedCountries?: Resolver<Maybe<ResolversTypes['GeoblockedCountries']>, ParentType, ContextType>;
-  geoblocking?: Resolver<Maybe<ResolversTypes['GeoblockingConnection']>, ParentType, ContextType, RequireFields<LiveGeoblockingArgs, 'page'>>;
-  height?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  hlsURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  hlsUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  interests?: Resolver<Maybe<ResolversTypes['InterestConnection']>, ParentType, ContextType, RequireFields<LiveInterestsArgs, 'page'>>;
-  isBookmarked?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isCreatedForKids?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isExplicit?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isInCollection?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<LiveIsInCollectionArgs, 'collectionXid'>>;
-  isInWatchLater?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isLiked?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isOnAir?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isPasswordProtected?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isPrivate?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isPublished?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isReacted?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  language?: Resolver<Maybe<ResolversTypes['Language']>, ParentType, ContextType, RequireFields<LiveLanguageArgs, 'auto'>>;
-  metrics?: Resolver<Maybe<ResolversTypes['LiveMetrics']>, ParentType, ContextType>;
-  moderation?: Resolver<Maybe<ResolversTypes['MediaModeration']>, ParentType, ContextType>;
-  quality?: Resolver<Maybe<ResolversTypes['Quality']>, ParentType, ContextType, RequireFields<LiveQualityArgs, 'auto'>>;
-  reactions?: Resolver<Maybe<ResolversTypes['ReactionConnection']>, ParentType, ContextType, RequireFields<LiveReactionsArgs, 'first' | 'page'>>;
-  restriction?: Resolver<Maybe<ResolversTypes['Restriction']>, ParentType, ContextType>;
-  settings?: Resolver<Maybe<ResolversTypes['LiveSettings']>, ParentType, ContextType>;
-  shareUrls?: Resolver<Maybe<ResolversTypes['LiveShareUrls']>, ParentType, ContextType>;
-  sharingURLs?: Resolver<Maybe<ResolversTypes['SharingURLConnection']>, ParentType, ContextType, RequireFields<LiveSharingUrLsArgs, 'page'>>;
-  startAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  startDate?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  stats?: Resolver<Maybe<ResolversTypes['LiveStats']>, ParentType, ContextType>;
-  streamUrls?: Resolver<Maybe<ResolversTypes['LiveStreamUrls']>, ParentType, ContextType>;
-  subtitles?: Resolver<Maybe<ResolversTypes['SubtitleConnection']>, ParentType, ContextType, RequireFields<LiveSubtitlesArgs, 'auto' | 'first' | 'page'>>;
-  tags?: Resolver<Maybe<ResolversTypes['MediaTagConnection']>, ParentType, ContextType, RequireFields<LiveTagsArgs, 'page'>>;
-  thumbnail?: Resolver<Maybe<ResolversTypes['Image']>, ParentType, ContextType, RequireFields<LiveThumbnailArgs, 'height'>>;
-  thumbnailURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType, RequireFields<LiveThumbnailUrlArgs, 'size'>>;
-  thumbnails?: Resolver<Maybe<ResolversTypes['Thumbnails']>, ParentType, ContextType>;
-  title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  topics?: Resolver<Maybe<ResolversTypes['TopicConnection']>, ParentType, ContextType, RequireFields<LiveTopicsArgs, 'first' | 'page' | 'whitelistedOnly'>>;
-  updateDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  updatedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  viewerEngagement?: Resolver<Maybe<ResolversTypes['LiveViewerEngagement']>, ParentType, ContextType>;
-  width?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  xid?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LiveConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['LiveConnection'] = ResolversParentTypes['LiveConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['LiveEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LiveEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['LiveEdge'] = ResolversParentTypes['LiveEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Live']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LiveEngagementMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['LiveEngagementMetrics'] = ResolversParentTypes['LiveEngagementMetrics']> = {
-  audience?: Resolver<Maybe<ResolversTypes['ChannelMetricConnection']>, ParentType, ContextType>;
-  bookmarks?: Resolver<Maybe<ResolversTypes['BookmarkMetricConnection']>, ParentType, ContextType, Partial<LiveEngagementMetricsBookmarksArgs>>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  likes?: Resolver<Maybe<ResolversTypes['LikeMetricConnection']>, ParentType, ContextType, Partial<LiveEngagementMetricsLikesArgs>>;
-  reactions?: Resolver<Maybe<ResolversTypes['ReactionMetricConnection']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LiveMetricResolvers<ContextType = any, ParentType extends ResolversParentTypes['LiveMetric'] = ResolversParentTypes['LiveMetric']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LiveMetricConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['LiveMetricConnection'] = ResolversParentTypes['LiveMetricConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['LiveMetricEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LiveMetricEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['LiveMetricEdge'] = ResolversParentTypes['LiveMetricEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['LiveMetric']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LiveMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['LiveMetrics'] = ResolversParentTypes['LiveMetrics']> = {
-  engagement?: Resolver<Maybe<ResolversTypes['LiveEngagementMetrics']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LiveSettingsResolvers<ContextType = any, ParentType extends ResolversParentTypes['LiveSettings'] = ResolversParentTypes['LiveSettings']> = {
-  embeddable?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  id?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LiveShareUrlsResolvers<ContextType = any, ParentType extends ResolversParentTypes['LiveShareUrls'] = ResolversParentTypes['LiveShareUrls']> = {
-  facebook?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  permalink?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  twitter?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LiveStatsResolvers<ContextType = any, ParentType extends ResolversParentTypes['LiveStats'] = ResolversParentTypes['LiveStats']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  views?: Resolver<Maybe<ResolversTypes['LiveStatsViews']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LiveStatsViewsResolvers<ContextType = any, ParentType extends ResolversParentTypes['LiveStatsViews'] = ResolversParentTypes['LiveStatsViews']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LiveStreamUrlsResolvers<ContextType = any, ParentType extends ResolversParentTypes['LiveStreamUrls'] = ResolversParentTypes['LiveStreamUrls']> = {
-  chromecast?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  hls?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LiveStreamsResolvers<ContextType = any, ParentType extends ResolversParentTypes['LiveStreams'] = ResolversParentTypes['LiveStreams']> = {
-  chromecastURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  hlsSourceURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  hlsURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  restriction?: Resolver<Maybe<ResolversTypes['Restriction']>, ParentType, ContextType>;
-  xid?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LiveStreamsConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['LiveStreamsConnection'] = ResolversParentTypes['LiveStreamsConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['LiveStreamsEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LiveStreamsEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['LiveStreamsEdge'] = ResolversParentTypes['LiveStreamsEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['LiveStreams']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LiveViewerEngagementResolvers<ContextType = any, ParentType extends ResolversParentTypes['LiveViewerEngagement'] = ResolversParentTypes['LiveViewerEngagement']> = {
-  bookmarked?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  favorited?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  likeRating?: Resolver<Maybe<ResolversTypes['LikeRating']>, ParentType, ContextType>;
-  liked?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  reacted?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  saved?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LocalizationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Localization'] = ResolversParentTypes['Localization']> = {
-  fallbackCountries?: Resolver<Maybe<ResolversTypes['FallbackCountryConnection']>, ParentType, ContextType, RequireFields<LocalizationFallbackCountriesArgs, 'page'>>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  me?: Resolver<Maybe<ResolversTypes['LocalizationMe']>, ParentType, ContextType>;
-  supportedCountries?: Resolver<Maybe<ResolversTypes['SupportedCountryConnection']>, ParentType, ContextType, RequireFields<LocalizationSupportedCountriesArgs, 'page'>>;
-  supportedLanguages?: Resolver<Maybe<ResolversTypes['SupportedLanguageConnection']>, ParentType, ContextType, RequireFields<LocalizationSupportedLanguagesArgs, 'page'>>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type LocalizationMeResolvers<ContextType = any, ParentType extends ResolversParentTypes['LocalizationMe'] = ResolversParentTypes['LocalizationMe']> = {
-  country?: Resolver<Maybe<ResolversTypes['Country']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  subdivision?: Resolver<Maybe<ResolversTypes['Subdivision']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type MediaResolvers<ContextType = any, ParentType extends ResolversParentTypes['Media'] = ResolversParentTypes['Media']> = {
-  __resolveType: TypeResolveFn<'Live' | 'Video', ParentType, ContextType>;
-};
-
-export type MediaConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['MediaConnection'] = ResolversParentTypes['MediaConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['MediaEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type MediaEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['MediaEdge'] = ResolversParentTypes['MediaEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Media']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type MediaModerationResolvers<ContextType = any, ParentType extends ResolversParentTypes['MediaModeration'] = ResolversParentTypes['MediaModeration']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  reviewDate?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  reviewedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type MediaPublishingInfoResolvers<ContextType = any, ParentType extends ResolversParentTypes['MediaPublishingInfo'] = ResolversParentTypes['MediaPublishingInfo']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  percentage?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type MediaStreamsResolvers<ContextType = any, ParentType extends ResolversParentTypes['MediaStreams'] = ResolversParentTypes['MediaStreams']> = {
-  __resolveType: TypeResolveFn<'LiveStreams' | 'VideoStreams', ParentType, ContextType>;
-};
-
-export type MediaStreamsConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['MediaStreamsConnection'] = ResolversParentTypes['MediaStreamsConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['MediaStreamsEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type MediaStreamsEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['MediaStreamsEdge'] = ResolversParentTypes['MediaStreamsEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['MediaStreams']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type MediaTagResolvers<ContextType = any, ParentType extends ResolversParentTypes['MediaTag'] = ResolversParentTypes['MediaTag']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  label?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type MediaTagConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['MediaTagConnection'] = ResolversParentTypes['MediaTagConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['MediaTagEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type MediaTagEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['MediaTagEdge'] = ResolversParentTypes['MediaTagEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['MediaTag']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type MediaUploadInfoResolvers<ContextType = any, ParentType extends ResolversParentTypes['MediaUploadInfo'] = ResolversParentTypes['MediaUploadInfo']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  publishing?: Resolver<Maybe<ResolversTypes['MediaPublishingInfo']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type MetadataResolvers<ContextType = any, ParentType extends ResolversParentTypes['Metadata'] = ResolversParentTypes['Metadata']> = {
-  algorithm?: Resolver<Maybe<ResolversTypes['Algorithm']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type MetricResolvers<ContextType = any, ParentType extends ResolversParentTypes['Metric'] = ResolversParentTypes['Metric']> = {
-  __resolveType: TypeResolveFn<'BookmarkMetric' | 'ChannelMetric' | 'CollectionMetric' | 'CommentMetric' | 'FollowerMetric' | 'FollowingMetric' | 'LikeMetric' | 'LiveMetric' | 'ReactionMetric' | 'VideoMetric', ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-};
-
-export type ModerationActionResolvers<ContextType = any, ParentType extends ResolversParentTypes['ModerationAction'] = ResolversParentTypes['ModerationAction']> = {
-  date?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
-  referenceNumber?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ModerationActionAppealPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['ModerationActionAppealPayload'] = ResolversParentTypes['ModerationActionAppealPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<ResolversTypes['Status'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type MonetizationInsightsResolvers<ContextType = any, ParentType extends ResolversParentTypes['MonetizationInsights'] = ResolversParentTypes['MonetizationInsights']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  isEmailEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
-  activateUser?: Resolver<Maybe<ResolversTypes['ActivateUserPayload']>, ParentType, ContextType, RequireFields<MutationActivateUserArgs, 'input'>>;
-  addCollectionVideo?: Resolver<Maybe<ResolversTypes['AddCollectionVideoPayload']>, ParentType, ContextType, RequireFields<MutationAddCollectionVideoArgs, 'input'>>;
-  addFollowing?: Resolver<Maybe<ResolversTypes['FollowingPayload']>, ParentType, ContextType, RequireFields<MutationAddFollowingArgs, 'input'>>;
-  addLike?: Resolver<Maybe<ResolversTypes['LikePayload']>, ParentType, ContextType, RequireFields<MutationAddLikeArgs, 'input'>>;
-  addWatchLaterVideo?: Resolver<Maybe<ResolversTypes['AddWatchLaterVideoPayload']>, ParentType, ContextType, RequireFields<MutationAddWatchLaterVideoArgs, 'input'>>;
-  analyticsReportCreate?: Resolver<Maybe<ResolversTypes['AnalyticsReportCreatePayload']>, ParentType, ContextType, RequireFields<MutationAnalyticsReportCreateArgs, 'input'>>;
-  askPartnerReportFile?: Resolver<Maybe<ResolversTypes['AskPartnerReportFilePayload']>, ParentType, ContextType, RequireFields<MutationAskPartnerReportFileArgs, 'input'>>;
-  channelCreate?: Resolver<Maybe<ResolversTypes['ChannelCreatePayload']>, ParentType, ContextType, RequireFields<MutationChannelCreateArgs, 'input'>>;
-  clearCollectionMedias?: Resolver<Maybe<ResolversTypes['ClearCollectionMediasPayload']>, ParentType, ContextType, RequireFields<MutationClearCollectionMediasArgs, 'input'>>;
-  clearLikedVideos?: Resolver<Maybe<ResolversTypes['ClearLikedVideosPayload']>, ParentType, ContextType, RequireFields<MutationClearLikedVideosArgs, 'input'>>;
-  clearWatchLaterVideos?: Resolver<Maybe<ResolversTypes['ClearWatchLaterVideosPayload']>, ParentType, ContextType, RequireFields<MutationClearWatchLaterVideosArgs, 'input'>>;
-  clearWatchedVideos?: Resolver<Maybe<ResolversTypes['ClearWatchedVideosPayload']>, ParentType, ContextType, RequireFields<MutationClearWatchedVideosArgs, 'input'>>;
-  createBehaviorRule?: Resolver<Maybe<ResolversTypes['CreateBehaviorRulePayload']>, ParentType, ContextType, RequireFields<MutationCreateBehaviorRuleArgs, 'input'>>;
-  createCollection?: Resolver<Maybe<ResolversTypes['CreateCollectionPayload']>, ParentType, ContextType, RequireFields<MutationCreateCollectionArgs, 'input'>>;
-  createComment?: Resolver<Maybe<ResolversTypes['CreateCommentPayload']>, ParentType, ContextType, RequireFields<MutationCreateCommentArgs, 'input'>>;
-  createReaction?: Resolver<Maybe<ResolversTypes['ReactionPayload']>, ParentType, ContextType, RequireFields<MutationCreateReactionArgs, 'input'>>;
-  createUser?: Resolver<Maybe<ResolversTypes['CreateUserPayload']>, ParentType, ContextType, RequireFields<MutationCreateUserArgs, 'input'>>;
-  createVideo?: Resolver<Maybe<ResolversTypes['CreateVideoPayload']>, ParentType, ContextType, RequireFields<MutationCreateVideoArgs, 'input'>>;
-  deleteBehaviorRule?: Resolver<Maybe<ResolversTypes['DeleteBehaviorRulePayload']>, ParentType, ContextType, RequireFields<MutationDeleteBehaviorRuleArgs, 'input'>>;
-  deleteComment?: Resolver<Maybe<ResolversTypes['DeleteCommentPayload']>, ParentType, ContextType, RequireFields<MutationDeleteCommentArgs, 'input'>>;
-  deleteReaction?: Resolver<Maybe<ResolversTypes['DeleteReactionPayload']>, ParentType, ContextType, RequireFields<MutationDeleteReactionArgs, 'input'>>;
-  deleteUser?: Resolver<Maybe<ResolversTypes['DeleteUserPayload']>, ParentType, ContextType, RequireFields<MutationDeleteUserArgs, 'input'>>;
-  deleteVideo?: Resolver<Maybe<ResolversTypes['DeleteVideoPayload']>, ParentType, ContextType, RequireFields<MutationDeleteVideoArgs, 'input'>>;
-  followChannel?: Resolver<Maybe<ResolversTypes['FollowChannelPayload']>, ParentType, ContextType, RequireFields<MutationFollowChannelArgs, 'input'>>;
-  followChannels?: Resolver<Maybe<ResolversTypes['FollowChannelsPayload']>, ParentType, ContextType, RequireFields<MutationFollowChannelsArgs, 'input'>>;
-  followTopic?: Resolver<Maybe<ResolversTypes['FollowTopicPayload']>, ParentType, ContextType, RequireFields<MutationFollowTopicArgs, 'input'>>;
-  followTopics?: Resolver<Maybe<ResolversTypes['FollowTopicsPayload']>, ParentType, ContextType, RequireFields<MutationFollowTopicsArgs, 'input'>>;
-  followedUserAdd?: Resolver<Maybe<ResolversTypes['FollowUserPayload']>, ParentType, ContextType, RequireFields<MutationFollowedUserAddArgs, 'input'>>;
-  followedUserRemove?: Resolver<Maybe<ResolversTypes['UnfollowUserPayload']>, ParentType, ContextType, RequireFields<MutationFollowedUserRemoveArgs, 'input'>>;
-  generateFileUploadUrl?: Resolver<Maybe<ResolversTypes['GenerateFileUploadUrlPayload']>, ParentType, ContextType, RequireFields<MutationGenerateFileUploadUrlArgs, 'input'>>;
-  generateVerifyEmailToken?: Resolver<Maybe<ResolversTypes['GenerateVerifyEmailTokenPayload']>, ParentType, ContextType, RequireFields<MutationGenerateVerifyEmailTokenArgs, 'input'>>;
-  likeVideo?: Resolver<Maybe<ResolversTypes['LikeVideoPayload']>, ParentType, ContextType, RequireFields<MutationLikeVideoArgs, 'input'>>;
-  moderationActionAppeal?: Resolver<Maybe<ResolversTypes['ModerationActionAppealPayload']>, ParentType, ContextType, RequireFields<MutationModerationActionAppealArgs, 'input'>>;
-  notificationFollowedChannelUpdate?: Resolver<Maybe<ResolversTypes['NotificationFollowedChannelUpdatePayload']>, ParentType, ContextType, RequireFields<MutationNotificationFollowedChannelUpdateArgs, 'input'>>;
-  pollAnswer?: Resolver<Maybe<ResolversTypes['PollAnswerPayload']>, ParentType, ContextType, RequireFields<MutationPollAnswerArgs, 'input'>>;
-  reactionVideoCreate?: Resolver<Maybe<ResolversTypes['ReactionVideoPayload']>, ParentType, ContextType, RequireFields<MutationReactionVideoCreateArgs, 'input'>>;
-  reactionVideoDelete?: Resolver<Maybe<ResolversTypes['ReactionVideoDeletePayload']>, ParentType, ContextType, RequireFields<MutationReactionVideoDeleteArgs, 'input'>>;
-  reactionVideoUpdate?: Resolver<Maybe<ResolversTypes['ReactionVideoPayload']>, ParentType, ContextType, RequireFields<MutationReactionVideoUpdateArgs, 'input'>>;
-  recoverPassword?: Resolver<Maybe<ResolversTypes['RecoverPasswordPayload']>, ParentType, ContextType, RequireFields<MutationRecoverPasswordArgs, 'input'>>;
-  removeCollection?: Resolver<Maybe<ResolversTypes['RemoveCollectionPayload']>, ParentType, ContextType, RequireFields<MutationRemoveCollectionArgs, 'input'>>;
-  removeCollectionVideo?: Resolver<Maybe<ResolversTypes['RemoveCollectionVideoPayload']>, ParentType, ContextType, RequireFields<MutationRemoveCollectionVideoArgs, 'input'>>;
-  removeFollowing?: Resolver<Maybe<ResolversTypes['FollowingPayload']>, ParentType, ContextType, RequireFields<MutationRemoveFollowingArgs, 'input'>>;
-  removeLike?: Resolver<Maybe<ResolversTypes['LikePayload']>, ParentType, ContextType, RequireFields<MutationRemoveLikeArgs, 'input'>>;
-  removeWatchLaterVideo?: Resolver<Maybe<ResolversTypes['RemoveWatchLaterVideoPayload']>, ParentType, ContextType, RequireFields<MutationRemoveWatchLaterVideoArgs, 'input'>>;
-  removeWatchedVideo?: Resolver<Maybe<ResolversTypes['RemoveWatchedVideoPayload']>, ParentType, ContextType, RequireFields<MutationRemoveWatchedVideoArgs, 'input'>>;
-  reorderCollectionMedia?: Resolver<Maybe<ResolversTypes['ReorderCollectionMediaPayload']>, ParentType, ContextType, RequireFields<MutationReorderCollectionMediaArgs, 'input'>>;
-  reportComment?: Resolver<ResolversTypes['ReportCommentPayload'], ParentType, ContextType, RequireFields<MutationReportCommentArgs, 'input'>>;
-  reportCreator?: Resolver<ResolversTypes['ReportCreatorPayload'], ParentType, ContextType, RequireFields<MutationReportCreatorArgs, 'input'>>;
-  reportRecording?: Resolver<Maybe<ResolversTypes['ReportRecordingPayload']>, ParentType, ContextType, RequireFields<MutationReportRecordingArgs, 'input'>>;
-  reportVideo?: Resolver<Maybe<ResolversTypes['ReportVideoPayload']>, ParentType, ContextType, RequireFields<MutationReportVideoArgs, 'input'>>;
-  reporterEmailVerify?: Resolver<ResolversTypes['ReporterEmailVerifyPayload'], ParentType, ContextType, RequireFields<MutationReporterEmailVerifyArgs, 'input'>>;
-  requestActivationCode?: Resolver<Maybe<ResolversTypes['RequestActivationCodePayload']>, ParentType, ContextType, RequireFields<MutationRequestActivationCodeArgs, 'input'>>;
-  resetPassword?: Resolver<Maybe<ResolversTypes['ResetPasswordPayload']>, ParentType, ContextType, RequireFields<MutationResetPasswordArgs, 'input'>>;
-  sendTransactionalEmail?: Resolver<Maybe<ResolversTypes['SendTransactionalEmailPayload']>, ParentType, ContextType, RequireFields<MutationSendTransactionalEmailArgs, 'input'>>;
-  sendVerifyEmailCode?: Resolver<Maybe<ResolversTypes['SendVerifyEmailCodePayload']>, ParentType, ContextType, RequireFields<MutationSendVerifyEmailCodeArgs, 'input'>>;
-  unfollowChannel?: Resolver<Maybe<ResolversTypes['UnfollowChannelPayload']>, ParentType, ContextType, RequireFields<MutationUnfollowChannelArgs, 'input'>>;
-  unfollowTopic?: Resolver<Maybe<ResolversTypes['UnfollowTopicPayload']>, ParentType, ContextType, RequireFields<MutationUnfollowTopicArgs, 'input'>>;
-  unlikeVideo?: Resolver<Maybe<ResolversTypes['UnlikeVideoPayload']>, ParentType, ContextType, RequireFields<MutationUnlikeVideoArgs, 'input'>>;
-  updateBehaviorRule?: Resolver<Maybe<ResolversTypes['UpdateBehaviorRulePayload']>, ParentType, ContextType, RequireFields<MutationUpdateBehaviorRuleArgs, 'input'>>;
-  updateChannel?: Resolver<Maybe<ResolversTypes['UpdateChannelPayload']>, ParentType, ContextType, RequireFields<MutationUpdateChannelArgs, 'input'>>;
-  updateCollection?: Resolver<Maybe<ResolversTypes['UpdateCollectionPayload']>, ParentType, ContextType, RequireFields<MutationUpdateCollectionArgs, 'input'>>;
-  updateNotificationSettingsEmail?: Resolver<Maybe<ResolversTypes['UpdateNotificationSettingsEmailPayload']>, ParentType, ContextType, RequireFields<MutationUpdateNotificationSettingsEmailArgs, 'input'>>;
-  updateNotificationSettingsPush?: Resolver<Maybe<ResolversTypes['UpdateNotificationSettingsPushPayload']>, ParentType, ContextType, RequireFields<MutationUpdateNotificationSettingsPushArgs, 'input'>>;
-  updateReaction?: Resolver<Maybe<ResolversTypes['ReactionPayload']>, ParentType, ContextType, RequireFields<MutationUpdateReactionArgs, 'input'>>;
-  updateUser?: Resolver<Maybe<ResolversTypes['UpdateUserPayload']>, ParentType, ContextType, RequireFields<MutationUpdateUserArgs, 'input'>>;
-  updateVideo?: Resolver<Maybe<ResolversTypes['UpdateVideoPayload']>, ParentType, ContextType, RequireFields<MutationUpdateVideoArgs, 'input'>>;
-  userEmailChangeConfirm?: Resolver<Maybe<ResolversTypes['UserEmailChangeConfirmPayload']>, ParentType, ContextType, RequireFields<MutationUserEmailChangeConfirmArgs, 'input'>>;
-  userEmailChangeRequest?: Resolver<Maybe<ResolversTypes['UserEmailChangeRequestPayload']>, ParentType, ContextType, RequireFields<MutationUserEmailChangeRequestArgs, 'input'>>;
-  userEmailConfirmationCodeReset?: Resolver<Maybe<ResolversTypes['UserEmailConfirmationCodeResetPayload']>, ParentType, ContextType, RequireFields<MutationUserEmailConfirmationCodeResetArgs, 'input'>>;
-  userEmailValidationTokenRequest?: Resolver<Maybe<ResolversTypes['UserEmailValidationTokenPayload']>, ParentType, ContextType, RequireFields<MutationUserEmailValidationTokenRequestArgs, 'input'>>;
-  userInterestAdd?: Resolver<Maybe<ResolversTypes['UserInterestAddPayload']>, ParentType, ContextType, RequireFields<MutationUserInterestAddArgs, 'input'>>;
-  userInterestRemove?: Resolver<Maybe<ResolversTypes['UserInterestRemovePayload']>, ParentType, ContextType, RequireFields<MutationUserInterestRemoveArgs, 'input'>>;
-  userInterestsUpdate?: Resolver<Maybe<ResolversTypes['UserInterestsUpdatePayload']>, ParentType, ContextType, RequireFields<MutationUserInterestsUpdateArgs, 'input'>>;
-  userOpenWebCodeBRequest?: Resolver<Maybe<ResolversTypes['UserOpenWebCodeBRequestPayload']>, ParentType, ContextType, RequireFields<MutationUserOpenWebCodeBRequestArgs, 'input'>>;
-  watchedVideoAdd?: Resolver<Maybe<ResolversTypes['WatchedVideoAddPayload']>, ParentType, ContextType, RequireFields<MutationWatchedVideoAddArgs, 'input'>>;
-};
-
-export type NeonResolvers<ContextType = any, ParentType extends ResolversParentTypes['Neon'] = ResolversParentTypes['Neon']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  sections?: Resolver<Maybe<ResolversTypes['SectionConnection']>, ParentType, ContextType, RequireFields<NeonSectionsArgs, 'page' | 'space'>>;
-  web?: Resolver<Maybe<ResolversTypes['Web']>, ParentType, ContextType, RequireFields<NeonWebArgs, 'uri'>>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type NodeResolvers<ContextType = any, ParentType extends ResolversParentTypes['Node'] = ResolversParentTypes['Node']> = {
-  __resolveType: TypeResolveFn<'Analytics' | 'AnalyticsGroupedPayloadItem' | 'AnalyticsReport' | 'Attribute' | 'Behavior' | 'BehaviorRuleTag' | 'BookmarkMetric' | 'Caption' | 'Channel' | 'ChannelEngagementMetrics' | 'ChannelExternalLinks' | 'ChannelMetric' | 'ChannelMetrics' | 'ChannelShareUrls' | 'ChannelStats' | 'ChannelStatsFollowers' | 'ChannelStatsReactions' | 'ChannelStatsVideos' | 'ChannelStatsViews' | 'ChannelUpdateRequired' | 'ChannelViewMetrics' | 'Collection' | 'CollectionEngagementMetrics' | 'CollectionMetric' | 'CollectionMetrics' | 'CollectionStats' | 'CollectionStatsVideos' | 'Comment' | 'CommentEngagementMetrics' | 'CommentMetric' | 'CommentMetrics' | 'CommentViewerEngagement' | 'ContentCategory' | 'Conversation' | 'Country' | 'CuratedCategory' | 'DailymotionAd' | 'EmailChangeRequest' | 'Embed' | 'ExperimentMatch' | 'FallbackCountry' | 'Favorite' | 'FeatureMatch' | 'FeaturedContent' | 'FileUpload' | 'FollowedChannel' | 'FollowedTopic' | 'Follower' | 'FollowerEngagement' | 'FollowerEngagementNotifications' | 'FollowerMetric' | 'Following' | 'FollowingChannelStartsLive' | 'FollowingChannelUploadsVideo' | 'FollowingMetric' | 'FollowingStartsLive' | 'GeoblockedCountries' | 'Geoblocking' | 'Hashtag' | 'HashtagEngagementMetrics' | 'HashtagMetrics' | 'Image' | 'Interest' | 'Language' | 'Like' | 'LikeMetric' | 'Live' | 'LiveEngagementMetrics' | 'LiveMetric' | 'LiveMetrics' | 'LiveShareUrls' | 'LiveStats' | 'LiveStatsViews' | 'LiveStreamUrls' | 'LiveStreams' | 'LiveViewerEngagement' | 'Localization' | 'LocalizationMe' | 'MediaModeration' | 'MediaPublishingInfo' | 'MediaTag' | 'MediaUploadInfo' | 'Metadata' | 'MonetizationInsights' | 'Neon' | 'NotificationSettings' | 'Organization' | 'OrganizationAnalysis' | 'OrganizationStats' | 'OrganizationStatsChannels' | 'Partner' | 'PartnerReportFile' | 'PartnerSpace' | 'Player' | 'PlayerQueue' | 'Poll' | 'PollOption' | 'PollShareUrls' | 'ProductUpdates' | 'Quality' | 'Reaction' | 'ReactionEngagementMetrics' | 'ReactionMetric' | 'ReactionMetrics' | 'ReactionShareUrls' | 'ReactionStreamUrls' | 'ReactionVideo' | 'ReactionVideoStats' | 'ReactionVideoStatsBookmarks' | 'ReactionVideoStatsFavorites' | 'ReactionVideoStatsLikes' | 'ReactionVideoStatsReactionVideos' | 'ReactionVideoStatsSaves' | 'ReactionViewerEngagement' | 'RecommendedRecording' | 'RemindUnwatchedVideos' | 'ReportFileDownloadLink' | 'Restriction' | 'Rule' | 'Search' | 'Section' | 'SharingURL' | 'Subdivision' | 'Subtitle' | 'Suggestion' | 'SupportedCountry' | 'SupportedLanguage' | 'Thumbnails' | 'Tips' | 'Topic' | 'TopicLabel' | 'TopicShareUrls' | 'TopicStats' | 'TopicStatsFollowers' | 'TopicStatsVideos' | 'TopicWhitelistStatus' | 'User' | 'UserInterest' | 'UserPollAnswer' | 'UserStats' | 'UserStatsCollections' | 'UserStatsFollowers' | 'UserStatsFollowingChannels' | 'UserStatsFollowingTopics' | 'UserStatsLikedVideos' | 'UserStatsReactionVideos' | 'UserStatsUploadedVideos' | 'UserStatsVideos' | 'UserStatsWatchLater' | 'UserStatsWatchedVideos' | 'Video' | 'VideoDigest' | 'VideoEngagementMetrics' | 'VideoMetric' | 'VideoMetrics' | 'VideoSettings' | 'VideoShareUrls' | 'VideoStats' | 'VideoStatsBookmarks' | 'VideoStatsFavorites' | 'VideoStatsLikes' | 'VideoStatsReactionVideos' | 'VideoStatsSaves' | 'VideoStatsViews' | 'VideoStreamUrls' | 'VideoStreams' | 'VideoViewMetrics' | 'VideoViewerEngagement' | 'Views' | 'Watch' | 'Web' | 'WebMetadata' | 'WebMetadataConnection', ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-};
-
-export type NotificationFollowedChannelUpdatePayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['NotificationFollowedChannelUpdatePayload'] = ResolversParentTypes['NotificationFollowedChannelUpdatePayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type NotificationSettingsResolvers<ContextType = any, ParentType extends ResolversParentTypes['NotificationSettings'] = ResolversParentTypes['NotificationSettings']> = {
-  followingChannelStartsLive?: Resolver<Maybe<ResolversTypes['FollowingChannelStartsLive']>, ParentType, ContextType>;
-  followingChannelUploadsVideo?: Resolver<Maybe<ResolversTypes['FollowingChannelUploadsVideo']>, ParentType, ContextType>;
-  followingStartsLive?: Resolver<Maybe<ResolversTypes['FollowingStartsLive']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  monetizationInsights?: Resolver<Maybe<ResolversTypes['MonetizationInsights']>, ParentType, ContextType>;
-  productUpdates?: Resolver<Maybe<ResolversTypes['ProductUpdates']>, ParentType, ContextType>;
-  remindUnwatchedVideos?: Resolver<Maybe<ResolversTypes['RemindUnwatchedVideos']>, ParentType, ContextType>;
-  tips?: Resolver<Maybe<ResolversTypes['Tips']>, ParentType, ContextType>;
-  videoDigest?: Resolver<Maybe<ResolversTypes['VideoDigest']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type OrganizationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Organization'] = ResolversParentTypes['Organization']> = {
-  analysis?: Resolver<Maybe<ResolversTypes['OrganizationAnalysis']>, ParentType, ContextType>;
-  analytics?: Resolver<Maybe<ResolversTypes['Analytics']>, ParentType, ContextType>;
-  category?: Resolver<Maybe<ResolversTypes['OrganizationCategory']>, ParentType, ContextType>;
-  channels?: Resolver<Maybe<ResolversTypes['ChannelConnection']>, ParentType, ContextType, RequireFields<OrganizationChannelsArgs, 'first' | 'page'>>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  owner?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
-  stats?: Resolver<Maybe<ResolversTypes['OrganizationStats']>, ParentType, ContextType>;
-  userLimit?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  xid?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type OrganizationAnalysisResolvers<ContextType = any, ParentType extends ResolversParentTypes['OrganizationAnalysis'] = ResolversParentTypes['OrganizationAnalysis']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  reports?: Resolver<ResolversTypes['AnalyticsReportConnection'], ParentType, ContextType, RequireFields<OrganizationAnalysisReportsArgs, 'page'>>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type OrganizationConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['OrganizationConnection'] = ResolversParentTypes['OrganizationConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['OrganizationEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type OrganizationEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['OrganizationEdge'] = ResolversParentTypes['OrganizationEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Organization']>, ParentType, ContextType>;
-  permission?: Resolver<Maybe<ResolversTypes['OrganizationPermission']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type OrganizationPermissionResolvers<ContextType = any, ParentType extends ResolversParentTypes['OrganizationPermission'] = ResolversParentTypes['OrganizationPermission']> = {
-  level?: Resolver<Maybe<ResolversTypes['OrganizationRole']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type OrganizationStatsResolvers<ContextType = any, ParentType extends ResolversParentTypes['OrganizationStats'] = ResolversParentTypes['OrganizationStats']> = {
-  channels?: Resolver<Maybe<ResolversTypes['OrganizationStatsChannels']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type OrganizationStatsChannelsResolvers<ContextType = any, ParentType extends ResolversParentTypes['OrganizationStatsChannels'] = ResolversParentTypes['OrganizationStatsChannels']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PageInfoResolvers<ContextType = any, ParentType extends ResolversParentTypes['PageInfo'] = ResolversParentTypes['PageInfo']> = {
-  hasNextPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  hasPreviousPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  nextPage?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PartnerResolvers<ContextType = any, ParentType extends ResolversParentTypes['Partner'] = ResolversParentTypes['Partner']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  organizations?: Resolver<Maybe<ResolversTypes['OrganizationConnection']>, ParentType, ContextType, RequireFields<PartnerOrganizationsArgs, 'first' | 'page'>>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PartnerReportFileResolvers<ContextType = any, ParentType extends ResolversParentTypes['PartnerReportFile'] = ResolversParentTypes['PartnerReportFile']> = {
-  createDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  createdAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  downloadLinks?: Resolver<Maybe<ResolversTypes['ReportFileDownloadLinkConnection']>, ParentType, ContextType, RequireFields<PartnerReportFileDownloadLinksArgs, 'page'>>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  reportToken?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['PartnerReportStatus']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PartnerSpaceResolvers<ContextType = any, ParentType extends ResolversParentTypes['PartnerSpace'] = ResolversParentTypes['PartnerSpace']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  reportFile?: Resolver<Maybe<ResolversTypes['PartnerReportFile']>, ParentType, ContextType, RequireFields<PartnerSpaceReportFileArgs, 'reportToken'>>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PlayerResolvers<ContextType = any, ParentType extends ResolversParentTypes['Player'] = ResolversParentTypes['Player']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  queue?: Resolver<Maybe<ResolversTypes['PlayerQueue']>, ParentType, ContextType, Partial<PlayerQueueArgs>>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PlayerQueueResolvers<ContextType = any, ParentType extends ResolversParentTypes['PlayerQueue'] = ResolversParentTypes['PlayerQueue']> = {
-  hasAutoPlayNext?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  recordings?: Resolver<Maybe<ResolversTypes['RecommendedRecordingConnection']>, ParentType, ContextType, RequireFields<PlayerQueueRecordingsArgs, 'page'>>;
-  videos?: Resolver<Maybe<ResolversTypes['VideoConnection']>, ParentType, ContextType, RequireFields<PlayerQueueVideosArgs, 'page'>>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PollResolvers<ContextType = any, ParentType extends ResolversParentTypes['Poll'] = ResolversParentTypes['Poll']> = {
-  component?: Resolver<Maybe<ResolversTypes['Component']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  me?: Resolver<Maybe<ResolversTypes['UserPollAnswer']>, ParentType, ContextType>;
-  opener?: Resolver<Maybe<ResolversTypes['Story']>, ParentType, ContextType>;
-  options?: Resolver<Array<ResolversTypes['PollOption']>, ParentType, ContextType>;
-  post?: Resolver<Maybe<ResolversTypes['Post']>, ParentType, ContextType>;
-  question?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  shareUrls?: Resolver<Maybe<ResolversTypes['PollShareUrls']>, ParentType, ContextType>;
-  url?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  voterCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PollAnswerPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['PollAnswerPayload'] = ResolversParentTypes['PollAnswerPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PollConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['PollConnection'] = ResolversParentTypes['PollConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['PollEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PollEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['PollEdge'] = ResolversParentTypes['PollEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Poll']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PollOptionResolvers<ContextType = any, ParentType extends ResolversParentTypes['PollOption'] = ResolversParentTypes['PollOption']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  text?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  voterCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PollShareUrlsResolvers<ContextType = any, ParentType extends ResolversParentTypes['PollShareUrls'] = ResolversParentTypes['PollShareUrls']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  permalink?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PostResolvers<ContextType = any, ParentType extends ResolversParentTypes['Post'] = ResolversParentTypes['Post']> = {
-  __resolveType: TypeResolveFn<'Collection' | 'Live' | 'Reaction' | 'ReactionVideo' | 'Video', ParentType, ContextType>;
-};
-
-export type PostConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['PostConnection'] = ResolversParentTypes['PostConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['PostEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PostEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['PostEdge'] = ResolversParentTypes['PostEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Post']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PostEngagementMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['PostEngagementMetrics'] = ResolversParentTypes['PostEngagementMetrics']> = {
-  __resolveType: TypeResolveFn<'LiveEngagementMetrics' | 'ReactionEngagementMetrics' | 'VideoEngagementMetrics', ParentType, ContextType>;
-  bookmarks?: Resolver<Maybe<ResolversTypes['BookmarkMetricConnection']>, ParentType, ContextType, Partial<PostEngagementMetricsBookmarksArgs>>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  likes?: Resolver<Maybe<ResolversTypes['LikeMetricConnection']>, ParentType, ContextType, Partial<PostEngagementMetricsLikesArgs>>;
-  reactions?: Resolver<Maybe<ResolversTypes['ReactionMetricConnection']>, ParentType, ContextType>;
-};
-
-export type PostMetricResolvers<ContextType = any, ParentType extends ResolversParentTypes['PostMetric'] = ResolversParentTypes['PostMetric']> = {
-  __resolveType: TypeResolveFn<'CollectionMetric' | 'LiveMetric' | 'ReactionMetric' | 'VideoMetric', ParentType, ContextType>;
-};
-
-export type PostMetricConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['PostMetricConnection'] = ResolversParentTypes['PostMetricConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['PostMetricEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PostMetricEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['PostMetricEdge'] = ResolversParentTypes['PostMetricEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['PostMetric']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PostMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['PostMetrics'] = ResolversParentTypes['PostMetrics']> = {
-  __resolveType: TypeResolveFn<'LiveMetrics' | 'ReactionMetrics' | 'VideoMetrics', ParentType, ContextType>;
-  engagement?: Resolver<Maybe<ResolversTypes['PostEngagementMetrics']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-};
-
-export type ProductUpdatesResolvers<ContextType = any, ParentType extends ResolversParentTypes['ProductUpdates'] = ResolversParentTypes['ProductUpdates']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  isEmailEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type QualityResolvers<ContextType = any, ParentType extends ResolversParentTypes['Quality'] = ResolversParentTypes['Quality']> = {
-  frameRate?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  resolution?: Resolver<Maybe<ResolversTypes['Resolution']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  appealApplication?: Resolver<ResolversTypes['AppealApplication'], ParentType, ContextType, RequireFields<QueryAppealApplicationArgs, 'token'>>;
-  behavior?: Resolver<Maybe<ResolversTypes['Behavior']>, ParentType, ContextType>;
-  categories?: Resolver<Maybe<ResolversTypes['CategoryConnection']>, ParentType, ContextType, RequireFields<QueryCategoriesArgs, 'filter' | 'page'>>;
-  channel?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType, Partial<QueryChannelArgs>>;
-  channels?: Resolver<Maybe<ResolversTypes['ChannelConnection']>, ParentType, ContextType, RequireFields<QueryChannelsArgs, 'first' | 'page'>>;
-  collection?: Resolver<Maybe<ResolversTypes['Collection']>, ParentType, ContextType, RequireFields<QueryCollectionArgs, 'xid'>>;
-  collections?: Resolver<Maybe<ResolversTypes['CollectionConnection']>, ParentType, ContextType, RequireFields<QueryCollectionsArgs, 'first' | 'page'>>;
-  contentFeed?: Resolver<Maybe<ResolversTypes['FeedPostConnection']>, ParentType, ContextType, RequireFields<QueryContentFeedArgs, 'first' | 'name' | 'page'>>;
-  conversations?: Resolver<Maybe<ResolversTypes['ConversationConnection']>, ParentType, ContextType, RequireFields<QueryConversationsArgs, 'page'>>;
-  featuredContent?: Resolver<Maybe<ResolversTypes['FeaturedContent']>, ParentType, ContextType>;
-  feed?: Resolver<Maybe<ResolversTypes['PostConnection']>, ParentType, ContextType, RequireFields<QueryFeedArgs, 'first' | 'name' | 'page'>>;
-  hashtag?: Resolver<Maybe<ResolversTypes['Hashtag']>, ParentType, ContextType, RequireFields<QueryHashtagArgs, 'id'>>;
-  interests?: Resolver<Maybe<ResolversTypes['InterestConnection']>, ParentType, ContextType, RequireFields<QueryInterestsArgs, 'enabledOnly' | 'page'>>;
-  live?: Resolver<Maybe<ResolversTypes['Live']>, ParentType, ContextType, RequireFields<QueryLiveArgs, 'xid'>>;
-  liveStreams?: Resolver<Maybe<ResolversTypes['LiveStreamsConnection']>, ParentType, ContextType, RequireFields<QueryLiveStreamsArgs, 'first' | 'page'>>;
-  lives?: Resolver<Maybe<ResolversTypes['LiveConnection']>, ParentType, ContextType, RequireFields<QueryLivesArgs, 'first' | 'page'>>;
-  localization?: Resolver<Maybe<ResolversTypes['Localization']>, ParentType, ContextType>;
-  me?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
-  media?: Resolver<Maybe<ResolversTypes['Media']>, ParentType, ContextType, RequireFields<QueryMediaArgs, 'xid'>>;
-  mediaStreams?: Resolver<Maybe<ResolversTypes['MediaStreamsConnection']>, ParentType, ContextType, RequireFields<QueryMediaStreamsArgs, 'first' | 'mediaXids' | 'page'>>;
-  node?: Resolver<Maybe<ResolversTypes['Node']>, ParentType, ContextType, RequireFields<QueryNodeArgs, 'id'>>;
-  partner?: Resolver<Maybe<ResolversTypes['PartnerSpace']>, ParentType, ContextType>;
-  player?: Resolver<Maybe<ResolversTypes['Player']>, ParentType, ContextType, RequireFields<QueryPlayerArgs, 'embed'>>;
-  poll?: Resolver<Maybe<ResolversTypes['Poll']>, ParentType, ContextType, RequireFields<QueryPollArgs, 'id'>>;
-  polls?: Resolver<Maybe<ResolversTypes['PollConnection']>, ParentType, ContextType, RequireFields<QueryPollsArgs, 'first' | 'page'>>;
-  reaction?: Resolver<Maybe<ResolversTypes['Reaction']>, ParentType, ContextType, RequireFields<QueryReactionArgs, 'xid'>>;
-  reactionVideo?: Resolver<Maybe<ResolversTypes['ReactionVideo']>, ParentType, ContextType, RequireFields<QueryReactionVideoArgs, 'xid'>>;
-  recording?: Resolver<Maybe<ResolversTypes['Recording']>, ParentType, ContextType, RequireFields<QueryRecordingArgs, 'id'>>;
-  search?: Resolver<Maybe<ResolversTypes['Search']>, ParentType, ContextType>;
-  supportedCountries?: Resolver<Maybe<Array<Maybe<ResolversTypes['Country']>>>, ParentType, ContextType>;
-  threads?: Resolver<Maybe<ResolversTypes['ThreadConnection']>, ParentType, ContextType, RequireFields<QueryThreadsArgs, 'first'>>;
-  topic?: Resolver<Maybe<ResolversTypes['Topic']>, ParentType, ContextType, Partial<QueryTopicArgs>>;
-  topics?: Resolver<Maybe<ResolversTypes['TopicConnection']>, ParentType, ContextType, RequireFields<QueryTopicsArgs, 'first' | 'page'>>;
-  user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<QueryUserArgs, 'xid'>>;
-  video?: Resolver<Maybe<ResolversTypes['Video']>, ParentType, ContextType, RequireFields<QueryVideoArgs, 'xid'>>;
-  videoOrLive?: Resolver<Maybe<ResolversTypes['VideoOrLive']>, ParentType, ContextType, RequireFields<QueryVideoOrLiveArgs, 'xid'>>;
-  videoStreams?: Resolver<Maybe<ResolversTypes['VideoStreamsConnection']>, ParentType, ContextType, RequireFields<QueryVideoStreamsArgs, 'first' | 'page'>>;
-  videos?: Resolver<Maybe<ResolversTypes['VideoConnection']>, ParentType, ContextType, RequireFields<QueryVideosArgs, 'first' | 'page'>>;
-  views?: Resolver<Maybe<ResolversTypes['Views']>, ParentType, ContextType>;
-};
-
-export type ReactionResolvers<ContextType = any, ParentType extends ResolversParentTypes['Reaction'] = ResolversParentTypes['Reaction']> = {
-  createDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  createdAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  creator?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
-  duration?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  hashtags?: Resolver<Maybe<ResolversTypes['HashtagConnection']>, ParentType, ContextType, RequireFields<ReactionHashtagsArgs, 'first' | 'page'>>;
-  hlsURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  hlsUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  isCommentsEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isReactionsEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  metrics?: Resolver<Maybe<ResolversTypes['ReactionMetrics']>, ParentType, ContextType>;
-  opener?: Resolver<Maybe<ResolversTypes['Story']>, ParentType, ContextType>;
-  reactions?: Resolver<Maybe<ResolversTypes['ReactionConnection']>, ParentType, ContextType, RequireFields<ReactionReactionsArgs, 'first' | 'page'>>;
-  shareUrls?: Resolver<Maybe<ResolversTypes['ReactionShareUrls']>, ParentType, ContextType>;
-  streamUrls?: Resolver<Maybe<ResolversTypes['ReactionStreamUrls']>, ParentType, ContextType>;
-  subtitles?: Resolver<Maybe<ResolversTypes['SubtitleConnection']>, ParentType, ContextType, RequireFields<ReactionSubtitlesArgs, 'auto' | 'autoGenerated' | 'page'>>;
-  thumbnail?: Resolver<Maybe<ResolversTypes['Image']>, ParentType, ContextType, RequireFields<ReactionThumbnailArgs, 'height'>>;
-  title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  transcript?: Resolver<Maybe<ResolversTypes['CaptionConnection']>, ParentType, ContextType, RequireFields<ReactionTranscriptArgs, 'page'>>;
-  url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  viewerEngagement?: Resolver<Maybe<ResolversTypes['ReactionViewerEngagement']>, ParentType, ContextType>;
-  xid?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionConnection'] = ResolversParentTypes['ReactionConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['ReactionEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionEdge'] = ResolversParentTypes['ReactionEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Reaction']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionEngagementMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionEngagementMetrics'] = ResolversParentTypes['ReactionEngagementMetrics']> = {
-  bookmarks?: Resolver<Maybe<ResolversTypes['BookmarkMetricConnection']>, ParentType, ContextType, Partial<ReactionEngagementMetricsBookmarksArgs>>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  likes?: Resolver<Maybe<ResolversTypes['LikeMetricConnection']>, ParentType, ContextType, Partial<ReactionEngagementMetricsLikesArgs>>;
-  reactions?: Resolver<Maybe<ResolversTypes['ReactionMetricConnection']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionMetricResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionMetric'] = ResolversParentTypes['ReactionMetric']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionMetricConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionMetricConnection'] = ResolversParentTypes['ReactionMetricConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['ReactionMetricEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionMetricEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionMetricEdge'] = ResolversParentTypes['ReactionMetricEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['ReactionMetric']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionMetrics'] = ResolversParentTypes['ReactionMetrics']> = {
-  engagement?: Resolver<Maybe<ResolversTypes['VideoEngagementMetrics']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionPayload'] = ResolversParentTypes['ReactionPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  reaction?: Resolver<Maybe<ResolversTypes['Reaction']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionShareUrlsResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionShareUrls'] = ResolversParentTypes['ReactionShareUrls']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  permalink?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionStreamUrlsResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionStreamUrls'] = ResolversParentTypes['ReactionStreamUrls']> = {
-  hls?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionVideoResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionVideo'] = ResolversParentTypes['ReactionVideo']> = {
-  createdAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  duration?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  hashtags?: Resolver<Maybe<ResolversTypes['HashtagConnection']>, ParentType, ContextType, RequireFields<ReactionVideoHashtagsArgs, 'first' | 'page'>>;
-  hlsURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  isBookmarked?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isCommentsEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isInWatchLater?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isLiked?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isReacted?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isReactionVideosEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  stats?: Resolver<Maybe<ResolversTypes['ReactionVideoStats']>, ParentType, ContextType>;
-  subtitles?: Resolver<Maybe<ResolversTypes['SubtitleConnection']>, ParentType, ContextType, RequireFields<ReactionVideoSubtitlesArgs, 'autoGenerated' | 'first' | 'page'>>;
-  thumbnail?: Resolver<Maybe<ResolversTypes['Image']>, ParentType, ContextType, RequireFields<ReactionVideoThumbnailArgs, 'height'>>;
-  thumbnailURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType, RequireFields<ReactionVideoThumbnailUrlArgs, 'size'>>;
-  title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
-  video?: Resolver<Maybe<ResolversTypes['Video']>, ParentType, ContextType>;
-  viewerEngagement?: Resolver<Maybe<ResolversTypes['ReactionViewerEngagement']>, ParentType, ContextType>;
-  xid?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionVideoConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionVideoConnection'] = ResolversParentTypes['ReactionVideoConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['ReactionVideoEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionVideoDeletePayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionVideoDeletePayload'] = ResolversParentTypes['ReactionVideoDeletePayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionVideoEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionVideoEdge'] = ResolversParentTypes['ReactionVideoEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['ReactionVideo']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionVideoPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionVideoPayload'] = ResolversParentTypes['ReactionVideoPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  reactionVideo?: Resolver<Maybe<ResolversTypes['ReactionVideo']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionVideoStatsResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionVideoStats'] = ResolversParentTypes['ReactionVideoStats']> = {
-  bookmarks?: Resolver<Maybe<ResolversTypes['ReactionVideoStatsBookmarks']>, ParentType, ContextType>;
-  favorites?: Resolver<Maybe<ResolversTypes['ReactionVideoStatsFavorites']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  likes?: Resolver<Maybe<ResolversTypes['ReactionVideoStatsLikes']>, ParentType, ContextType>;
-  reactionVideos?: Resolver<Maybe<ResolversTypes['ReactionVideoStatsReactionVideos']>, ParentType, ContextType>;
-  saves?: Resolver<Maybe<ResolversTypes['ReactionVideoStatsSaves']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionVideoStatsBookmarksResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionVideoStatsBookmarks'] = ResolversParentTypes['ReactionVideoStatsBookmarks']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionVideoStatsFavoritesResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionVideoStatsFavorites'] = ResolversParentTypes['ReactionVideoStatsFavorites']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionVideoStatsLikesResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionVideoStatsLikes'] = ResolversParentTypes['ReactionVideoStatsLikes']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionVideoStatsReactionVideosResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionVideoStatsReactionVideos'] = ResolversParentTypes['ReactionVideoStatsReactionVideos']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionVideoStatsSavesResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionVideoStatsSaves'] = ResolversParentTypes['ReactionVideoStatsSaves']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReactionViewerEngagementResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReactionViewerEngagement'] = ResolversParentTypes['ReactionViewerEngagement']> = {
-  bookmarked?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  favorited?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  likeRating?: Resolver<Maybe<ResolversTypes['LikeRating']>, ParentType, ContextType>;
-  liked?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  reacted?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  saved?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  watchCompleted?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  watchStarted?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type RecommendedRecordingResolvers<ContextType = any, ParentType extends ResolversParentTypes['RecommendedRecording'] = ResolversParentTypes['RecommendedRecording']> = {
-  algorithm?: Resolver<Maybe<ResolversTypes['Algorithm']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  recording?: Resolver<Maybe<ResolversTypes['Recording']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type RecommendedRecordingConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['RecommendedRecordingConnection'] = ResolversParentTypes['RecommendedRecordingConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['RecommendedRecordingEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type RecommendedRecordingEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['RecommendedRecordingEdge'] = ResolversParentTypes['RecommendedRecordingEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['RecommendedRecording']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type RecordingResolvers<ContextType = any, ParentType extends ResolversParentTypes['Recording'] = ResolversParentTypes['Recording']> = {
-  __resolveType: TypeResolveFn<'Live' | 'Reaction' | 'Video', ParentType, ContextType>;
-  createDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  createdAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  hlsUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  reactions?: Resolver<Maybe<ResolversTypes['ReactionConnection']>, ParentType, ContextType, RequireFields<RecordingReactionsArgs, 'first' | 'page'>>;
-  shareUrls?: Resolver<Maybe<ResolversTypes['ShareUrls']>, ParentType, ContextType>;
-  streamUrls?: Resolver<Maybe<ResolversTypes['StreamUrls']>, ParentType, ContextType>;
-  thumbnail?: Resolver<Maybe<ResolversTypes['Image']>, ParentType, ContextType, RequireFields<RecordingThumbnailArgs, 'height'>>;
-  title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-};
-
-export type RecoverPasswordPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['RecoverPasswordPayload'] = ResolversParentTypes['RecoverPasswordPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type RemindUnwatchedVideosResolvers<ContextType = any, ParentType extends ResolversParentTypes['RemindUnwatchedVideos'] = ResolversParentTypes['RemindUnwatchedVideos']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  isEmailEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isPushEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type RemoveCollectionPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['RemoveCollectionPayload'] = ResolversParentTypes['RemoveCollectionPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type RemoveCollectionVideoPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['RemoveCollectionVideoPayload'] = ResolversParentTypes['RemoveCollectionVideoPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type RemoveWatchLaterVideoPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['RemoveWatchLaterVideoPayload'] = ResolversParentTypes['RemoveWatchLaterVideoPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type RemoveWatchedVideoPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['RemoveWatchedVideoPayload'] = ResolversParentTypes['RemoveWatchedVideoPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReorderCollectionMediaPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReorderCollectionMediaPayload'] = ResolversParentTypes['ReorderCollectionMediaPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReportCommentPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReportCommentPayload'] = ResolversParentTypes['ReportCommentPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReportCreatorPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReportCreatorPayload'] = ResolversParentTypes['ReportCreatorPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReportFileDownloadLinkResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReportFileDownloadLink'] = ResolversParentTypes['ReportFileDownloadLink']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  link?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReportFileDownloadLinkConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReportFileDownloadLinkConnection'] = ResolversParentTypes['ReportFileDownloadLinkConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['ReportFileDownloadLinkEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReportFileDownloadLinkEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReportFileDownloadLinkEdge'] = ResolversParentTypes['ReportFileDownloadLinkEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['ReportFileDownloadLink']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReportRecordingPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReportRecordingPayload'] = ResolversParentTypes['ReportRecordingPayload']> = {
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReportVideoPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReportVideoPayload'] = ResolversParentTypes['ReportVideoPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ReporterEmailVerifyPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['ReporterEmailVerifyPayload'] = ResolversParentTypes['ReporterEmailVerifyPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<ResolversTypes['Status'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type RequestActivationCodePayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['RequestActivationCodePayload'] = ResolversParentTypes['RequestActivationCodePayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ResetPasswordPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['ResetPasswordPayload'] = ResolversParentTypes['ResetPasswordPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type RestrictionResolvers<ContextType = any, ParentType extends ResolversParentTypes['Restriction'] = ResolversParentTypes['Restriction']> = {
-  code?: Resolver<ResolversTypes['RestrictionCode'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type RuleResolvers<ContextType = any, ParentType extends ResolversParentTypes['Rule'] = ResolversParentTypes['Rule']> = {
-  complexCondition?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  condition?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  createDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  createdAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  creatorXid?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  enabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  endAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  endDate?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  experiment?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  startAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  startDate?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  tags?: Resolver<Maybe<ResolversTypes['BehaviorRuleTagConnection']>, ParentType, ContextType, RequireFields<RuleTagsArgs, 'page'>>;
-  updateDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  updatedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  uuid?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type RuleConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['RuleConnection'] = ResolversParentTypes['RuleConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['RuleEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type RuleEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['RuleEdge'] = ResolversParentTypes['RuleEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Rule']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SearchResolvers<ContextType = any, ParentType extends ResolversParentTypes['Search'] = ResolversParentTypes['Search']> = {
-  autosuggestions?: Resolver<Maybe<ResolversTypes['SuggestionConnection']>, ParentType, ContextType, RequireFields<SearchAutosuggestionsArgs, 'filter' | 'first' | 'page' | 'query'>>;
-  channels?: Resolver<Maybe<ResolversTypes['ChannelConnection']>, ParentType, ContextType, RequireFields<SearchChannelsArgs, 'first' | 'page' | 'query'>>;
-  collections?: Resolver<Maybe<ResolversTypes['CollectionConnection']>, ParentType, ContextType, RequireFields<SearchCollectionsArgs, 'first' | 'page' | 'query'>>;
-  hashtags?: Resolver<Maybe<ResolversTypes['HashtagConnection']>, ParentType, ContextType, RequireFields<SearchHashtagsArgs, 'first' | 'page' | 'query'>>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  lives?: Resolver<Maybe<ResolversTypes['LiveConnection']>, ParentType, ContextType, RequireFields<SearchLivesArgs, 'first' | 'page' | 'query'>>;
-  stories?: Resolver<Maybe<ResolversTypes['StoryConnection']>, ParentType, ContextType, RequireFields<SearchStoriesArgs, 'first' | 'orderBy' | 'page' | 'query'>>;
-  topics?: Resolver<Maybe<ResolversTypes['TopicConnection']>, ParentType, ContextType, RequireFields<SearchTopicsArgs, 'first' | 'page' | 'query'>>;
-  videos?: Resolver<Maybe<ResolversTypes['VideoConnection']>, ParentType, ContextType, RequireFields<SearchVideosArgs, 'first' | 'page' | 'query' | 'sort'>>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['Section'] = ResolversParentTypes['Section']> = {
-  components?: Resolver<Maybe<ResolversTypes['ComponentConnection']>, ParentType, ContextType, RequireFields<SectionComponentsArgs, 'page'>>;
-  description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  groupingType?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  relatedComponent?: Resolver<Maybe<ResolversTypes['Component']>, ParentType, ContextType>;
-  title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SectionConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['SectionConnection'] = ResolversParentTypes['SectionConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['SectionEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SectionEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['SectionEdge'] = ResolversParentTypes['SectionEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Section']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SendTransactionalEmailPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['SendTransactionalEmailPayload'] = ResolversParentTypes['SendTransactionalEmailPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SendVerifyEmailCodePayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['SendVerifyEmailCodePayload'] = ResolversParentTypes['SendVerifyEmailCodePayload']> = {
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ShareUrlsResolvers<ContextType = any, ParentType extends ResolversParentTypes['ShareUrls'] = ResolversParentTypes['ShareUrls']> = {
-  __resolveType: TypeResolveFn<'ChannelShareUrls' | 'LiveShareUrls' | 'PollShareUrls' | 'ReactionShareUrls' | 'TopicShareUrls' | 'VideoShareUrls', ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  permalink?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-};
-
-export type SharingUrlResolvers<ContextType = any, ParentType extends ResolversParentTypes['SharingURL'] = ResolversParentTypes['SharingURL']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  serviceName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SharingUrlConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['SharingURLConnection'] = ResolversParentTypes['SharingURLConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['SharingURLEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SharingUrlEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['SharingURLEdge'] = ResolversParentTypes['SharingURLEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['SharingURL']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type StoryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Story'] = ResolversParentTypes['Story']> = {
-  __resolveType: TypeResolveFn<'Channel' | 'Collection' | 'ContentCategory' | 'Hashtag' | 'Live' | 'Poll' | 'Reaction' | 'ReactionVideo' | 'Topic' | 'Video', ParentType, ContextType>;
-};
-
-export type StoryConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['StoryConnection'] = ResolversParentTypes['StoryConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['StoryEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type StoryEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['StoryEdge'] = ResolversParentTypes['StoryEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Story']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type StreamUrlsResolvers<ContextType = any, ParentType extends ResolversParentTypes['StreamUrls'] = ResolversParentTypes['StreamUrls']> = {
-  __resolveType: TypeResolveFn<'LiveStreamUrls' | 'ReactionStreamUrls' | 'VideoStreamUrls', ParentType, ContextType>;
-  hls?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-};
-
-export type SubdivisionResolvers<ContextType = any, ParentType extends ResolversParentTypes['Subdivision'] = ResolversParentTypes['Subdivision']> = {
-  codeAlpha2?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SubtitleResolvers<ContextType = any, ParentType extends ResolversParentTypes['Subtitle'] = ResolversParentTypes['Subtitle']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  language?: Resolver<Maybe<ResolversTypes['Language']>, ParentType, ContextType>;
-  url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  xid?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SubtitleConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['SubtitleConnection'] = ResolversParentTypes['SubtitleConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['SubtitleEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SubtitleEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['SubtitleEdge'] = ResolversParentTypes['SubtitleEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Subtitle']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SuggestionResolvers<ContextType = any, ParentType extends ResolversParentTypes['Suggestion'] = ResolversParentTypes['Suggestion']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SuggestionConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['SuggestionConnection'] = ResolversParentTypes['SuggestionConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['SuggestionEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SuggestionEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['SuggestionEdge'] = ResolversParentTypes['SuggestionEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Suggestion']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SupportedCountryResolvers<ContextType = any, ParentType extends ResolversParentTypes['SupportedCountry'] = ResolversParentTypes['SupportedCountry']> = {
-  country?: Resolver<Maybe<ResolversTypes['Country']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  language?: Resolver<Maybe<ResolversTypes['Language']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SupportedCountryConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['SupportedCountryConnection'] = ResolversParentTypes['SupportedCountryConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['SupportedCountryEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SupportedCountryEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['SupportedCountryEdge'] = ResolversParentTypes['SupportedCountryEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['SupportedCountry']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SupportedLanguageResolvers<ContextType = any, ParentType extends ResolversParentTypes['SupportedLanguage'] = ResolversParentTypes['SupportedLanguage']> = {
-  countries?: Resolver<Maybe<ResolversTypes['CountryConnection']>, ParentType, ContextType, RequireFields<SupportedLanguageCountriesArgs, 'page'>>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  language?: Resolver<Maybe<ResolversTypes['Language']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SupportedLanguageConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['SupportedLanguageConnection'] = ResolversParentTypes['SupportedLanguageConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['SupportedLanguageEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SupportedLanguageEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['SupportedLanguageEdge'] = ResolversParentTypes['SupportedLanguageEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['SupportedLanguage']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ThreadResolvers<ContextType = any, ParentType extends ResolversParentTypes['Thread'] = ResolversParentTypes['Thread']> = {
-  __resolveType: TypeResolveFn<'Comment' | 'Poll' | 'Reaction', ParentType, ContextType>;
-  opener?: Resolver<Maybe<ResolversTypes['Story']>, ParentType, ContextType>;
-};
-
-export type ThreadConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['ThreadConnection'] = ResolversParentTypes['ThreadConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['ThreadEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ThreadEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['ThreadEdge'] = ResolversParentTypes['ThreadEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Thread']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ThumbnailsResolvers<ContextType = any, ParentType extends ResolversParentTypes['Thumbnails'] = ResolversParentTypes['Thumbnails']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  x60?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  x240?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export interface TimeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Time'], any> {
-  name: 'Time';
-}
-
-export type TipsResolvers<ContextType = any, ParentType extends ResolversParentTypes['Tips'] = ResolversParentTypes['Tips']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  isEmailEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isPushEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type TopicResolvers<ContextType = any, ParentType extends ResolversParentTypes['Topic'] = ResolversParentTypes['Topic']> = {
-  collection?: Resolver<Maybe<ResolversTypes['Collection']>, ParentType, ContextType, Partial<TopicCollectionArgs>>;
-  coverURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType, RequireFields<TopicCoverUrlArgs, 'size'>>;
-  createDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  createdAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  isFollowed?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  names?: Resolver<Maybe<ResolversTypes['TopicLabelConnection']>, ParentType, ContextType, RequireFields<TopicNamesArgs, 'page'>>;
-  shareUrls?: Resolver<Maybe<ResolversTypes['TopicShareUrls']>, ParentType, ContextType>;
-  stats?: Resolver<Maybe<ResolversTypes['TopicStats']>, ParentType, ContextType>;
-  thumbnails?: Resolver<Maybe<ResolversTypes['Thumbnails']>, ParentType, ContextType>;
-  updateDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  updatedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  videos?: Resolver<Maybe<ResolversTypes['VideoConnection']>, ParentType, ContextType, RequireFields<TopicVideosArgs, 'first' | 'page'>>;
-  whitelistStatus?: Resolver<Maybe<ResolversTypes['TopicWhitelistStatus']>, ParentType, ContextType>;
-  xid?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type TopicConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['TopicConnection'] = ResolversParentTypes['TopicConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['TopicEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type TopicEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['TopicEdge'] = ResolversParentTypes['TopicEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Topic']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type TopicLabelResolvers<ContextType = any, ParentType extends ResolversParentTypes['TopicLabel'] = ResolversParentTypes['TopicLabel']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  language?: Resolver<Maybe<ResolversTypes['Language']>, ParentType, ContextType>;
-  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type TopicLabelConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['TopicLabelConnection'] = ResolversParentTypes['TopicLabelConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['TopicLabelEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type TopicLabelEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['TopicLabelEdge'] = ResolversParentTypes['TopicLabelEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['TopicLabel']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type TopicShareUrlsResolvers<ContextType = any, ParentType extends ResolversParentTypes['TopicShareUrls'] = ResolversParentTypes['TopicShareUrls']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  permalink?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type TopicStatsResolvers<ContextType = any, ParentType extends ResolversParentTypes['TopicStats'] = ResolversParentTypes['TopicStats']> = {
-  followers?: Resolver<Maybe<ResolversTypes['TopicStatsFollowers']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  videos?: Resolver<Maybe<ResolversTypes['TopicStatsVideos']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type TopicStatsFollowersResolvers<ContextType = any, ParentType extends ResolversParentTypes['TopicStatsFollowers'] = ResolversParentTypes['TopicStatsFollowers']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type TopicStatsVideosResolvers<ContextType = any, ParentType extends ResolversParentTypes['TopicStatsVideos'] = ResolversParentTypes['TopicStatsVideos']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type TopicWhitelistStatusResolvers<ContextType = any, ParentType extends ResolversParentTypes['TopicWhitelistStatus'] = ResolversParentTypes['TopicWhitelistStatus']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  isWhitelisted?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  mode?: Resolver<Maybe<ResolversTypes['TopicWhitelistStatusMode']>, ParentType, ContextType>;
-  whitelistedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UnfollowChannelPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['UnfollowChannelPayload'] = ResolversParentTypes['UnfollowChannelPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UnfollowTopicPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['UnfollowTopicPayload'] = ResolversParentTypes['UnfollowTopicPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UnfollowUserPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['UnfollowUserPayload'] = ResolversParentTypes['UnfollowUserPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UnlikeVideoPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['UnlikeVideoPayload'] = ResolversParentTypes['UnlikeVideoPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UpdateBehaviorRulePayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['UpdateBehaviorRulePayload'] = ResolversParentTypes['UpdateBehaviorRulePayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  rule?: Resolver<Maybe<ResolversTypes['Rule']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UpdateChannelPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['UpdateChannelPayload'] = ResolversParentTypes['UpdateChannelPayload']> = {
-  channel?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UpdateCollectionPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['UpdateCollectionPayload'] = ResolversParentTypes['UpdateCollectionPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  collection?: Resolver<Maybe<ResolversTypes['Collection']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UpdateNotificationSettingsEmailPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['UpdateNotificationSettingsEmailPayload'] = ResolversParentTypes['UpdateNotificationSettingsEmailPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  notificationSettings?: Resolver<Maybe<ResolversTypes['NotificationSettings']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UpdateNotificationSettingsPushPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['UpdateNotificationSettingsPushPayload'] = ResolversParentTypes['UpdateNotificationSettingsPushPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  notificationSettings?: Resolver<Maybe<ResolversTypes['NotificationSettings']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UpdateUserPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['UpdateUserPayload'] = ResolversParentTypes['UpdateUserPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UpdateVideoPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['UpdateVideoPayload'] = ResolversParentTypes['UpdateVideoPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  video?: Resolver<Maybe<ResolversTypes['Video']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserResolvers<ContextType = any, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
-  accountStatus?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  accountType?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  appleID?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  avatarURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType, RequireFields<UserAvatarUrlArgs, 'size'>>;
-  birthday?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  canAccessPartnerHQ?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  canChangeNickname?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  canChangeUsername?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  channel?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
-  collections?: Resolver<Maybe<ResolversTypes['CollectionConnection']>, ParentType, ContextType, RequireFields<UserCollectionsArgs, 'first' | 'page'>>;
-  country?: Resolver<Maybe<ResolversTypes['Country']>, ParentType, ContextType>;
-  coverURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType, RequireFields<UserCoverUrlArgs, 'size'>>;
-  createDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  createdAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  email?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  emailChangeRequest?: Resolver<Maybe<ResolversTypes['EmailChangeRequest']>, ParentType, ContextType>;
-  emailVerified?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  facebookID?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  firstName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  followedChannels?: Resolver<Maybe<ResolversTypes['FollowedChannelConnection']>, ParentType, ContextType, RequireFields<UserFollowedChannelsArgs, 'first' | 'page'>>;
-  followedTopics?: Resolver<Maybe<ResolversTypes['FollowedTopicConnection']>, ParentType, ContextType, RequireFields<UserFollowedTopicsArgs, 'first' | 'page'>>;
-  followers?: Resolver<Maybe<ResolversTypes['FollowerConnection']>, ParentType, ContextType, RequireFields<UserFollowersArgs, 'first' | 'page'>>;
-  following?: Resolver<Maybe<ResolversTypes['FollowingConnection']>, ParentType, ContextType, RequireFields<UserFollowingArgs, 'first' | 'page'>>;
-  followingChannels?: Resolver<Maybe<ResolversTypes['ChannelConnection']>, ParentType, ContextType, RequireFields<UserFollowingChannelsArgs, 'first' | 'page'>>;
-  followingTopics?: Resolver<Maybe<ResolversTypes['TopicConnection']>, ParentType, ContextType, RequireFields<UserFollowingTopicsArgs, 'first' | 'page'>>;
-  fullName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  gender?: Resolver<Maybe<ResolversTypes['Gender']>, ParentType, ContextType>;
-  googleplusID?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  hasChannel?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  hasLinkedSocialAccounts?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  hasOrganizationMemberships?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  interests?: Resolver<Maybe<ResolversTypes['UserInterestConnection']>, ParentType, ContextType, RequireFields<UserInterestsArgs, 'enabledOnly' | 'page'>>;
-  isAdmin?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  isConfirmed?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  isCopyrightOwnerMassReport?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  isFollowed?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  language?: Resolver<Maybe<ResolversTypes['Language']>, ParentType, ContextType>;
-  lastName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  likedMedias?: Resolver<Maybe<ResolversTypes['MediaConnection']>, ParentType, ContextType, RequireFields<UserLikedMediasArgs, 'first' | 'page'>>;
-  likedVideos?: Resolver<Maybe<ResolversTypes['VideoConnection']>, ParentType, ContextType, RequireFields<UserLikedVideosArgs, 'first' | 'page'>>;
-  microsoftID?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  nickname?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  notificationSettings?: Resolver<Maybe<ResolversTypes['NotificationSettings']>, ParentType, ContextType>;
-  organizations?: Resolver<Maybe<ResolversTypes['OrganizationConnection']>, ParentType, ContextType, RequireFields<UserOrganizationsArgs, 'first' | 'page'>>;
-  partner?: Resolver<Maybe<ResolversTypes['Partner']>, ParentType, ContextType>;
-  reactionVideos?: Resolver<Maybe<ResolversTypes['ReactionVideoConnection']>, ParentType, ContextType, RequireFields<UserReactionVideosArgs, 'first' | 'page'>>;
-  sharingURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  stats?: Resolver<Maybe<ResolversTypes['UserStats']>, ParentType, ContextType>;
-  subscriptions?: Resolver<Maybe<ResolversTypes['VideoConnection']>, ParentType, ContextType, RequireFields<UserSubscriptionsArgs, 'first' | 'page' | 'type'>>;
-  uploadedVideos?: Resolver<Maybe<ResolversTypes['VideoConnection']>, ParentType, ContextType, RequireFields<UserUploadedVideosArgs, 'first' | 'page'>>;
-  username?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  watchLater?: Resolver<Maybe<ResolversTypes['VideoConnection']>, ParentType, ContextType, RequireFields<UserWatchLaterArgs, 'first' | 'page'>>;
-  watchLaterMedias?: Resolver<Maybe<ResolversTypes['MediaConnection']>, ParentType, ContextType, RequireFields<UserWatchLaterMediasArgs, 'first' | 'page'>>;
-  watchedMedias?: Resolver<Maybe<ResolversTypes['MediaConnection']>, ParentType, ContextType, RequireFields<UserWatchedMediasArgs, 'first' | 'page'>>;
-  watchedVideos?: Resolver<Maybe<ResolversTypes['VideoConnection']>, ParentType, ContextType, RequireFields<UserWatchedVideosArgs, 'first' | 'page'>>;
-  xid?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserEmailChangeConfirmPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserEmailChangeConfirmPayload'] = ResolversParentTypes['UserEmailChangeConfirmPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserEmailChangeRequestPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserEmailChangeRequestPayload'] = ResolversParentTypes['UserEmailChangeRequestPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserEmailConfirmationCodeResetPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserEmailConfirmationCodeResetPayload'] = ResolversParentTypes['UserEmailConfirmationCodeResetPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserEmailValidationTokenPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserEmailValidationTokenPayload'] = ResolversParentTypes['UserEmailValidationTokenPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  emailValidationToken?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserInterestResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserInterest'] = ResolversParentTypes['UserInterest']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  interest?: Resolver<Maybe<ResolversTypes['Interest']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserInterestAddPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserInterestAddPayload'] = ResolversParentTypes['UserInterestAddPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserInterestConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserInterestConnection'] = ResolversParentTypes['UserInterestConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['UserInterestEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserInterestEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserInterestEdge'] = ResolversParentTypes['UserInterestEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['UserInterest']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserInterestRemovePayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserInterestRemovePayload'] = ResolversParentTypes['UserInterestRemovePayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserInterestsUpdatePayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserInterestsUpdatePayload'] = ResolversParentTypes['UserInterestsUpdatePayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserOpenWebCodeBRequestPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserOpenWebCodeBRequestPayload'] = ResolversParentTypes['UserOpenWebCodeBRequestPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  codeB?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserPollAnswerResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserPollAnswer'] = ResolversParentTypes['UserPollAnswer']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  optionId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserStatsResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserStats'] = ResolversParentTypes['UserStats']> = {
-  collections?: Resolver<Maybe<ResolversTypes['UserStatsCollections']>, ParentType, ContextType>;
-  followers?: Resolver<Maybe<ResolversTypes['UserStatsFollowers']>, ParentType, ContextType>;
-  followingChannels?: Resolver<Maybe<ResolversTypes['UserStatsFollowingChannels']>, ParentType, ContextType>;
-  followingTopics?: Resolver<Maybe<ResolversTypes['UserStatsFollowingTopics']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  likedVideos?: Resolver<Maybe<ResolversTypes['UserStatsLikedVideos']>, ParentType, ContextType>;
-  reactionVideos?: Resolver<Maybe<ResolversTypes['UserStatsReactionVideos']>, ParentType, ContextType>;
-  uploadedVideos?: Resolver<Maybe<ResolversTypes['UserStatsUploadedVideos']>, ParentType, ContextType>;
-  videos?: Resolver<Maybe<ResolversTypes['UserStatsVideos']>, ParentType, ContextType>;
-  watchLater?: Resolver<Maybe<ResolversTypes['UserStatsWatchLater']>, ParentType, ContextType>;
-  watchedVideos?: Resolver<Maybe<ResolversTypes['UserStatsWatchedVideos']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserStatsCollectionsResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserStatsCollections'] = ResolversParentTypes['UserStatsCollections']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserStatsFollowersResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserStatsFollowers'] = ResolversParentTypes['UserStatsFollowers']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserStatsFollowingChannelsResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserStatsFollowingChannels'] = ResolversParentTypes['UserStatsFollowingChannels']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserStatsFollowingTopicsResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserStatsFollowingTopics'] = ResolversParentTypes['UserStatsFollowingTopics']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserStatsLikedVideosResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserStatsLikedVideos'] = ResolversParentTypes['UserStatsLikedVideos']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserStatsReactionVideosResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserStatsReactionVideos'] = ResolversParentTypes['UserStatsReactionVideos']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserStatsUploadedVideosResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserStatsUploadedVideos'] = ResolversParentTypes['UserStatsUploadedVideos']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserStatsVideosResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserStatsVideos'] = ResolversParentTypes['UserStatsVideos']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserStatsWatchLaterResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserStatsWatchLater'] = ResolversParentTypes['UserStatsWatchLater']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type UserStatsWatchedVideosResolvers<ContextType = any, ParentType extends ResolversParentTypes['UserStatsWatchedVideos'] = ResolversParentTypes['UserStatsWatchedVideos']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoResolvers<ContextType = any, ParentType extends ResolversParentTypes['Video'] = ResolversParentTypes['Video']> = {
-  allowEmbed?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  aspectRatio?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
-  bestAvailableQuality?: Resolver<Maybe<ResolversTypes['MediaQuality']>, ParentType, ContextType>;
-  canDisplayAds?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  categories?: Resolver<Maybe<ResolversTypes['CategoryConnection']>, ParentType, ContextType, RequireFields<VideoCategoriesArgs, 'filter'>>;
-  category?: Resolver<Maybe<ResolversTypes['MediaCategory']>, ParentType, ContextType>;
-  channel?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
-  claimer?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
-  collections?: Resolver<Maybe<ResolversTypes['CollectionConnection']>, ParentType, ContextType, RequireFields<VideoCollectionsArgs, 'first' | 'page'>>;
-  comments?: Resolver<Maybe<ResolversTypes['CommentConnection']>, ParentType, ContextType, RequireFields<VideoCommentsArgs, 'first' | 'page'>>;
-  createDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  createdAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  creator?: Resolver<Maybe<ResolversTypes['Channel']>, ParentType, ContextType>;
-  curatedCategories?: Resolver<Maybe<ResolversTypes['CuratedCategoryConnection']>, ParentType, ContextType, RequireFields<VideoCuratedCategoriesArgs, 'page'>>;
-  description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  duration?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  embed?: Resolver<Maybe<ResolversTypes['Embed']>, ParentType, ContextType>;
-  embedHtml?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  embedURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  geoblockedCountries?: Resolver<Maybe<ResolversTypes['GeoblockedCountries']>, ParentType, ContextType>;
-  geoblocking?: Resolver<Maybe<ResolversTypes['GeoblockingConnection']>, ParentType, ContextType, RequireFields<VideoGeoblockingArgs, 'page'>>;
-  hasFingerprint?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  hasPerspective?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  hashtags?: Resolver<Maybe<ResolversTypes['HashtagConnection']>, ParentType, ContextType, RequireFields<VideoHashtagsArgs, 'first' | 'page'>>;
-  height?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  hlsURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  hlsUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  interests?: Resolver<Maybe<ResolversTypes['InterestConnection']>, ParentType, ContextType, RequireFields<VideoInterestsArgs, 'page'>>;
-  is360?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isAdvertisingBlocked?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isBookmarked?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isCommentsEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isCreatedForKids?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isDownloadable?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isExplicit?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isInCollection?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<VideoIsInCollectionArgs, 'collectionXid'>>;
-  isInWatchLater?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isLiked?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isPasswordProtected?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isPrivate?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isPublished?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isReacted?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isReactionVideosEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isWatched?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isWatchedComplete?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  language?: Resolver<Maybe<ResolversTypes['Language']>, ParentType, ContextType, RequireFields<VideoLanguageArgs, 'auto' | 'source'>>;
-  metrics?: Resolver<Maybe<ResolversTypes['VideoMetrics']>, ParentType, ContextType>;
-  moderation?: Resolver<Maybe<ResolversTypes['MediaModeration']>, ParentType, ContextType>;
-  nextVideos?: Resolver<Maybe<ResolversTypes['VideoConnection']>, ParentType, ContextType, RequireFields<VideoNextVideosArgs, 'first' | 'page'>>;
-  quality?: Resolver<Maybe<ResolversTypes['Quality']>, ParentType, ContextType, RequireFields<VideoQualityArgs, 'auto'>>;
-  reactionVideos?: Resolver<Maybe<ResolversTypes['ReactionVideoConnection']>, ParentType, ContextType, RequireFields<VideoReactionVideosArgs, 'first' | 'page'>>;
-  reactions?: Resolver<Maybe<ResolversTypes['ReactionConnection']>, ParentType, ContextType, RequireFields<VideoReactionsArgs, 'first' | 'page'>>;
-  relatedVideos?: Resolver<Maybe<ResolversTypes['VideoConnection']>, ParentType, ContextType, RequireFields<VideoRelatedVideosArgs, 'first' | 'page'>>;
-  restriction?: Resolver<Maybe<ResolversTypes['Restriction']>, ParentType, ContextType>;
-  settings?: Resolver<Maybe<ResolversTypes['VideoSettings']>, ParentType, ContextType>;
-  shareUrls?: Resolver<Maybe<ResolversTypes['VideoShareUrls']>, ParentType, ContextType>;
-  sharingURLs?: Resolver<Maybe<ResolversTypes['SharingURLConnection']>, ParentType, ContextType, RequireFields<VideoSharingUrLsArgs, 'page'>>;
-  spritesheet?: Resolver<Maybe<ResolversTypes['Image']>, ParentType, ContextType>;
-  spritesheetSeeker?: Resolver<Maybe<ResolversTypes['Image']>, ParentType, ContextType>;
-  stats?: Resolver<Maybe<ResolversTypes['VideoStats']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['VideoStatus']>, ParentType, ContextType>;
-  streamUrls?: Resolver<Maybe<ResolversTypes['VideoStreamUrls']>, ParentType, ContextType>;
-  subtitles?: Resolver<Maybe<ResolversTypes['SubtitleConnection']>, ParentType, ContextType, RequireFields<VideoSubtitlesArgs, 'auto' | 'autoGenerated' | 'first' | 'page'>>;
-  tags?: Resolver<Maybe<ResolversTypes['MediaTagConnection']>, ParentType, ContextType, RequireFields<VideoTagsArgs, 'page'>>;
-  thumbnail?: Resolver<Maybe<ResolversTypes['Image']>, ParentType, ContextType, RequireFields<VideoThumbnailArgs, 'height'>>;
-  thumbnailURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType, RequireFields<VideoThumbnailUrlArgs, 'size'>>;
-  thumbnails?: Resolver<Maybe<ResolversTypes['Thumbnails']>, ParentType, ContextType>;
-  title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  topics?: Resolver<Maybe<ResolversTypes['TopicConnection']>, ParentType, ContextType, RequireFields<VideoTopicsArgs, 'first' | 'page' | 'whitelistedOnly'>>;
-  transcript?: Resolver<Maybe<ResolversTypes['CaptionConnection']>, ParentType, ContextType, RequireFields<VideoTranscriptArgs, 'page'>>;
-  updateDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  updatedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  uploadInfo?: Resolver<Maybe<ResolversTypes['MediaUploadInfo']>, ParentType, ContextType>;
-  url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  viewCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  viewerEngagement?: Resolver<Maybe<ResolversTypes['VideoViewerEngagement']>, ParentType, ContextType>;
-  width?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  xid?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoConnection'] = ResolversParentTypes['VideoConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['VideoEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoDigestResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoDigest'] = ResolversParentTypes['VideoDigest']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  isEmailEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  isPushEnabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoEdge'] = ResolversParentTypes['VideoEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['Video']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoEngagementMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoEngagementMetrics'] = ResolversParentTypes['VideoEngagementMetrics']> = {
-  bookmarks?: Resolver<Maybe<ResolversTypes['BookmarkMetricConnection']>, ParentType, ContextType, Partial<VideoEngagementMetricsBookmarksArgs>>;
-  comments?: Resolver<Maybe<ResolversTypes['CommentMetricConnection']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  likes?: Resolver<Maybe<ResolversTypes['LikeMetricConnection']>, ParentType, ContextType, Partial<VideoEngagementMetricsLikesArgs>>;
-  reactions?: Resolver<Maybe<ResolversTypes['ReactionMetricConnection']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoMetricResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoMetric'] = ResolversParentTypes['VideoMetric']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoMetricConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoMetricConnection'] = ResolversParentTypes['VideoMetricConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['VideoMetricEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoMetricEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoMetricEdge'] = ResolversParentTypes['VideoMetricEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['VideoMetric']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoMetrics'] = ResolversParentTypes['VideoMetrics']> = {
-  engagement?: Resolver<Maybe<ResolversTypes['VideoEngagementMetrics']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  views?: Resolver<Maybe<ResolversTypes['VideoViewMetrics']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoOrLiveResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoOrLive'] = ResolversParentTypes['VideoOrLive']> = {
-  __resolveType: TypeResolveFn<'Live' | 'Video', ParentType, ContextType>;
-};
-
-export type VideoSettingsResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoSettings'] = ResolversParentTypes['VideoSettings']> = {
-  adsStreamable?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  downloadable?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  embeddable?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  threadsDisabled?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoShareUrlsResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoShareUrls'] = ResolversParentTypes['VideoShareUrls']> = {
-  facebook?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  permalink?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  twitter?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoStatsResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoStats'] = ResolversParentTypes['VideoStats']> = {
-  bookmarks?: Resolver<Maybe<ResolversTypes['VideoStatsBookmarks']>, ParentType, ContextType>;
-  favorites?: Resolver<Maybe<ResolversTypes['VideoStatsFavorites']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  likes?: Resolver<Maybe<ResolversTypes['VideoStatsLikes']>, ParentType, ContextType>;
-  reactionVideos?: Resolver<Maybe<ResolversTypes['VideoStatsReactionVideos']>, ParentType, ContextType>;
-  saves?: Resolver<Maybe<ResolversTypes['VideoStatsSaves']>, ParentType, ContextType>;
-  views?: Resolver<Maybe<ResolversTypes['VideoStatsViews']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoStatsBookmarksResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoStatsBookmarks'] = ResolversParentTypes['VideoStatsBookmarks']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoStatsFavoritesResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoStatsFavorites'] = ResolversParentTypes['VideoStatsFavorites']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoStatsLikesResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoStatsLikes'] = ResolversParentTypes['VideoStatsLikes']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoStatsReactionVideosResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoStatsReactionVideos'] = ResolversParentTypes['VideoStatsReactionVideos']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoStatsSavesResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoStatsSaves'] = ResolversParentTypes['VideoStatsSaves']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoStatsViewsResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoStatsViews'] = ResolversParentTypes['VideoStatsViews']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoStreamUrlsResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoStreamUrls'] = ResolversParentTypes['VideoStreamUrls']> = {
-  audio?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  chromecast?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  h264?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType, RequireFields<VideoStreamUrlsH264Args, 'resolution'>>;
-  hls?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  preview?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType, RequireFields<VideoStreamUrlsPreviewArgs, 'resolution'>>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoStreamsResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoStreams'] = ResolversParentTypes['VideoStreams']> = {
-  audioURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  chromecastURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  h264URL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType, RequireFields<VideoStreamsH264UrlArgs, 'quality'>>;
-  hlsURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  previewURL?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType, RequireFields<VideoStreamsPreviewUrlArgs, 'quality'>>;
-  restriction?: Resolver<Maybe<ResolversTypes['Restriction']>, ParentType, ContextType>;
-  xid?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoStreamsConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoStreamsConnection'] = ResolversParentTypes['VideoStreamsConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['VideoStreamsEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoStreamsEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoStreamsEdge'] = ResolversParentTypes['VideoStreamsEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['VideoStreams']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoViewMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoViewMetrics'] = ResolversParentTypes['VideoViewMetrics']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  visits?: Resolver<Maybe<ResolversTypes['ChannelMetricConnection']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type VideoViewerEngagementResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoViewerEngagement'] = ResolversParentTypes['VideoViewerEngagement']> = {
-  bookmarked?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  commented?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  favorited?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  likeRating?: Resolver<Maybe<ResolversTypes['LikeRating']>, ParentType, ContextType>;
-  liked?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  reacted?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  saved?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  watchCompleted?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  watchStarted?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ViewerEngagementResolvers<ContextType = any, ParentType extends ResolversParentTypes['ViewerEngagement'] = ResolversParentTypes['ViewerEngagement']> = {
-  __resolveType: TypeResolveFn<'CommentViewerEngagement' | 'LiveViewerEngagement' | 'ReactionViewerEngagement' | 'VideoViewerEngagement', ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  likeRating?: Resolver<Maybe<ResolversTypes['LikeRating']>, ParentType, ContextType>;
-  liked?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-};
-
-export type ViewsResolvers<ContextType = any, ParentType extends ResolversParentTypes['Views'] = ResolversParentTypes['Views']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  neon?: Resolver<Maybe<ResolversTypes['Neon']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type WatchResolvers<ContextType = any, ParentType extends ResolversParentTypes['Watch'] = ResolversParentTypes['Watch']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  post?: Resolver<ResolversTypes['Post'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type WatchedVideoAddPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['WatchedVideoAddPayload'] = ResolversParentTypes['WatchedVideoAddPayload']> = {
-  clientMutationId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<Maybe<ResolversTypes['Status']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type WebResolvers<ContextType = any, ParentType extends ResolversParentTypes['Web'] = ResolversParentTypes['Web']> = {
-  author?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  country?: Resolver<Maybe<ResolversTypes['Country']>, ParentType, ContextType>;
-  description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  isFollowable?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  language?: Resolver<Maybe<ResolversTypes['Language']>, ParentType, ContextType>;
-  metadata?: Resolver<Maybe<ResolversTypes['WebMetadataConnectionConnection']>, ParentType, ContextType, RequireFields<WebMetadataArgs, 'page'>>;
-  metadatas?: Resolver<Maybe<Array<Maybe<ResolversTypes['WebMetadata']>>>, ParentType, ContextType>;
-  title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type WebMetadataResolvers<ContextType = any, ParentType extends ResolversParentTypes['WebMetadata'] = ResolversParentTypes['WebMetadata']> = {
-  attributes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Attribute']>>>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type WebMetadataConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['WebMetadataConnection'] = ResolversParentTypes['WebMetadataConnection']> = {
-  attributes?: Resolver<Maybe<ResolversTypes['AttributeConnection']>, ParentType, ContextType, RequireFields<WebMetadataConnectionAttributesArgs, 'page'>>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type WebMetadataConnectionConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['WebMetadataConnectionConnection'] = ResolversParentTypes['WebMetadataConnectionConnection']> = {
-  edges?: Resolver<Array<Maybe<ResolversTypes['WebMetadataConnectionEdge']>>, ParentType, ContextType>;
-  metadata?: Resolver<ResolversTypes['Metadata'], ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
-  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type WebMetadataConnectionEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['WebMetadataConnectionEdge'] = ResolversParentTypes['WebMetadataConnectionEdge']> = {
-  node?: Resolver<Maybe<ResolversTypes['WebMetadataConnection']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type Resolvers<ContextType = any> = {
-  ActivateUserPayload?: ActivateUserPayloadResolvers<ContextType>;
-  AddCollectionVideoPayload?: AddCollectionVideoPayloadResolvers<ContextType>;
-  AddWatchLaterVideoPayload?: AddWatchLaterVideoPayloadResolvers<ContextType>;
-  Algorithm?: AlgorithmResolvers<ContextType>;
-  Analytics?: AnalyticsResolvers<ContextType>;
-  AnalyticsFlatPayload?: AnalyticsFlatPayloadResolvers<ContextType>;
-  AnalyticsGroupedPayload?: AnalyticsGroupedPayloadResolvers<ContextType>;
-  AnalyticsGroupedPayloadItem?: AnalyticsGroupedPayloadItemResolvers<ContextType>;
-  AnalyticsPayload?: AnalyticsPayloadResolvers<ContextType>;
-  AnalyticsReport?: AnalyticsReportResolvers<ContextType>;
-  AnalyticsReportConnection?: AnalyticsReportConnectionResolvers<ContextType>;
-  AnalyticsReportCreatePayload?: AnalyticsReportCreatePayloadResolvers<ContextType>;
-  AnalyticsReportEdge?: AnalyticsReportEdgeResolvers<ContextType>;
-  Any?: GraphQLScalarType;
-  AppealApplication?: AppealApplicationResolvers<ContextType>;
-  AskPartnerReportFilePayload?: AskPartnerReportFilePayloadResolvers<ContextType>;
-  Attribute?: AttributeResolvers<ContextType>;
-  AttributeConnection?: AttributeConnectionResolvers<ContextType>;
-  AttributeEdge?: AttributeEdgeResolvers<ContextType>;
-  Behavior?: BehaviorResolvers<ContextType>;
-  BehaviorRuleTag?: BehaviorRuleTagResolvers<ContextType>;
-  BehaviorRuleTagConnection?: BehaviorRuleTagConnectionResolvers<ContextType>;
-  BehaviorRuleTagEdge?: BehaviorRuleTagEdgeResolvers<ContextType>;
-  BigInt?: GraphQLScalarType;
-  Bookmark?: BookmarkResolvers<ContextType>;
-  BookmarkConnection?: BookmarkConnectionResolvers<ContextType>;
-  BookmarkEdge?: BookmarkEdgeResolvers<ContextType>;
-  BookmarkMetric?: BookmarkMetricResolvers<ContextType>;
-  BookmarkMetricConnection?: BookmarkMetricConnectionResolvers<ContextType>;
-  BookmarkMetricEdge?: BookmarkMetricEdgeResolvers<ContextType>;
-  Caption?: CaptionResolvers<ContextType>;
-  CaptionConnection?: CaptionConnectionResolvers<ContextType>;
-  CaptionEdge?: CaptionEdgeResolvers<ContextType>;
-  Category?: CategoryResolvers<ContextType>;
-  CategoryConnection?: CategoryConnectionResolvers<ContextType>;
-  CategoryEdge?: CategoryEdgeResolvers<ContextType>;
-  Channel?: ChannelResolvers<ContextType>;
-  ChannelConnection?: ChannelConnectionResolvers<ContextType>;
-  ChannelCreatePayload?: ChannelCreatePayloadResolvers<ContextType>;
-  ChannelEdge?: ChannelEdgeResolvers<ContextType>;
-  ChannelEngagementMetrics?: ChannelEngagementMetricsResolvers<ContextType>;
-  ChannelExternalLinks?: ChannelExternalLinksResolvers<ContextType>;
-  ChannelMetric?: ChannelMetricResolvers<ContextType>;
-  ChannelMetricConnection?: ChannelMetricConnectionResolvers<ContextType>;
-  ChannelMetricEdge?: ChannelMetricEdgeResolvers<ContextType>;
-  ChannelMetrics?: ChannelMetricsResolvers<ContextType>;
-  ChannelPermission?: ChannelPermissionResolvers<ContextType>;
-  ChannelShareUrls?: ChannelShareUrlsResolvers<ContextType>;
-  ChannelStats?: ChannelStatsResolvers<ContextType>;
-  ChannelStatsFollowers?: ChannelStatsFollowersResolvers<ContextType>;
-  ChannelStatsReactions?: ChannelStatsReactionsResolvers<ContextType>;
-  ChannelStatsVideos?: ChannelStatsVideosResolvers<ContextType>;
-  ChannelStatsViews?: ChannelStatsViewsResolvers<ContextType>;
-  ChannelUpdateRequired?: ChannelUpdateRequiredResolvers<ContextType>;
-  ChannelViewMetrics?: ChannelViewMetricsResolvers<ContextType>;
-  ClearCollectionMediasPayload?: ClearCollectionMediasPayloadResolvers<ContextType>;
-  ClearLikedVideosPayload?: ClearLikedVideosPayloadResolvers<ContextType>;
-  ClearWatchLaterVideosPayload?: ClearWatchLaterVideosPayloadResolvers<ContextType>;
-  ClearWatchedVideosPayload?: ClearWatchedVideosPayloadResolvers<ContextType>;
-  Collection?: CollectionResolvers<ContextType>;
-  CollectionConnection?: CollectionConnectionResolvers<ContextType>;
-  CollectionEdge?: CollectionEdgeResolvers<ContextType>;
-  CollectionEngagementMetrics?: CollectionEngagementMetricsResolvers<ContextType>;
-  CollectionMetric?: CollectionMetricResolvers<ContextType>;
-  CollectionMetricConnection?: CollectionMetricConnectionResolvers<ContextType>;
-  CollectionMetricEdge?: CollectionMetricEdgeResolvers<ContextType>;
-  CollectionMetrics?: CollectionMetricsResolvers<ContextType>;
-  CollectionStats?: CollectionStatsResolvers<ContextType>;
-  CollectionStatsVideos?: CollectionStatsVideosResolvers<ContextType>;
-  Comment?: CommentResolvers<ContextType>;
-  CommentConnection?: CommentConnectionResolvers<ContextType>;
-  CommentEdge?: CommentEdgeResolvers<ContextType>;
-  CommentEngagementMetrics?: CommentEngagementMetricsResolvers<ContextType>;
-  CommentMetric?: CommentMetricResolvers<ContextType>;
-  CommentMetricConnection?: CommentMetricConnectionResolvers<ContextType>;
-  CommentMetricEdge?: CommentMetricEdgeResolvers<ContextType>;
-  CommentMetrics?: CommentMetricsResolvers<ContextType>;
-  CommentViewerEngagement?: CommentViewerEngagementResolvers<ContextType>;
-  Component?: ComponentResolvers<ContextType>;
-  ComponentConnection?: ComponentConnectionResolvers<ContextType>;
-  ComponentEdge?: ComponentEdgeResolvers<ContextType>;
-  Content?: ContentResolvers<ContextType>;
-  ContentCategory?: ContentCategoryResolvers<ContextType>;
-  Conversation?: ConversationResolvers<ContextType>;
-  ConversationConnection?: ConversationConnectionResolvers<ContextType>;
-  ConversationEdge?: ConversationEdgeResolvers<ContextType>;
-  Country?: CountryResolvers<ContextType>;
-  CountryConnection?: CountryConnectionResolvers<ContextType>;
-  CountryEdge?: CountryEdgeResolvers<ContextType>;
-  CreateBehaviorRulePayload?: CreateBehaviorRulePayloadResolvers<ContextType>;
-  CreateCollectionPayload?: CreateCollectionPayloadResolvers<ContextType>;
-  CreateCommentPayload?: CreateCommentPayloadResolvers<ContextType>;
-  CreateUserPayload?: CreateUserPayloadResolvers<ContextType>;
-  CreateVideoPayload?: CreateVideoPayloadResolvers<ContextType>;
-  CuratedCategory?: CuratedCategoryResolvers<ContextType>;
-  CuratedCategoryConnection?: CuratedCategoryConnectionResolvers<ContextType>;
-  CuratedCategoryEdge?: CuratedCategoryEdgeResolvers<ContextType>;
-  DailymotionAd?: DailymotionAdResolvers<ContextType>;
-  Date?: GraphQLScalarType;
-  DateTime?: GraphQLScalarType;
-  DeleteBehaviorRulePayload?: DeleteBehaviorRulePayloadResolvers<ContextType>;
-  DeleteCommentPayload?: DeleteCommentPayloadResolvers<ContextType>;
-  DeleteReactionPayload?: DeleteReactionPayloadResolvers<ContextType>;
-  DeleteUserPayload?: DeleteUserPayloadResolvers<ContextType>;
-  DeleteVideoPayload?: DeleteVideoPayloadResolvers<ContextType>;
-  EmailChangeRequest?: EmailChangeRequestResolvers<ContextType>;
-  Embed?: EmbedResolvers<ContextType>;
-  ExperimentMatch?: ExperimentMatchResolvers<ContextType>;
-  ExperimentMatchConnection?: ExperimentMatchConnectionResolvers<ContextType>;
-  ExperimentMatchEdge?: ExperimentMatchEdgeResolvers<ContextType>;
-  FallbackCountry?: FallbackCountryResolvers<ContextType>;
-  FallbackCountryConnection?: FallbackCountryConnectionResolvers<ContextType>;
-  FallbackCountryEdge?: FallbackCountryEdgeResolvers<ContextType>;
-  Favorite?: FavoriteResolvers<ContextType>;
-  FeatureMatch?: FeatureMatchResolvers<ContextType>;
-  FeatureMatchConnection?: FeatureMatchConnectionResolvers<ContextType>;
-  FeatureMatchEdge?: FeatureMatchEdgeResolvers<ContextType>;
-  FeaturedContent?: FeaturedContentResolvers<ContextType>;
-  FeedPost?: FeedPostResolvers<ContextType>;
-  FeedPostConnection?: FeedPostConnectionResolvers<ContextType>;
-  FeedPostEdge?: FeedPostEdgeResolvers<ContextType>;
-  FileUpload?: FileUploadResolvers<ContextType>;
-  FollowChannelPayload?: FollowChannelPayloadResolvers<ContextType>;
-  FollowChannelsPayload?: FollowChannelsPayloadResolvers<ContextType>;
-  FollowTopicPayload?: FollowTopicPayloadResolvers<ContextType>;
-  FollowTopicsPayload?: FollowTopicsPayloadResolvers<ContextType>;
-  FollowUserPayload?: FollowUserPayloadResolvers<ContextType>;
-  FollowedChannel?: FollowedChannelResolvers<ContextType>;
-  FollowedChannelConnection?: FollowedChannelConnectionResolvers<ContextType>;
-  FollowedChannelEdge?: FollowedChannelEdgeResolvers<ContextType>;
-  FollowedTopic?: FollowedTopicResolvers<ContextType>;
-  FollowedTopicConnection?: FollowedTopicConnectionResolvers<ContextType>;
-  FollowedTopicEdge?: FollowedTopicEdgeResolvers<ContextType>;
-  Follower?: FollowerResolvers<ContextType>;
-  FollowerConnection?: FollowerConnectionResolvers<ContextType>;
-  FollowerEdge?: FollowerEdgeResolvers<ContextType>;
-  FollowerEngagement?: FollowerEngagementResolvers<ContextType>;
-  FollowerEngagementNotifications?: FollowerEngagementNotificationsResolvers<ContextType>;
-  FollowerMetric?: FollowerMetricResolvers<ContextType>;
-  FollowerMetricConnection?: FollowerMetricConnectionResolvers<ContextType>;
-  FollowerMetricEdge?: FollowerMetricEdgeResolvers<ContextType>;
-  Following?: FollowingResolvers<ContextType>;
-  FollowingChannelStartsLive?: FollowingChannelStartsLiveResolvers<ContextType>;
-  FollowingChannelUploadsVideo?: FollowingChannelUploadsVideoResolvers<ContextType>;
-  FollowingConnection?: FollowingConnectionResolvers<ContextType>;
-  FollowingEdge?: FollowingEdgeResolvers<ContextType>;
-  FollowingMetric?: FollowingMetricResolvers<ContextType>;
-  FollowingMetricConnection?: FollowingMetricConnectionResolvers<ContextType>;
-  FollowingMetricEdge?: FollowingMetricEdgeResolvers<ContextType>;
-  FollowingPayload?: FollowingPayloadResolvers<ContextType>;
-  FollowingStartsLive?: FollowingStartsLiveResolvers<ContextType>;
-  GenerateFileUploadUrlPayload?: GenerateFileUploadUrlPayloadResolvers<ContextType>;
-  GenerateVerifyEmailTokenPayload?: GenerateVerifyEmailTokenPayloadResolvers<ContextType>;
-  GeoblockedCountries?: GeoblockedCountriesResolvers<ContextType>;
-  Geoblocking?: GeoblockingResolvers<ContextType>;
-  GeoblockingConnection?: GeoblockingConnectionResolvers<ContextType>;
-  GeoblockingEdge?: GeoblockingEdgeResolvers<ContextType>;
-  Hashtag?: HashtagResolvers<ContextType>;
-  HashtagConnection?: HashtagConnectionResolvers<ContextType>;
-  HashtagEdge?: HashtagEdgeResolvers<ContextType>;
-  HashtagEngagementMetrics?: HashtagEngagementMetricsResolvers<ContextType>;
-  HashtagMetrics?: HashtagMetricsResolvers<ContextType>;
-  History?: HistoryResolvers<ContextType>;
-  HistoryConnection?: HistoryConnectionResolvers<ContextType>;
-  HistoryEdge?: HistoryEdgeResolvers<ContextType>;
-  Image?: ImageResolvers<ContextType>;
-  Interaction?: InteractionResolvers<ContextType>;
-  InteractionConnection?: InteractionConnectionResolvers<ContextType>;
-  InteractionEdge?: InteractionEdgeResolvers<ContextType>;
-  Interest?: InterestResolvers<ContextType>;
-  InterestConnection?: InterestConnectionResolvers<ContextType>;
-  InterestEdge?: InterestEdgeResolvers<ContextType>;
-  Language?: LanguageResolvers<ContextType>;
-  Like?: LikeResolvers<ContextType>;
-  LikeMetric?: LikeMetricResolvers<ContextType>;
-  LikeMetricConnection?: LikeMetricConnectionResolvers<ContextType>;
-  LikeMetricEdge?: LikeMetricEdgeResolvers<ContextType>;
-  LikePayload?: LikePayloadResolvers<ContextType>;
-  LikeVideoPayload?: LikeVideoPayloadResolvers<ContextType>;
-  Live?: LiveResolvers<ContextType>;
-  LiveConnection?: LiveConnectionResolvers<ContextType>;
-  LiveEdge?: LiveEdgeResolvers<ContextType>;
-  LiveEngagementMetrics?: LiveEngagementMetricsResolvers<ContextType>;
-  LiveMetric?: LiveMetricResolvers<ContextType>;
-  LiveMetricConnection?: LiveMetricConnectionResolvers<ContextType>;
-  LiveMetricEdge?: LiveMetricEdgeResolvers<ContextType>;
-  LiveMetrics?: LiveMetricsResolvers<ContextType>;
-  LiveSettings?: LiveSettingsResolvers<ContextType>;
-  LiveShareUrls?: LiveShareUrlsResolvers<ContextType>;
-  LiveStats?: LiveStatsResolvers<ContextType>;
-  LiveStatsViews?: LiveStatsViewsResolvers<ContextType>;
-  LiveStreamUrls?: LiveStreamUrlsResolvers<ContextType>;
-  LiveStreams?: LiveStreamsResolvers<ContextType>;
-  LiveStreamsConnection?: LiveStreamsConnectionResolvers<ContextType>;
-  LiveStreamsEdge?: LiveStreamsEdgeResolvers<ContextType>;
-  LiveViewerEngagement?: LiveViewerEngagementResolvers<ContextType>;
-  Localization?: LocalizationResolvers<ContextType>;
-  LocalizationMe?: LocalizationMeResolvers<ContextType>;
-  Media?: MediaResolvers<ContextType>;
-  MediaConnection?: MediaConnectionResolvers<ContextType>;
-  MediaEdge?: MediaEdgeResolvers<ContextType>;
-  MediaModeration?: MediaModerationResolvers<ContextType>;
-  MediaPublishingInfo?: MediaPublishingInfoResolvers<ContextType>;
-  MediaStreams?: MediaStreamsResolvers<ContextType>;
-  MediaStreamsConnection?: MediaStreamsConnectionResolvers<ContextType>;
-  MediaStreamsEdge?: MediaStreamsEdgeResolvers<ContextType>;
-  MediaTag?: MediaTagResolvers<ContextType>;
-  MediaTagConnection?: MediaTagConnectionResolvers<ContextType>;
-  MediaTagEdge?: MediaTagEdgeResolvers<ContextType>;
-  MediaUploadInfo?: MediaUploadInfoResolvers<ContextType>;
-  Metadata?: MetadataResolvers<ContextType>;
-  Metric?: MetricResolvers<ContextType>;
-  ModerationAction?: ModerationActionResolvers<ContextType>;
-  ModerationActionAppealPayload?: ModerationActionAppealPayloadResolvers<ContextType>;
-  MonetizationInsights?: MonetizationInsightsResolvers<ContextType>;
-  Mutation?: MutationResolvers<ContextType>;
-  Neon?: NeonResolvers<ContextType>;
-  Node?: NodeResolvers<ContextType>;
-  NotificationFollowedChannelUpdatePayload?: NotificationFollowedChannelUpdatePayloadResolvers<ContextType>;
-  NotificationSettings?: NotificationSettingsResolvers<ContextType>;
-  Organization?: OrganizationResolvers<ContextType>;
-  OrganizationAnalysis?: OrganizationAnalysisResolvers<ContextType>;
-  OrganizationConnection?: OrganizationConnectionResolvers<ContextType>;
-  OrganizationEdge?: OrganizationEdgeResolvers<ContextType>;
-  OrganizationPermission?: OrganizationPermissionResolvers<ContextType>;
-  OrganizationStats?: OrganizationStatsResolvers<ContextType>;
-  OrganizationStatsChannels?: OrganizationStatsChannelsResolvers<ContextType>;
-  PageInfo?: PageInfoResolvers<ContextType>;
-  Partner?: PartnerResolvers<ContextType>;
-  PartnerReportFile?: PartnerReportFileResolvers<ContextType>;
-  PartnerSpace?: PartnerSpaceResolvers<ContextType>;
-  Player?: PlayerResolvers<ContextType>;
-  PlayerQueue?: PlayerQueueResolvers<ContextType>;
-  Poll?: PollResolvers<ContextType>;
-  PollAnswerPayload?: PollAnswerPayloadResolvers<ContextType>;
-  PollConnection?: PollConnectionResolvers<ContextType>;
-  PollEdge?: PollEdgeResolvers<ContextType>;
-  PollOption?: PollOptionResolvers<ContextType>;
-  PollShareUrls?: PollShareUrlsResolvers<ContextType>;
-  Post?: PostResolvers<ContextType>;
-  PostConnection?: PostConnectionResolvers<ContextType>;
-  PostEdge?: PostEdgeResolvers<ContextType>;
-  PostEngagementMetrics?: PostEngagementMetricsResolvers<ContextType>;
-  PostMetric?: PostMetricResolvers<ContextType>;
-  PostMetricConnection?: PostMetricConnectionResolvers<ContextType>;
-  PostMetricEdge?: PostMetricEdgeResolvers<ContextType>;
-  PostMetrics?: PostMetricsResolvers<ContextType>;
-  ProductUpdates?: ProductUpdatesResolvers<ContextType>;
-  Quality?: QualityResolvers<ContextType>;
-  Query?: QueryResolvers<ContextType>;
-  Reaction?: ReactionResolvers<ContextType>;
-  ReactionConnection?: ReactionConnectionResolvers<ContextType>;
-  ReactionEdge?: ReactionEdgeResolvers<ContextType>;
-  ReactionEngagementMetrics?: ReactionEngagementMetricsResolvers<ContextType>;
-  ReactionMetric?: ReactionMetricResolvers<ContextType>;
-  ReactionMetricConnection?: ReactionMetricConnectionResolvers<ContextType>;
-  ReactionMetricEdge?: ReactionMetricEdgeResolvers<ContextType>;
-  ReactionMetrics?: ReactionMetricsResolvers<ContextType>;
-  ReactionPayload?: ReactionPayloadResolvers<ContextType>;
-  ReactionShareUrls?: ReactionShareUrlsResolvers<ContextType>;
-  ReactionStreamUrls?: ReactionStreamUrlsResolvers<ContextType>;
-  ReactionVideo?: ReactionVideoResolvers<ContextType>;
-  ReactionVideoConnection?: ReactionVideoConnectionResolvers<ContextType>;
-  ReactionVideoDeletePayload?: ReactionVideoDeletePayloadResolvers<ContextType>;
-  ReactionVideoEdge?: ReactionVideoEdgeResolvers<ContextType>;
-  ReactionVideoPayload?: ReactionVideoPayloadResolvers<ContextType>;
-  ReactionVideoStats?: ReactionVideoStatsResolvers<ContextType>;
-  ReactionVideoStatsBookmarks?: ReactionVideoStatsBookmarksResolvers<ContextType>;
-  ReactionVideoStatsFavorites?: ReactionVideoStatsFavoritesResolvers<ContextType>;
-  ReactionVideoStatsLikes?: ReactionVideoStatsLikesResolvers<ContextType>;
-  ReactionVideoStatsReactionVideos?: ReactionVideoStatsReactionVideosResolvers<ContextType>;
-  ReactionVideoStatsSaves?: ReactionVideoStatsSavesResolvers<ContextType>;
-  ReactionViewerEngagement?: ReactionViewerEngagementResolvers<ContextType>;
-  RecommendedRecording?: RecommendedRecordingResolvers<ContextType>;
-  RecommendedRecordingConnection?: RecommendedRecordingConnectionResolvers<ContextType>;
-  RecommendedRecordingEdge?: RecommendedRecordingEdgeResolvers<ContextType>;
-  Recording?: RecordingResolvers<ContextType>;
-  RecoverPasswordPayload?: RecoverPasswordPayloadResolvers<ContextType>;
-  RemindUnwatchedVideos?: RemindUnwatchedVideosResolvers<ContextType>;
-  RemoveCollectionPayload?: RemoveCollectionPayloadResolvers<ContextType>;
-  RemoveCollectionVideoPayload?: RemoveCollectionVideoPayloadResolvers<ContextType>;
-  RemoveWatchLaterVideoPayload?: RemoveWatchLaterVideoPayloadResolvers<ContextType>;
-  RemoveWatchedVideoPayload?: RemoveWatchedVideoPayloadResolvers<ContextType>;
-  ReorderCollectionMediaPayload?: ReorderCollectionMediaPayloadResolvers<ContextType>;
-  ReportCommentPayload?: ReportCommentPayloadResolvers<ContextType>;
-  ReportCreatorPayload?: ReportCreatorPayloadResolvers<ContextType>;
-  ReportFileDownloadLink?: ReportFileDownloadLinkResolvers<ContextType>;
-  ReportFileDownloadLinkConnection?: ReportFileDownloadLinkConnectionResolvers<ContextType>;
-  ReportFileDownloadLinkEdge?: ReportFileDownloadLinkEdgeResolvers<ContextType>;
-  ReportRecordingPayload?: ReportRecordingPayloadResolvers<ContextType>;
-  ReportVideoPayload?: ReportVideoPayloadResolvers<ContextType>;
-  ReporterEmailVerifyPayload?: ReporterEmailVerifyPayloadResolvers<ContextType>;
-  RequestActivationCodePayload?: RequestActivationCodePayloadResolvers<ContextType>;
-  ResetPasswordPayload?: ResetPasswordPayloadResolvers<ContextType>;
-  Restriction?: RestrictionResolvers<ContextType>;
-  Rule?: RuleResolvers<ContextType>;
-  RuleConnection?: RuleConnectionResolvers<ContextType>;
-  RuleEdge?: RuleEdgeResolvers<ContextType>;
-  Search?: SearchResolvers<ContextType>;
-  Section?: SectionResolvers<ContextType>;
-  SectionConnection?: SectionConnectionResolvers<ContextType>;
-  SectionEdge?: SectionEdgeResolvers<ContextType>;
-  SendTransactionalEmailPayload?: SendTransactionalEmailPayloadResolvers<ContextType>;
-  SendVerifyEmailCodePayload?: SendVerifyEmailCodePayloadResolvers<ContextType>;
-  ShareUrls?: ShareUrlsResolvers<ContextType>;
-  SharingURL?: SharingUrlResolvers<ContextType>;
-  SharingURLConnection?: SharingUrlConnectionResolvers<ContextType>;
-  SharingURLEdge?: SharingUrlEdgeResolvers<ContextType>;
-  Story?: StoryResolvers<ContextType>;
-  StoryConnection?: StoryConnectionResolvers<ContextType>;
-  StoryEdge?: StoryEdgeResolvers<ContextType>;
-  StreamUrls?: StreamUrlsResolvers<ContextType>;
-  Subdivision?: SubdivisionResolvers<ContextType>;
-  Subtitle?: SubtitleResolvers<ContextType>;
-  SubtitleConnection?: SubtitleConnectionResolvers<ContextType>;
-  SubtitleEdge?: SubtitleEdgeResolvers<ContextType>;
-  Suggestion?: SuggestionResolvers<ContextType>;
-  SuggestionConnection?: SuggestionConnectionResolvers<ContextType>;
-  SuggestionEdge?: SuggestionEdgeResolvers<ContextType>;
-  SupportedCountry?: SupportedCountryResolvers<ContextType>;
-  SupportedCountryConnection?: SupportedCountryConnectionResolvers<ContextType>;
-  SupportedCountryEdge?: SupportedCountryEdgeResolvers<ContextType>;
-  SupportedLanguage?: SupportedLanguageResolvers<ContextType>;
-  SupportedLanguageConnection?: SupportedLanguageConnectionResolvers<ContextType>;
-  SupportedLanguageEdge?: SupportedLanguageEdgeResolvers<ContextType>;
-  Thread?: ThreadResolvers<ContextType>;
-  ThreadConnection?: ThreadConnectionResolvers<ContextType>;
-  ThreadEdge?: ThreadEdgeResolvers<ContextType>;
-  Thumbnails?: ThumbnailsResolvers<ContextType>;
-  Time?: GraphQLScalarType;
-  Tips?: TipsResolvers<ContextType>;
-  Topic?: TopicResolvers<ContextType>;
-  TopicConnection?: TopicConnectionResolvers<ContextType>;
-  TopicEdge?: TopicEdgeResolvers<ContextType>;
-  TopicLabel?: TopicLabelResolvers<ContextType>;
-  TopicLabelConnection?: TopicLabelConnectionResolvers<ContextType>;
-  TopicLabelEdge?: TopicLabelEdgeResolvers<ContextType>;
-  TopicShareUrls?: TopicShareUrlsResolvers<ContextType>;
-  TopicStats?: TopicStatsResolvers<ContextType>;
-  TopicStatsFollowers?: TopicStatsFollowersResolvers<ContextType>;
-  TopicStatsVideos?: TopicStatsVideosResolvers<ContextType>;
-  TopicWhitelistStatus?: TopicWhitelistStatusResolvers<ContextType>;
-  UnfollowChannelPayload?: UnfollowChannelPayloadResolvers<ContextType>;
-  UnfollowTopicPayload?: UnfollowTopicPayloadResolvers<ContextType>;
-  UnfollowUserPayload?: UnfollowUserPayloadResolvers<ContextType>;
-  UnlikeVideoPayload?: UnlikeVideoPayloadResolvers<ContextType>;
-  UpdateBehaviorRulePayload?: UpdateBehaviorRulePayloadResolvers<ContextType>;
-  UpdateChannelPayload?: UpdateChannelPayloadResolvers<ContextType>;
-  UpdateCollectionPayload?: UpdateCollectionPayloadResolvers<ContextType>;
-  UpdateNotificationSettingsEmailPayload?: UpdateNotificationSettingsEmailPayloadResolvers<ContextType>;
-  UpdateNotificationSettingsPushPayload?: UpdateNotificationSettingsPushPayloadResolvers<ContextType>;
-  UpdateUserPayload?: UpdateUserPayloadResolvers<ContextType>;
-  UpdateVideoPayload?: UpdateVideoPayloadResolvers<ContextType>;
-  User?: UserResolvers<ContextType>;
-  UserEmailChangeConfirmPayload?: UserEmailChangeConfirmPayloadResolvers<ContextType>;
-  UserEmailChangeRequestPayload?: UserEmailChangeRequestPayloadResolvers<ContextType>;
-  UserEmailConfirmationCodeResetPayload?: UserEmailConfirmationCodeResetPayloadResolvers<ContextType>;
-  UserEmailValidationTokenPayload?: UserEmailValidationTokenPayloadResolvers<ContextType>;
-  UserInterest?: UserInterestResolvers<ContextType>;
-  UserInterestAddPayload?: UserInterestAddPayloadResolvers<ContextType>;
-  UserInterestConnection?: UserInterestConnectionResolvers<ContextType>;
-  UserInterestEdge?: UserInterestEdgeResolvers<ContextType>;
-  UserInterestRemovePayload?: UserInterestRemovePayloadResolvers<ContextType>;
-  UserInterestsUpdatePayload?: UserInterestsUpdatePayloadResolvers<ContextType>;
-  UserOpenWebCodeBRequestPayload?: UserOpenWebCodeBRequestPayloadResolvers<ContextType>;
-  UserPollAnswer?: UserPollAnswerResolvers<ContextType>;
-  UserStats?: UserStatsResolvers<ContextType>;
-  UserStatsCollections?: UserStatsCollectionsResolvers<ContextType>;
-  UserStatsFollowers?: UserStatsFollowersResolvers<ContextType>;
-  UserStatsFollowingChannels?: UserStatsFollowingChannelsResolvers<ContextType>;
-  UserStatsFollowingTopics?: UserStatsFollowingTopicsResolvers<ContextType>;
-  UserStatsLikedVideos?: UserStatsLikedVideosResolvers<ContextType>;
-  UserStatsReactionVideos?: UserStatsReactionVideosResolvers<ContextType>;
-  UserStatsUploadedVideos?: UserStatsUploadedVideosResolvers<ContextType>;
-  UserStatsVideos?: UserStatsVideosResolvers<ContextType>;
-  UserStatsWatchLater?: UserStatsWatchLaterResolvers<ContextType>;
-  UserStatsWatchedVideos?: UserStatsWatchedVideosResolvers<ContextType>;
-  Video?: VideoResolvers<ContextType>;
-  VideoConnection?: VideoConnectionResolvers<ContextType>;
-  VideoDigest?: VideoDigestResolvers<ContextType>;
-  VideoEdge?: VideoEdgeResolvers<ContextType>;
-  VideoEngagementMetrics?: VideoEngagementMetricsResolvers<ContextType>;
-  VideoMetric?: VideoMetricResolvers<ContextType>;
-  VideoMetricConnection?: VideoMetricConnectionResolvers<ContextType>;
-  VideoMetricEdge?: VideoMetricEdgeResolvers<ContextType>;
-  VideoMetrics?: VideoMetricsResolvers<ContextType>;
-  VideoOrLive?: VideoOrLiveResolvers<ContextType>;
-  VideoSettings?: VideoSettingsResolvers<ContextType>;
-  VideoShareUrls?: VideoShareUrlsResolvers<ContextType>;
-  VideoStats?: VideoStatsResolvers<ContextType>;
-  VideoStatsBookmarks?: VideoStatsBookmarksResolvers<ContextType>;
-  VideoStatsFavorites?: VideoStatsFavoritesResolvers<ContextType>;
-  VideoStatsLikes?: VideoStatsLikesResolvers<ContextType>;
-  VideoStatsReactionVideos?: VideoStatsReactionVideosResolvers<ContextType>;
-  VideoStatsSaves?: VideoStatsSavesResolvers<ContextType>;
-  VideoStatsViews?: VideoStatsViewsResolvers<ContextType>;
-  VideoStreamUrls?: VideoStreamUrlsResolvers<ContextType>;
-  VideoStreams?: VideoStreamsResolvers<ContextType>;
-  VideoStreamsConnection?: VideoStreamsConnectionResolvers<ContextType>;
-  VideoStreamsEdge?: VideoStreamsEdgeResolvers<ContextType>;
-  VideoViewMetrics?: VideoViewMetricsResolvers<ContextType>;
-  VideoViewerEngagement?: VideoViewerEngagementResolvers<ContextType>;
-  ViewerEngagement?: ViewerEngagementResolvers<ContextType>;
-  Views?: ViewsResolvers<ContextType>;
-  Watch?: WatchResolvers<ContextType>;
-  WatchedVideoAddPayload?: WatchedVideoAddPayloadResolvers<ContextType>;
-  Web?: WebResolvers<ContextType>;
-  WebMetadata?: WebMetadataResolvers<ContextType>;
-  WebMetadataConnection?: WebMetadataConnectionResolvers<ContextType>;
-  WebMetadataConnectionConnection?: WebMetadataConnectionConnectionResolvers<ContextType>;
-  WebMetadataConnectionEdge?: WebMetadataConnectionEdgeResolvers<ContextType>;
-};
-
-export type DirectiveResolvers<ContextType = any> = {
-  actAsPyEnum?: ActAsPyEnumDirectiveResolver<any, any, ContextType>;
-  auth?: AuthDirectiveResolver<any, any, ContextType>;
-  beta?: BetaDirectiveResolver<any, any, ContextType>;
-  constraint?: ConstraintDirectiveResolver<any, any, ContextType>;
-  depthLimit?: DepthLimitDirectiveResolver<any, any, ContextType>;
-  hidden?: HiddenDirectiveResolver<any, any, ContextType>;
-  nonIntrospectable?: NonIntrospectableDirectiveResolver<any, any, ContextType>;
-  resetSeconds?: ResetSecondsDirectiveResolver<any, any, ContextType>;
-  skipResolve?: SkipResolveDirectiveResolver<any, any, ContextType>;
-  validateChoices?: ValidateChoicesDirectiveResolver<any, any, ContextType>;
-  validateTimePeriodFrequency?: ValidateTimePeriodFrequencyDirectiveResolver<any, any, ContextType>;
-  validateVideoTimeCode?: ValidateVideoTimeCodeDirectiveResolver<any, any, ContextType>;
+  /** The ID of the story to like. */
+  id?: InputMaybe<Scalars['ID']['input']>;
+  /** @deprecated(reason: "Use `id`".) - The ID of the post. */
+  postId?: InputMaybe<Scalars['ID']['input']>;
 };

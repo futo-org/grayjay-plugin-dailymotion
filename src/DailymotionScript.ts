@@ -6,7 +6,11 @@ const state = {
   anonymousUserAuthorizationTokenExpirationDate: 0,
   commentWebServiceToken: '',
   channelsCache: {} as Record<string, PlatformChannel>,
-  maintenanceMode: false
+  maintenanceMode: false,
+  visitorId: '',
+  visitId: '',
+  apiEndpoint: '',
+  apiAuthEndpoint: ''
 };
 
 import {
@@ -14,6 +18,7 @@ import {
   SEARCH_CAPABILITIES,
   BASE_URL_PLAYLIST,
   BASE_URL_API,
+  BASE_URL_SEARCH_API,
   BASE_URL_METADATA,
   ERROR_TYPES,
   LikedMediaSort,
@@ -100,6 +105,7 @@ import {
   IPlatformSystemPlaylist,
 } from '../types/types';
 import {
+  extractApiEndpoint,
   extractClientCredentials,
   getTokenFromClientCredentials,
 } from './extraction';
@@ -192,6 +198,14 @@ source.enable = function (conf, settings, saveStateStr) {
           didSaveState = true;
           log('Using save state');
         }
+
+        // Ensure visitor IDs are set (regenerate if missing from old save states)
+        if (!state.visitorId) {
+          state.visitorId = generateUUIDv4();
+        }
+        if (!state.visitId) {
+          state.visitId = Date.now().toString();
+        }
       }
     }
   } catch (ex) {
@@ -227,13 +241,22 @@ source.enable = function (conf, settings, saveStateStr) {
 
     state.maintenanceMode = false;
 
-    const clientCredentials = extractClientCredentials(detailsRequestHtml);
+    // Initialize visitor tracking IDs BEFORE getting token
+    // so the same visitor ID is used in both the token request and subsequent requests
+    state.visitorId = generateUUIDv4();
+    state.visitId = Date.now().toString();
+
+    // Extract API endpoint from homepage (dynamic to avoid hardcoding subdomain like graphql-ix7)
+    state.apiEndpoint = extractApiEndpoint(detailsRequestHtml.body);
+    state.apiAuthEndpoint = `${state.apiEndpoint}/oauth/token`;
+
+    const clientCredentials = extractClientCredentials(detailsRequestHtml, webclient);
 
     const {
       anonymousUserAuthorizationToken,
       anonymousUserAuthorizationTokenExpirationDate,
       isValid,
-    } = getTokenFromClientCredentials(http, clientCredentials);
+    } = getTokenFromClientCredentials(webclient, clientCredentials, state.visitorId, state.apiAuthEndpoint);
 
     if (!isValid) {
       console.error('Failed to get token');
@@ -878,7 +901,8 @@ function searchPlaylists(contextQuery) {
     avatar_size: CREATOR_AVATAR_HEIGHT[_settings?.avatarSizeOptionIndex],
   };
 
-  const [error, gqlResponse] = executeGqlQuery(http, {
+  // Use dedicated search endpoint to avoid rate limiting
+  const [error, gqlResponse] = executeSearchQuery(http, {
     operationName: 'SEARCH_QUERY',
     variables: variables,
     query: SEARCH_QUERY,
@@ -1150,7 +1174,8 @@ function getSearchPagerAll(contextQuery): VideoPager {
       THUMBNAIL_HEIGHT[_settings?.thumbnailResolutionOptionIndex],
   };
 
-  const [error, gqlResponse] = executeGqlQuery(http, {
+  // Use dedicated search endpoint to avoid rate limiting
+  const [error, gqlResponse] = executeSearchQuery(http, {
     operationName: 'SEARCH_QUERY',
     variables: variables,
     query: SEARCH_QUERY,
@@ -1158,7 +1183,12 @@ function getSearchPagerAll(contextQuery): VideoPager {
   });
 
   if (error) {
-    log('Failed to search:' + error.message);
+    // Don't use partial data when rate-limited - it returns discovery content, not search results
+    if (error.status?.includes('Maximum attempts')) {
+      log('Search rate limited: ' + error.status);
+      throw new ScriptException('Search temporarily unavailable - rate limited');
+    }
+    log('Failed to search: [' + error.code + '] ' + error.status);
     return new VideoPager([], false);
   }
 
@@ -1223,7 +1253,7 @@ function getSavedVideo(url, usePlatformAuth = false) {
     .batch()
     .GET(player_metadata_url, headers1, usePlatformAuth)
     .POST(
-      BASE_URL_API,
+      state.apiEndpoint || BASE_URL_API,
       videoDetailsRequestBody,
       videoDetailsRequestHeaders,
       usePlatformAuth,
@@ -1269,7 +1299,8 @@ function getSavedVideo(url, usePlatformAuth = false) {
 }
 
 function getSearchChannelPager(context) {
-  const [error, searchResponse] = executeGqlQuery(http, {
+  // Use dedicated search endpoint to avoid rate limiting
+  const [error, searchResponse] = executeSearchQuery(http, {
     operationName: 'SEARCH_QUERY',
     variables: {
       query: context.q,
@@ -1391,7 +1422,7 @@ function executeGqlQuery(httpClient, requestOptions) {
   }
 
   try {
-    const res = httpClient.POST(BASE_URL_API, gql, headersToAdd, usePlatformAuth);
+    const res = httpClient.POST(state.apiEndpoint || BASE_URL_API, gql, headersToAdd, usePlatformAuth);
 
     if (!res.isOk) {
       const errorInfo = {
@@ -1448,6 +1479,95 @@ function executeGqlQuery(httpClient, requestOptions) {
       variables: requestOptions.variables
     };
     
+    return [errorInfo, null];
+  }
+}
+
+function executeSearchQuery(httpClient, requestOptions) {
+  // Use dedicated search endpoint with visitor tracking headers
+  const headersToAdd = requestOptions.headers || applyCommonHeaders({
+    'X-DM-Preferred-Country': getPreferredCountry(_settings?.preferredCountryOptionIndex) ?? 'us',
+  });
+
+  // Add visitor tracking headers that the browser uses
+  headersToAdd['X-DM-Visit-Id'] = state.visitId || Date.now().toString();
+  headersToAdd['X-DM-Visitor-Id'] = state.visitorId || generateUUIDv4();
+  headersToAdd['X-DM-Neon-SSR'] = '0';
+
+  const gql = JSON.stringify({
+    operationName: requestOptions.operationName,
+    variables: requestOptions.variables,
+    query: requestOptions.query,
+  });
+
+  const usePlatformAuth =
+    requestOptions.usePlatformAuth == undefined
+      ? false
+      : requestOptions.usePlatformAuth;
+
+  if (!usePlatformAuth) {
+    headersToAdd.Authorization = state.anonymousUserAuthorizationToken;
+  }
+
+  try {
+    const res = httpClient.POST(BASE_URL_SEARCH_API, gql, headersToAdd, usePlatformAuth);
+
+    if (!res.isOk) {
+      const errorInfo = {
+        code: res.code,
+        status: `HTTP ${res.code}`,
+        operationName: requestOptions.operationName,
+        body: res.body ? (typeof res.body === 'string' ? res.body : JSON.stringify(res.body)) : 'No response body',
+        variables: requestOptions.variables
+      };
+
+      console.error('Failed to execute search request', errorInfo);
+
+      return [errorInfo, null];
+    }
+
+    let body;
+    try {
+      body = JSON.parse(res.body);
+    } catch (parseError) {
+      const errorInfo = {
+        code: 'PARSE_ERROR',
+        status: 'Failed to parse response body',
+        operationName: requestOptions.operationName,
+        body: res.body ? res.body.substring(0, 500) : 'No response body',
+        parseError: String(parseError),
+        variables: requestOptions.variables
+      };
+
+      return [errorInfo, null];
+    }
+
+    if (body.errors) {
+      const message = body.errors.map((e) => e.message).join(', ');
+      const isRateLimited = message.includes('Maximum attempts');
+      const errorInfo = {
+        code: 'GQL_ERROR',
+        status: message,
+        operationName: requestOptions.operationName,
+        errors: body.errors,
+        variables: requestOptions.variables,
+        data: body.data
+      };
+
+      // Don't return partial data when rate limited - it's discovery content, not search results
+      return [errorInfo, isRateLimited ? null : (body.data ? body : null)];
+    }
+
+    return [null, body];
+  } catch (error) {
+    const errorInfo = {
+      code: 'EXCEPTION',
+      status: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      operationName: requestOptions.operationName,
+      variables: requestOptions.variables
+    };
+
     return [errorInfo, null];
   }
 }

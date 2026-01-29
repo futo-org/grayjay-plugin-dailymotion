@@ -1,11 +1,15 @@
 'use strict';
 
 const BASE_URL = 'https://www.dailymotion.com';
-const BASE_URL_API = 'https://graphql.api.dailymotion.com';
+// Use graphql-ix7 subdomain which has consistent SSL certificates
+// The main graphql.api.dailymotion.com has misconfigured certs on ~50% of load balancer nodes
+const BASE_URL_API = 'https://graphql-ix7.api.dailymotion.com';
+// Search uses a dedicated endpoint (observed from browser behavior)
+// This helps avoid rate limiting on the main GraphQL API
+const BASE_URL_SEARCH_API = 'https://search.dailymotion.com';
 const BASE_URL_COMMENTS = 'https://api-2-0.spot.im/v1.0.0/conversation/read';
 const BASE_URL_COMMENTS_AUTH = 'https://api-2-0.spot.im/v1.0.0/authenticate';
 const BASE_URL_COMMENTS_THUMBNAILS = 'https://images.spot.im/image/upload';
-const BASE_URL_API_AUTH = `${BASE_URL_API}/oauth/token`;
 const BASE_URL_VIDEO = `${BASE_URL}/video`;
 const BASE_URL_PLAYLIST = `${BASE_URL}/playlist`;
 const BASE_URL_METADATA = `${BASE_URL}/player/metadata/video`;
@@ -17,6 +21,10 @@ const REGEX_VIDEO_PLAYLIST_URL = /^https:\/\/(?:www\.)?dailymotion\.com\/playlis
 const REGEX_INITIAL_DATA_API_AUTH_1 = /(?<=window\.__LOADABLE_LOADED_CHUNKS__=.*)\b[a-f0-9]{20}\b|\b[a-f0-9]{40}\b/g;
 const REGEX_API_CLIENT_ID = /get apiClientId\(\)\{return"([a-f0-9]{20})"\}/;
 const REGEX_API_CLIENT_SECRET = /get apiClientSecret\(\)\{return"([a-f0-9]{40})"\}/;
+// Pattern to find the app.js URL in the homepage HTML
+const REGEX_APP_JS_URL = /static\/app\.[a-f0-9]+\.js/;
+// Pattern to extract API_ENDPOINT from homepage (e.g., "API_ENDPOINT: 'https://graphql-ix7.api.dailymotion.com'")
+const REGEX_API_ENDPOINT = /API_ENDPOINT:\s*'(https:\/\/[^']+)'/;
 const createAuthRegexByTextLength = (length) => new RegExp(`\\b\\w+\\s*=\\s*"([a-zA-Z0-9]{${length}})"`);
 const USER_AGENT = 'Mozilla/5.0 (Linux; Android 12) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.230 Mobile Safari/537.36';
 const FALLBACK_SPOT_ID = 'sp_vWPN1lBu';
@@ -191,6 +199,7 @@ fragment SEARCH_DISCOVERY_VIDEO_FRAGMENT on Video {
 	thumbnail(height:$thumbnail_resolution) {
 		url
 	}
+	createDate
 	createdAt
 	creator {
 		id
@@ -317,6 +326,7 @@ query CHANNEL_VIDEOS_QUERY(
             url
           }
           duration
+          createDate
           createdAt
           creator {
             id
@@ -349,6 +359,7 @@ fragment VIDEO_BASE_FRAGMENT on Video {
 	id
 	xid
 	title
+	createDate
 	createdAt
 	metrics {
 		engagement {
@@ -518,6 +529,7 @@ fragment VIDEO_FRAGMENT on Video {
 	thumbnail(height:$thumbnail_resolution) {
 		url
 	}
+	createDate
 	createdAt
 	metrics {
 		engagement {
@@ -585,6 +597,7 @@ fragment LIVE_FRAGMENT on Live {
 	thumbnail(height:$thumbnail_resolution){
 		url
 	}
+	createDate
 	createdAt
 	videoWidth: width
 	videoHeight: height
@@ -729,6 +742,7 @@ query PLAYLIST_VIDEO_QUERY($xid: String!, $numberOfVideos: Int = 100, $avatar_si
 					title
 					description
 					url
+					createDate
 					createdAt
 					thumbnail(height:$thumbnail_resolution) {
 						url
@@ -832,6 +846,7 @@ query CHANNEL_PLAYLISTS_QUERY(
 				node {
 					id
 					xid
+					createDate
 					createdAt
 					name
 					description
@@ -858,6 +873,7 @@ query CHANNEL_PLAYLISTS_QUERY(
 					videos {
 						edges {
 							node {
+								createDate
 								createdAt
 								creator {
 									id
@@ -1032,6 +1048,7 @@ fragment VideoFields on Video {
   	id
 	xid
 	title
+	createDate
 	createdAt
 	metrics {
 		engagement {
@@ -1388,6 +1405,13 @@ class SearchPlaylistPager extends PlaylistPager {
     }
 }
 
+// TODO: createDate requires authentication, so we fallback to deprecated createdAt for unauthenticated requests
+const toUnixTimestamp = (dateStr) => {
+    if (!dateStr)
+        return 0;
+    const timestamp = new Date(dateStr).getTime();
+    return isNaN(timestamp) ? 0 : Math.floor(timestamp / 1000);
+};
 const SourceChannelToGrayjayChannel = (pluginId, sourceChannel, url) => {
     const externalLinks = sourceChannel?.externalLinks ?? {};
     const links = Object.keys(externalLinks).reduce((acc, key) => {
@@ -1437,8 +1461,8 @@ const SourceVideoToGrayjayVideo = (pluginId, sourceVideo) => {
             new Thumbnail(sourceVideo?.thumbnail?.url ?? '', 0),
         ]),
         author: SourceAuthorToGrayjayPlatformAuthorLink(pluginId, sourceVideo?.creator),
-        uploadDate: Math.floor(new Date(sourceVideo?.createdAt).getTime() / 1000),
-        datetime: Math.floor(new Date(sourceVideo?.createdAt).getTime() / 1000),
+        uploadDate: toUnixTimestamp(sourceVideo?.createDate ?? sourceVideo?.createdAt),
+        datetime: toUnixTimestamp(sourceVideo?.createDate ?? sourceVideo?.createdAt),
         url: `${BASE_URL_VIDEO}/${sourceVideo?.xid}`,
         duration: sourceVideo?.duration ?? 0,
         viewCount,
@@ -1535,9 +1559,8 @@ const SourceVideoToPlatformVideoDetailsDef = (pluginId, sourceVideo, player_meta
             new Thumbnail(sourceVideo?.thumbnail?.url ?? '', 0),
         ]),
         author: SourceAuthorToGrayjayPlatformAuthorLink(pluginId, sourceVideo?.creator),
-        //TODO: sourceVideo?.createdAt is deprecated but sourceVideo?.createDate requires authentication
-        uploadDate: Math.floor(new Date(sourceVideo?.createdAt).getTime() / 1000),
-        datetime: Math.floor(new Date(sourceVideo?.createdAt).getTime() / 1000),
+        uploadDate: toUnixTimestamp(sourceVideo?.createDate ?? sourceVideo?.createdAt),
+        datetime: toUnixTimestamp(sourceVideo?.createDate ?? sourceVideo?.createdAt),
         duration,
         viewCount,
         url: sourceVideo?.xid ? `${BASE_URL_VIDEO}/${sourceVideo.xid}` : '',
@@ -1612,7 +1635,7 @@ const convertSRTtoVTT = (srt) => {
     return vtt.join('');
 };
 
-function oauthClientCredentialsRequest(httpClient, url, clientId, secret, throwOnInvalid = false) {
+function oauthClientCredentialsRequest(httpClient, url, clientId, secret, visitorId, throwOnInvalid = false) {
     if (!httpClient || !url || !clientId || !secret) {
         throw new ScriptException('Invalid parameters provided to oauthClientCredentialsRequest');
     }
@@ -1620,7 +1643,7 @@ function oauthClientCredentialsRequest(httpClient, url, clientId, secret, throwO
         client_id: clientId,
         client_secret: secret,
         grant_type: 'client_credentials',
-        visitor_id: generateUUIDv4()
+        visitor_id: visitorId
     });
     try {
         return httpClient.POST(url, body, {
@@ -1639,37 +1662,74 @@ function oauthClientCredentialsRequest(httpClient, url, clientId, secret, throwO
         }, false);
     }
     catch (error) {
-        console.error('Error making OAuth client credentials request:', error);
+        log('OAuth request exception: ' + (error instanceof Error ? error.message : String(error)));
         if (throwOnInvalid) {
             throw new ScriptException('Failed to obtain OAuth client credentials');
         }
         return null;
     }
 }
-function extractClientCredentials(detailsRequestHtml) {
+function extractClientCredentials(detailsRequestHtml, httpClient) {
     const result = [];
-    // Try new regex patterns first
-    const clientIdMatch = detailsRequestHtml.body.match(REGEX_API_CLIENT_ID);
-    const clientSecretMatch = detailsRequestHtml.body.match(REGEX_API_CLIENT_SECRET);
+    // Try new regex patterns on homepage first (credentials might be inlined)
+    let clientIdMatch = detailsRequestHtml.body.match(REGEX_API_CLIENT_ID);
+    let clientSecretMatch = detailsRequestHtml.body.match(REGEX_API_CLIENT_SECRET);
     if (clientIdMatch && clientSecretMatch && clientIdMatch[1] && clientSecretMatch[1]) {
         result.unshift({
             clientId: clientIdMatch[1],
             secret: clientSecretMatch[1],
         });
-        log('Successfully extracted API credentials from page using new regex patterns');
+        log('Successfully extracted API credentials from homepage');
         return result;
     }
-    // Fallback to old regex pattern
+    // Credentials not in homepage HTML - fetch app.js where they are typically located
+    if (httpClient) {
+        const appJsMatch = detailsRequestHtml.body.match(REGEX_APP_JS_URL);
+        if (appJsMatch) {
+            const appJsUrl = `https://static.neon-ssr.dailymotion.com/neon-user-ssr/${appJsMatch[0]}`;
+            log(`Fetching app.js from ${appJsUrl}`);
+            try {
+                const appJsResponse = httpClient.GET(appJsUrl, {
+                    'User-Agent': USER_AGENT,
+                }, false);
+                if (appJsResponse?.isOk) {
+                    clientIdMatch = appJsResponse.body.match(REGEX_API_CLIENT_ID);
+                    clientSecretMatch = appJsResponse.body.match(REGEX_API_CLIENT_SECRET);
+                    if (clientIdMatch && clientSecretMatch && clientIdMatch[1] && clientSecretMatch[1]) {
+                        result.unshift({
+                            clientId: clientIdMatch[1],
+                            secret: clientSecretMatch[1],
+                        });
+                        log('Successfully extracted API credentials from app.js');
+                        return result;
+                    }
+                    else {
+                        log('Credentials not found in app.js content');
+                    }
+                }
+                else {
+                    log(`Failed to fetch app.js: ${appJsResponse?.code}`);
+                }
+            }
+            catch (error) {
+                log(`Error fetching app.js: ${error}`);
+            }
+        }
+        else {
+            log('Could not find app.js URL in homepage');
+        }
+    }
+    // Fallback to old regex pattern on homepage
     const match = detailsRequestHtml.body.match(REGEX_INITIAL_DATA_API_AUTH_1);
     if (match?.length === 2 && match[0] && match[1]) {
         result.unshift({
             clientId: match[0],
             secret: match[1],
         });
-        log('Successfully extracted API credentials from page using old regex pattern');
+        log('Successfully extracted API credentials using old regex pattern');
     }
     else {
-        log('Failed to extract API credentials from page using regex. Using DOM parsing.');
+        log('Failed to extract API credentials using regex. Trying DOM parsing.');
         const htmlElement = domParser.parseFromString(detailsRequestHtml.body, 'text/html');
         const extractedId = getScriptVariableByTextLength(htmlElement, 20);
         const extractedSecret = getScriptVariableByTextLength(htmlElement, 40);
@@ -1678,10 +1738,10 @@ function extractClientCredentials(detailsRequestHtml) {
                 clientId: extractedId,
                 secret: extractedSecret,
             });
-            log(`Successfully extracted API credentials from page using DOM parsing: ${extractedSecret}`);
+            log(`Successfully extracted API credentials using DOM parsing`);
         }
         else {
-            log('Failed to extract API credentials using DOM parsing with exact text length.');
+            log('Failed to extract API credentials using all methods');
         }
     }
     return result;
@@ -1701,17 +1761,27 @@ function getScriptVariableByTextLength(htmlElement, length) {
         return matches[1];
     }
 }
-function getTokenFromClientCredentials(httpClient, credentials, throwOnInvalid = false) {
+function extractApiEndpoint(homepageHtml) {
+    const match = homepageHtml.match(REGEX_API_ENDPOINT);
+    if (match && match[1]) {
+        log(`Extracted API endpoint: ${match[1]}`);
+        return match[1];
+    }
+    log(`Could not extract API endpoint from homepage, using fallback: ${BASE_URL_API}`);
+    return BASE_URL_API;
+}
+function getTokenFromClientCredentials(httpClient, credentials, visitorId, authUrl, throwOnInvalid = false) {
     let result = {
         isValid: false,
     };
+    const tokenUrl = authUrl || `${BASE_URL_API}/oauth/token`;
     for (const credential of credentials) {
-        const res = oauthClientCredentialsRequest(httpClient, BASE_URL_API_AUTH, credential.clientId, credential.secret);
+        const res = oauthClientCredentialsRequest(httpClient, tokenUrl, credential.clientId, credential.secret, visitorId);
         if (res?.isOk) {
             const anonymousTokenResponse = JSON.parse(res.body);
             if (!anonymousTokenResponse.token_type ||
                 !anonymousTokenResponse.access_token) {
-                console.error('Invalid token response', res);
+                log('Invalid token response body: ' + res.body);
                 if (throwOnInvalid) {
                     throw new ScriptException('', 'Invalid token response: ' + res.body);
                 }
@@ -1724,7 +1794,7 @@ function getTokenFromClientCredentials(httpClient, credentials, throwOnInvalid =
             break;
         }
         else {
-            console.error('Failed to get token', res);
+            log(`Token request failed: code=${res?.code}, body=${res?.body?.substring(0, 200)}`);
         }
     }
     return result;
@@ -1737,7 +1807,11 @@ const state = {
     anonymousUserAuthorizationTokenExpirationDate: 0,
     commentWebServiceToken: '',
     channelsCache: {},
-    maintenanceMode: false
+    maintenanceMode: false,
+    visitorId: '',
+    visitId: '',
+    apiEndpoint: '',
+    apiAuthEndpoint: ''
 };
 source.setSettings = function (settings) {
     _settings = settings;
@@ -1809,6 +1883,13 @@ source.enable = function (conf, settings, saveStateStr) {
                     didSaveState = true;
                     log('Using save state');
                 }
+                // Ensure visitor IDs are set (regenerate if missing from old save states)
+                if (!state.visitorId) {
+                    state.visitorId = generateUUIDv4();
+                }
+                if (!state.visitId) {
+                    state.visitId = Date.now().toString();
+                }
             }
         }
     }
@@ -1840,8 +1921,15 @@ source.enable = function (conf, settings, saveStateStr) {
             return;
         }
         state.maintenanceMode = false;
-        const clientCredentials = extractClientCredentials(detailsRequestHtml);
-        const { anonymousUserAuthorizationToken, anonymousUserAuthorizationTokenExpirationDate, isValid, } = getTokenFromClientCredentials(http, clientCredentials);
+        // Initialize visitor tracking IDs BEFORE getting token
+        // so the same visitor ID is used in both the token request and subsequent requests
+        state.visitorId = generateUUIDv4();
+        state.visitId = Date.now().toString();
+        // Extract API endpoint from homepage (dynamic to avoid hardcoding subdomain like graphql-ix7)
+        state.apiEndpoint = extractApiEndpoint(detailsRequestHtml.body);
+        state.apiAuthEndpoint = `${state.apiEndpoint}/oauth/token`;
+        const clientCredentials = extractClientCredentials(detailsRequestHtml, webclient);
+        const { anonymousUserAuthorizationToken, anonymousUserAuthorizationTokenExpirationDate, isValid, } = getTokenFromClientCredentials(webclient, clientCredentials, state.visitorId, state.apiAuthEndpoint);
         if (!isValid) {
             console.error('Failed to get token');
             throw new ScriptException('Failed to get authentication token');
@@ -2303,7 +2391,8 @@ function searchPlaylists(contextQuery) {
         thumbnail_resolution: THUMBNAIL_HEIGHT[_settings?.thumbnailResolutionOptionIndex],
         avatar_size: CREATOR_AVATAR_HEIGHT[_settings?.avatarSizeOptionIndex],
     };
-    const [error, gqlResponse] = executeGqlQuery(http, {
+    // Use dedicated search endpoint to avoid rate limiting
+    const [error, gqlResponse] = executeSearchQuery(http, {
         operationName: 'SEARCH_QUERY',
         variables: variables,
         query: SEARCH_QUERY,
@@ -2509,14 +2598,20 @@ function getSearchPagerAll(contextQuery) {
         avatar_size: CREATOR_AVATAR_HEIGHT[_settings?.avatarSizeOptionIndex],
         thumbnail_resolution: THUMBNAIL_HEIGHT[_settings?.thumbnailResolutionOptionIndex],
     };
-    const [error, gqlResponse] = executeGqlQuery(http, {
+    // Use dedicated search endpoint to avoid rate limiting
+    const [error, gqlResponse] = executeSearchQuery(http, {
         operationName: 'SEARCH_QUERY',
         variables: variables,
         query: SEARCH_QUERY,
         headers: undefined,
     });
     if (error) {
-        log('Failed to search:' + error.message);
+        // Don't use partial data when rate-limited - it returns discovery content, not search results
+        if (error.status?.includes('Maximum attempts')) {
+            log('Search rate limited: ' + error.status);
+            throw new ScriptException('Search temporarily unavailable - rate limited');
+        }
+        log('Failed to search: [' + error.code + '] ' + error.status);
         return new VideoPager([], false);
     }
     const videoConnection = gqlResponse?.data?.search?.videos;
@@ -2559,7 +2654,7 @@ function getSavedVideo(url, usePlatformAuth = false) {
     const [player_metadataResponse, video_details_response] = http
         .batch()
         .GET(player_metadata_url, headers1, usePlatformAuth)
-        .POST(BASE_URL_API, videoDetailsRequestBody, videoDetailsRequestHeaders, usePlatformAuth)
+        .POST(state.apiEndpoint || BASE_URL_API, videoDetailsRequestBody, videoDetailsRequestHeaders, usePlatformAuth)
         .execute();
     if (!player_metadataResponse.isOk) {
         throw new UnavailableException('Unable to get player metadata');
@@ -2585,7 +2680,8 @@ function getSavedVideo(url, usePlatformAuth = false) {
     return videoDetails;
 }
 function getSearchChannelPager(context) {
-    const [error, searchResponse] = executeGqlQuery(http, {
+    // Use dedicated search endpoint to avoid rate limiting
+    const [error, searchResponse] = executeSearchQuery(http, {
         operationName: 'SEARCH_QUERY',
         variables: {
             query: context.q,
@@ -2665,7 +2761,7 @@ function executeGqlQuery(httpClient, requestOptions) {
         headersToAdd.Authorization = state.anonymousUserAuthorizationToken;
     }
     try {
-        const res = httpClient.POST(BASE_URL_API, gql, headersToAdd, usePlatformAuth);
+        const res = httpClient.POST(state.apiEndpoint || BASE_URL_API, gql, headersToAdd, usePlatformAuth);
         if (!res.isOk) {
             const errorInfo = {
                 code: res.code,
@@ -2704,6 +2800,81 @@ function executeGqlQuery(httpClient, requestOptions) {
                 data: body.data
             };
             return [errorInfo, body.data ? body : null]; // Return partial data if available
+        }
+        return [null, body];
+    }
+    catch (error) {
+        const errorInfo = {
+            code: 'EXCEPTION',
+            status: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+            operationName: requestOptions.operationName,
+            variables: requestOptions.variables
+        };
+        return [errorInfo, null];
+    }
+}
+function executeSearchQuery(httpClient, requestOptions) {
+    // Use dedicated search endpoint with visitor tracking headers
+    const headersToAdd = requestOptions.headers || applyCommonHeaders({
+        'X-DM-Preferred-Country': getPreferredCountry(_settings?.preferredCountryOptionIndex) ?? 'us',
+    });
+    // Add visitor tracking headers that the browser uses
+    headersToAdd['X-DM-Visit-Id'] = state.visitId || Date.now().toString();
+    headersToAdd['X-DM-Visitor-Id'] = state.visitorId || generateUUIDv4();
+    headersToAdd['X-DM-Neon-SSR'] = '0';
+    const gql = JSON.stringify({
+        operationName: requestOptions.operationName,
+        variables: requestOptions.variables,
+        query: requestOptions.query,
+    });
+    const usePlatformAuth = requestOptions.usePlatformAuth == undefined
+        ? false
+        : requestOptions.usePlatformAuth;
+    if (!usePlatformAuth) {
+        headersToAdd.Authorization = state.anonymousUserAuthorizationToken;
+    }
+    try {
+        const res = httpClient.POST(BASE_URL_SEARCH_API, gql, headersToAdd, usePlatformAuth);
+        if (!res.isOk) {
+            const errorInfo = {
+                code: res.code,
+                status: `HTTP ${res.code}`,
+                operationName: requestOptions.operationName,
+                body: res.body ? (typeof res.body === 'string' ? res.body : JSON.stringify(res.body)) : 'No response body',
+                variables: requestOptions.variables
+            };
+            console.error('Failed to execute search request', errorInfo);
+            return [errorInfo, null];
+        }
+        let body;
+        try {
+            body = JSON.parse(res.body);
+        }
+        catch (parseError) {
+            const errorInfo = {
+                code: 'PARSE_ERROR',
+                status: 'Failed to parse response body',
+                operationName: requestOptions.operationName,
+                body: res.body ? res.body.substring(0, 500) : 'No response body',
+                parseError: String(parseError),
+                variables: requestOptions.variables
+            };
+            return [errorInfo, null];
+        }
+        if (body.errors) {
+            const message = body.errors.map((e) => e.message).join(', ');
+            const isRateLimited = message.includes('Maximum attempts');
+            const errorInfo = {
+                code: 'GQL_ERROR',
+                status: message,
+                operationName: requestOptions.operationName,
+                errors: body.errors,
+                variables: requestOptions.variables,
+                data: body.data
+            };
+            // Don't return partial data when rate limited - it's discovery content, not search results
+            return [errorInfo, isRateLimited ? null : (body.data ? body : null)];
         }
         return [null, body];
     }
