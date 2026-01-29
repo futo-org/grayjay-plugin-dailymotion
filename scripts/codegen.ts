@@ -1,10 +1,7 @@
-// Disable TLS certificate validation for graphql.api.dailymotion.com
-// Their certificate doesn't include graphql.api.dailymotion.com in the SAN
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
 const REGEX_API_CLIENT_ID = /get apiClientId\(\)\{return"([a-f0-9]{20})"\}/;
 const REGEX_API_CLIENT_SECRET = /get apiClientSecret\(\)\{return"([a-f0-9]{40})"\}/;
 const REGEX_APP_JS_URL = /static\/app\.[a-f0-9]+\.js/;
+const REGEX_API_ENDPOINT = /API_ENDPOINT:\s*'(https:\/\/[^']+)'/;
 
 const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0';
@@ -23,8 +20,8 @@ const commonHeaders = {
   'Cache-Control': 'no-cache',
 };
 
-// Extract API credentials from Dailymotion's website
-async function extractCredentials(): Promise<{ clientId: string; clientSecret: string }> {
+// Extract API credentials and endpoint from Dailymotion's website
+async function extractCredentials(): Promise<{ clientId: string; clientSecret: string; apiEndpoint: string }> {
   console.log('Fetching Dailymotion homepage...');
   const homepageResponse = await fetch('https://www.dailymotion.com', {
     headers: { 'User-Agent': USER_AGENT },
@@ -35,6 +32,11 @@ async function extractCredentials(): Promise<{ clientId: string; clientSecret: s
   }
 
   const homepageHtml = await homepageResponse.text();
+
+  // Extract API endpoint from homepage
+  const apiEndpointMatch = homepageHtml.match(REGEX_API_ENDPOINT);
+  const apiEndpoint = apiEndpointMatch ? apiEndpointMatch[1] : 'https://graphql.api.dailymotion.com';
+  console.log(`Extracted API endpoint: ${apiEndpoint}`);
 
   // Find the app.js URL
   const appJsMatch = homepageHtml.match(REGEX_APP_JS_URL);
@@ -69,18 +71,21 @@ async function extractCredentials(): Promise<{ clientId: string; clientSecret: s
   console.log(`Extracted client_id: ${clientId}`);
   console.log(`Extracted client_secret: ${clientSecret.substring(0, 8)}...`);
 
-  return { clientId, clientSecret };
+  return { clientId, clientSecret, apiEndpoint };
 }
 
 // Function to fetch OAuth token
-async function fetchToken(clientId: string, clientSecret: string): Promise<string> {
+async function fetchToken(clientId: string, clientSecret: string, apiEndpoint: string): Promise<string> {
   const body = new URLSearchParams({
     client_id: clientId,
     client_secret: clientSecret,
     grant_type: 'client_credentials',
   });
 
-  const response = await fetch('https://graphql.api.dailymotion.com/oauth/token', {
+  const tokenUrl = `${apiEndpoint}/oauth/token`;
+  console.log(`Fetching token from ${tokenUrl}...`);
+
+  const response = await fetch(tokenUrl, {
     method: 'POST',
     headers: {
       ...commonHeaders,
@@ -100,13 +105,15 @@ async function fetchToken(clientId: string, clientSecret: string): Promise<strin
 
 // Main function to setup GraphQL Codegen config
 async function setupCodegenConfig() {
-  const { clientId, clientSecret } = await extractCredentials();
-  const token = await fetchToken(clientId, clientSecret);
+  const { clientId, clientSecret, apiEndpoint } = await extractCredentials();
+  const token = await fetchToken(clientId, clientSecret, apiEndpoint);
+
+  console.log(`Using API endpoint for schema: ${apiEndpoint}`);
 
   const config = {
     overwrite: true,
     schema: {
-      'https://graphql.api.dailymotion.com': {
+      [apiEndpoint]: {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',

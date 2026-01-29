@@ -2838,6 +2838,8 @@ export type CreateUserInput = {
   password?: InputMaybe<Scalars['String']['input']>;
   /** The user response token provided by reCAPTCHA. */
   recaptchaToken?: InputMaybe<Scalars['String']['input']>;
+  /** The user response token provided by turnstile. */
+  turnstileToken?: InputMaybe<Scalars['String']['input']>;
   /** The mutation version. */
   version?: InputMaybe<Scalars['Int']['input']>;
 };
