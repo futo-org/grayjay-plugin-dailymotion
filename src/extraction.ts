@@ -1,11 +1,13 @@
 import { AnonymousUserAuthorization } from '../types/types';
 import {
   BASE_URL,
-  BASE_URL_API_AUTH,
+  BASE_URL_API,
   createAuthRegexByTextLength,
   REGEX_INITIAL_DATA_API_AUTH_1,
   REGEX_API_CLIENT_ID,
   REGEX_API_CLIENT_SECRET,
+  REGEX_APP_JS_URL,
+  REGEX_API_ENDPOINT,
   USER_AGENT,
 } from './constants';
 import { objectToUrlEncodedString, generateUUIDv4 } from './util';
@@ -15,6 +17,7 @@ export function oauthClientCredentialsRequest(
   url: string,
   clientId: string,
   secret: string,
+  visitorId: string,
   throwOnInvalid = false,
 ): HttpResponse {
   if (!httpClient || !url || !clientId || !secret) {
@@ -27,7 +30,7 @@ export function oauthClientCredentialsRequest(
     client_id: clientId,
     client_secret: secret,
     grant_type: 'client_credentials',
-    visitor_id: generateUUIDv4()
+    visitor_id: visitorId
   });
 
   try {
@@ -51,7 +54,7 @@ export function oauthClientCredentialsRequest(
       false,
     );
   } catch (error) {
-    console.error('Error making OAuth client credentials request:', error);
+    log('OAuth request exception: ' + (error instanceof Error ? error.message : String(error)));
     if (throwOnInvalid) {
       throw new ScriptException('Failed to obtain OAuth client credentials');
     }
@@ -59,24 +62,61 @@ export function oauthClientCredentialsRequest(
   }
 }
 
-export function extractClientCredentials(detailsRequestHtml) {
+export function extractClientCredentials(detailsRequestHtml, httpClient?: IHttp) {
 
   const result = [];
 
-  // Try new regex patterns first
-  const clientIdMatch = detailsRequestHtml.body.match(REGEX_API_CLIENT_ID);
-  const clientSecretMatch = detailsRequestHtml.body.match(REGEX_API_CLIENT_SECRET);
+  // Try new regex patterns on homepage first (credentials might be inlined)
+  let clientIdMatch = detailsRequestHtml.body.match(REGEX_API_CLIENT_ID);
+  let clientSecretMatch = detailsRequestHtml.body.match(REGEX_API_CLIENT_SECRET);
 
   if (clientIdMatch && clientSecretMatch && clientIdMatch[1] && clientSecretMatch[1]) {
     result.unshift({
       clientId: clientIdMatch[1],
       secret: clientSecretMatch[1],
     });
-    log('Successfully extracted API credentials from page using new regex patterns');
+    log('Successfully extracted API credentials from homepage');
     return result;
   }
 
-  // Fallback to old regex pattern
+  // Credentials not in homepage HTML - fetch app.js where they are typically located
+  if (httpClient) {
+    const appJsMatch = detailsRequestHtml.body.match(REGEX_APP_JS_URL);
+    if (appJsMatch) {
+      const appJsUrl = `https://static.neon-ssr.dailymotion.com/neon-user-ssr/${appJsMatch[0]}`;
+      log(`Fetching app.js from ${appJsUrl}`);
+
+      try {
+        const appJsResponse = httpClient.GET(appJsUrl, {
+          'User-Agent': USER_AGENT,
+        }, false);
+
+        if (appJsResponse?.isOk) {
+          clientIdMatch = appJsResponse.body.match(REGEX_API_CLIENT_ID);
+          clientSecretMatch = appJsResponse.body.match(REGEX_API_CLIENT_SECRET);
+
+          if (clientIdMatch && clientSecretMatch && clientIdMatch[1] && clientSecretMatch[1]) {
+            result.unshift({
+              clientId: clientIdMatch[1],
+              secret: clientSecretMatch[1],
+            });
+            log('Successfully extracted API credentials from app.js');
+            return result;
+          } else {
+            log('Credentials not found in app.js content');
+          }
+        } else {
+          log(`Failed to fetch app.js: ${appJsResponse?.code}`);
+        }
+      } catch (error) {
+        log(`Error fetching app.js: ${error}`);
+      }
+    } else {
+      log('Could not find app.js URL in homepage');
+    }
+  }
+
+  // Fallback to old regex pattern on homepage
   const match = detailsRequestHtml.body.match(REGEX_INITIAL_DATA_API_AUTH_1);
 
   if (match?.length === 2 && match[0] && match[1]) {
@@ -84,9 +124,9 @@ export function extractClientCredentials(detailsRequestHtml) {
       clientId: match[0],
       secret: match[1],
     });
-    log('Successfully extracted API credentials from page using old regex pattern');
+    log('Successfully extracted API credentials using old regex pattern');
   } else {
-    log('Failed to extract API credentials from page using regex. Using DOM parsing.');
+    log('Failed to extract API credentials using regex. Trying DOM parsing.');
 
     const htmlElement = domParser.parseFromString(
       detailsRequestHtml.body,
@@ -101,11 +141,9 @@ export function extractClientCredentials(detailsRequestHtml) {
         secret: extractedSecret,
       });
 
-      log(`Successfully extracted API credentials from page using DOM parsing: ${extractedSecret}`,);
+      log(`Successfully extracted API credentials using DOM parsing`);
     } else {
-      log(
-        'Failed to extract API credentials using DOM parsing with exact text length.',
-      );
+      log('Failed to extract API credentials using all methods');
     }
   }
 
@@ -135,21 +173,36 @@ export function getScriptVariableByTextLength(htmlElement, length: number) {
   }
 }
 
+export function extractApiEndpoint(homepageHtml: string): string {
+  const match = homepageHtml.match(REGEX_API_ENDPOINT);
+  if (match && match[1]) {
+    log(`Extracted API endpoint: ${match[1]}`);
+    return match[1];
+  }
+  log(`Could not extract API endpoint from homepage, using fallback: ${BASE_URL_API}`);
+  return BASE_URL_API;
+}
+
 export function getTokenFromClientCredentials(
   httpClient: IHttp,
   credentials,
+  visitorId: string,
+  authUrl?: string,
   throwOnInvalid = false,
 ) {
   let result: AnonymousUserAuthorization = {
     isValid: false,
   };
 
+  const tokenUrl = authUrl || `${BASE_URL_API}/oauth/token`;
+
   for (const credential of credentials) {
     const res = oauthClientCredentialsRequest(
       httpClient,
-      BASE_URL_API_AUTH,
+      tokenUrl,
       credential.clientId,
       credential.secret,
+      visitorId,
     );
 
     if (res?.isOk) {
@@ -159,7 +212,7 @@ export function getTokenFromClientCredentials(
         !anonymousTokenResponse.token_type ||
         !anonymousTokenResponse.access_token
       ) {
-        console.error('Invalid token response', res);
+        log('Invalid token response body: ' + res.body);
         if (throwOnInvalid) {
           throw new ScriptException('', 'Invalid token response: ' + res.body);
         }
@@ -174,7 +227,7 @@ export function getTokenFromClientCredentials(
 
       break;
     } else {
-      console.error('Failed to get token', res);
+      log(`Token request failed: code=${res?.code}, body=${res?.body?.substring(0, 200)}`);
     }
   }
 

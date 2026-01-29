@@ -8,7 +8,9 @@ const state = {
   channelsCache: {} as Record<string, PlatformChannel>,
   maintenanceMode: false,
   visitorId: '',
-  visitId: ''
+  visitId: '',
+  apiEndpoint: '',
+  apiAuthEndpoint: ''
 };
 
 import {
@@ -103,6 +105,7 @@ import {
   IPlatformSystemPlaylist,
 } from '../types/types';
 import {
+  extractApiEndpoint,
   extractClientCredentials,
   getTokenFromClientCredentials,
 } from './extraction';
@@ -238,13 +241,22 @@ source.enable = function (conf, settings, saveStateStr) {
 
     state.maintenanceMode = false;
 
-    const clientCredentials = extractClientCredentials(detailsRequestHtml);
+    // Initialize visitor tracking IDs BEFORE getting token
+    // so the same visitor ID is used in both the token request and subsequent requests
+    state.visitorId = generateUUIDv4();
+    state.visitId = Date.now().toString();
+
+    // Extract API endpoint from homepage (dynamic to avoid hardcoding subdomain like graphql-ix7)
+    state.apiEndpoint = extractApiEndpoint(detailsRequestHtml.body);
+    state.apiAuthEndpoint = `${state.apiEndpoint}/oauth/token`;
+
+    const clientCredentials = extractClientCredentials(detailsRequestHtml, webclient);
 
     const {
       anonymousUserAuthorizationToken,
       anonymousUserAuthorizationTokenExpirationDate,
       isValid,
-    } = getTokenFromClientCredentials(http, clientCredentials);
+    } = getTokenFromClientCredentials(webclient, clientCredentials, state.visitorId, state.apiAuthEndpoint);
 
     if (!isValid) {
       console.error('Failed to get token');
@@ -257,10 +269,6 @@ source.enable = function (conf, settings, saveStateStr) {
       anonymousUserAuthorizationToken ?? '';
     state.anonymousUserAuthorizationTokenExpirationDate =
       anonymousUserAuthorizationTokenExpirationDate ?? 0;
-
-    // Initialize visitor tracking IDs for search requests
-    state.visitorId = generateUUIDv4();
-    state.visitId = Date.now().toString();
 
     if (config.allowAllHttpHeaderAccess) {
       // get token for message service api-2-0.spot.im
@@ -1245,7 +1253,7 @@ function getSavedVideo(url, usePlatformAuth = false) {
     .batch()
     .GET(player_metadata_url, headers1, usePlatformAuth)
     .POST(
-      BASE_URL_API,
+      state.apiEndpoint || BASE_URL_API,
       videoDetailsRequestBody,
       videoDetailsRequestHeaders,
       usePlatformAuth,
@@ -1414,7 +1422,7 @@ function executeGqlQuery(httpClient, requestOptions) {
   }
 
   try {
-    const res = httpClient.POST(BASE_URL_API, gql, headersToAdd, usePlatformAuth);
+    const res = httpClient.POST(state.apiEndpoint || BASE_URL_API, gql, headersToAdd, usePlatformAuth);
 
     if (!res.isOk) {
       const errorInfo = {
@@ -1536,6 +1544,7 @@ function executeSearchQuery(httpClient, requestOptions) {
 
     if (body.errors) {
       const message = body.errors.map((e) => e.message).join(', ');
+      const isRateLimited = message.includes('Maximum attempts');
       const errorInfo = {
         code: 'GQL_ERROR',
         status: message,
@@ -1545,7 +1554,8 @@ function executeSearchQuery(httpClient, requestOptions) {
         data: body.data
       };
 
-      return [errorInfo, body.data ? body : null];
+      // Don't return partial data when rate limited - it's discovery content, not search results
+      return [errorInfo, isRateLimited ? null : (body.data ? body : null)];
     }
 
     return [null, body];
