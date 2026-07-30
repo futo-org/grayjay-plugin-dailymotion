@@ -1,9 +1,10 @@
 'use strict';
 
 const BASE_URL = 'https://www.dailymotion.com';
-// Use graphql-ix7 subdomain which has consistent SSL certificates
-// The main graphql.api.dailymotion.com has misconfigured certs on ~50% of load balancer nodes
-const BASE_URL_API = 'https://graphql-ix7.api.dailymotion.com';
+// Fallbacks for the API_ENDPOINT / AUTH_ENDPOINT values in window.__RUNTIME_CONFIG__.
+// The live values are extracted from the homepage at runtime; these two hosts differ.
+const BASE_URL_API = 'https://api.dailymotion.com/v1/graphql';
+const BASE_URL_API_AUTH = 'https://graphql.api.dailymotion.com/oauth/token';
 // Search uses a dedicated endpoint (observed from browser behavior)
 // This helps avoid rate limiting on the main GraphQL API
 const BASE_URL_SEARCH_API = 'https://search.dailymotion.com';
@@ -23,8 +24,10 @@ const REGEX_API_CLIENT_ID = /get apiClientId\(\)\{return"([a-f0-9]{20})"\}/;
 const REGEX_API_CLIENT_SECRET = /get apiClientSecret\(\)\{return"([a-f0-9]{40})"\}/;
 // Pattern to find the app.js URL in the homepage HTML
 const REGEX_APP_JS_URL = /static\/app\.[a-f0-9]+\.js/;
-// Pattern to extract API_ENDPOINT from homepage (e.g., "API_ENDPOINT: 'https://graphql-ix7.api.dailymotion.com'")
-const REGEX_API_ENDPOINT = /API_ENDPOINT:\s*'(https:\/\/[^']+)'/;
+// Patterns for window.__RUNTIME_CONFIG__ on the homepage. The leading boundary stops
+// API_ENDPOINT from also matching SEARCH_API_ENDPOINT or REPORT_API_ENDPOINT.
+const REGEX_API_ENDPOINT = /(?:^|[^A-Z_])API_ENDPOINT:\s*'(https:\/\/[^']+)'/;
+const REGEX_AUTH_ENDPOINT = /(?:^|[^A-Z_])AUTH_ENDPOINT:\s*'(https:\/\/[^']+)'/;
 const createAuthRegexByTextLength = (length) => new RegExp(`\\b\\w+\\s*=\\s*"([a-zA-Z0-9]{${length}})"`);
 const USER_AGENT = 'Mozilla/5.0 (Linux; Android 12) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.230 Mobile Safari/537.36';
 const FALLBACK_SPOT_ID = 'sp_vWPN1lBu';
@@ -1770,11 +1773,22 @@ function extractApiEndpoint(homepageHtml) {
     log(`Could not extract API endpoint from homepage, using fallback: ${BASE_URL_API}`);
     return BASE_URL_API;
 }
+// The auth host is not derivable from the API endpoint; they are separate values
+// in window.__RUNTIME_CONFIG__ and currently point at different hosts.
+function extractAuthEndpoint(homepageHtml) {
+    const match = homepageHtml.match(REGEX_AUTH_ENDPOINT);
+    if (match && match[1]) {
+        log(`Extracted auth endpoint: ${match[1]}`);
+        return match[1];
+    }
+    log(`Could not extract auth endpoint from homepage, using fallback: ${BASE_URL_API_AUTH}`);
+    return BASE_URL_API_AUTH;
+}
 function getTokenFromClientCredentials(httpClient, credentials, visitorId, authUrl, throwOnInvalid = false) {
     let result = {
         isValid: false,
     };
-    const tokenUrl = authUrl || `${BASE_URL_API}/oauth/token`;
+    const tokenUrl = authUrl || BASE_URL_API_AUTH;
     for (const credential of credentials) {
         const res = oauthClientCredentialsRequest(httpClient, tokenUrl, credential.clientId, credential.secret, visitorId);
         if (res?.isOk) {
@@ -1925,9 +1939,10 @@ source.enable = function (conf, settings, saveStateStr) {
         // so the same visitor ID is used in both the token request and subsequent requests
         state.visitorId = generateUUIDv4();
         state.visitId = Date.now().toString();
-        // Extract API endpoint from homepage (dynamic to avoid hardcoding subdomain like graphql-ix7)
+        // Both endpoints come from the homepage runtime config. They are read separately
+        // because the auth host is not a prefix of the API endpoint.
         state.apiEndpoint = extractApiEndpoint(detailsRequestHtml.body);
-        state.apiAuthEndpoint = `${state.apiEndpoint}/oauth/token`;
+        state.apiAuthEndpoint = extractAuthEndpoint(detailsRequestHtml.body);
         const clientCredentials = extractClientCredentials(detailsRequestHtml, webclient);
         const { anonymousUserAuthorizationToken, anonymousUserAuthorizationTokenExpirationDate, isValid, } = getTokenFromClientCredentials(webclient, clientCredentials, state.visitorId, state.apiAuthEndpoint);
         if (!isValid) {
