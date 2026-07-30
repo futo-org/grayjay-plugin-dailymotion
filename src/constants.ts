@@ -1,8 +1,11 @@
 export const BASE_URL = 'https://www.dailymotion.com';
 
-// Use graphql-ix7 subdomain which has consistent SSL certificates
-// The main graphql.api.dailymotion.com has misconfigured certs on ~50% of load balancer nodes
-export const BASE_URL_API = 'https://graphql-ix7.api.dailymotion.com';
+// Fallbacks for the API_ENDPOINT / AUTH_ENDPOINT values in window.__RUNTIME_CONFIG__.
+// The live values are extracted from the homepage at runtime; these two hosts differ.
+export const BASE_URL_API = 'https://api.dailymotion.com/v1/graphql';
+
+export const BASE_URL_API_AUTH =
+  'https://graphql.api.dailymotion.com/oauth/token';
 
 // Search uses a dedicated endpoint (observed from browser behavior)
 // This helps avoid rate limiting on the main GraphQL API
@@ -47,8 +50,13 @@ export const REGEX_API_CLIENT_SECRET = /get apiClientSecret\(\)\{return"([a-f0-9
 // Pattern to find the app.js URL in the homepage HTML
 export const REGEX_APP_JS_URL = /static\/app\.[a-f0-9]+\.js/;
 
-// Pattern to extract API_ENDPOINT from homepage (e.g., "API_ENDPOINT: 'https://graphql-ix7.api.dailymotion.com'")
-export const REGEX_API_ENDPOINT = /API_ENDPOINT:\s*'(https:\/\/[^']+)'/;
+// Patterns for window.__RUNTIME_CONFIG__ on the homepage. The leading boundary stops
+// API_ENDPOINT from also matching SEARCH_API_ENDPOINT or REPORT_API_ENDPOINT.
+export const REGEX_API_ENDPOINT =
+  /(?:^|[^A-Z_])API_ENDPOINT:\s*'(https:\/\/[^']+)'/;
+
+export const REGEX_AUTH_ENDPOINT =
+  /(?:^|[^A-Z_])AUTH_ENDPOINT:\s*'(https:\/\/[^']+)'/;
 
 export const createAuthRegexByTextLength = (length: number) =>
   new RegExp(`\\b\\w+\\s*=\\s*"([a-zA-Z0-9]{${length}})"`);

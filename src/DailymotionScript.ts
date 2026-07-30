@@ -106,6 +106,7 @@ import {
 } from '../types/types';
 import {
   extractApiEndpoint,
+  extractAuthEndpoint,
   extractClientCredentials,
   getTokenFromClientCredentials,
 } from './extraction';
@@ -246,9 +247,10 @@ source.enable = function (conf, settings, saveStateStr) {
     state.visitorId = generateUUIDv4();
     state.visitId = Date.now().toString();
 
-    // Extract API endpoint from homepage (dynamic to avoid hardcoding subdomain like graphql-ix7)
+    // Both endpoints come from the homepage runtime config. They are read separately
+    // because the auth host is not a prefix of the API endpoint.
     state.apiEndpoint = extractApiEndpoint(detailsRequestHtml.body);
-    state.apiAuthEndpoint = `${state.apiEndpoint}/oauth/token`;
+    state.apiAuthEndpoint = extractAuthEndpoint(detailsRequestHtml.body);
 
     const clientCredentials = extractClientCredentials(detailsRequestHtml, webclient);
 

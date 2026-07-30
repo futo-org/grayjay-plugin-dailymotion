@@ -2,12 +2,14 @@ import { AnonymousUserAuthorization } from '../types/types';
 import {
   BASE_URL,
   BASE_URL_API,
+  BASE_URL_API_AUTH,
   createAuthRegexByTextLength,
   REGEX_INITIAL_DATA_API_AUTH_1,
   REGEX_API_CLIENT_ID,
   REGEX_API_CLIENT_SECRET,
   REGEX_APP_JS_URL,
   REGEX_API_ENDPOINT,
+  REGEX_AUTH_ENDPOINT,
   USER_AGENT,
 } from './constants';
 import { objectToUrlEncodedString, generateUUIDv4 } from './util';
@@ -183,6 +185,20 @@ export function extractApiEndpoint(homepageHtml: string): string {
   return BASE_URL_API;
 }
 
+// The auth host is not derivable from the API endpoint; they are separate values
+// in window.__RUNTIME_CONFIG__ and currently point at different hosts.
+export function extractAuthEndpoint(homepageHtml: string): string {
+  const match = homepageHtml.match(REGEX_AUTH_ENDPOINT);
+  if (match && match[1]) {
+    log(`Extracted auth endpoint: ${match[1]}`);
+    return match[1];
+  }
+  log(
+    `Could not extract auth endpoint from homepage, using fallback: ${BASE_URL_API_AUTH}`,
+  );
+  return BASE_URL_API_AUTH;
+}
+
 export function getTokenFromClientCredentials(
   httpClient: IHttp,
   credentials,
@@ -194,7 +210,7 @@ export function getTokenFromClientCredentials(
     isValid: false,
   };
 
-  const tokenUrl = authUrl || `${BASE_URL_API}/oauth/token`;
+  const tokenUrl = authUrl || BASE_URL_API_AUTH;
 
   for (const credential of credentials) {
     const res = oauthClientCredentialsRequest(

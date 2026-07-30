@@ -7,7 +7,7 @@
   "sourceUrl": "https://plugins.grayjay.app/Dailymotion/DailymotionConfig.json",
   "scriptUrl": "./DailymotionScript.js",
   "repositoryUrl": "https://gitlab.futo.org/videostreaming/plugins/dailymotion",
-  "version": 37,
+  "version": 38,
   "iconUrl": "./DailymotionIcon.png",
   "id": "9c87e8db-e75d-48f4-afe5-2d203d4b95c5",
   "scriptSignature": "",
@@ -404,6 +404,9 @@
     ],
     "37": [
       "Fix: authentication;"
+    ],
+    "38": [
+      "Fix: Token extraction;"
     ]
   }
 }
