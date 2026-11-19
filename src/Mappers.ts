@@ -138,7 +138,8 @@ export const SourceVideoToGrayjayVideo = (
 export const SourceCollectionToGrayjayPlaylistDetails = (
   pluginId: string,
   sourceCollection: Collection,
-  videos: PlatformVideo[] = [],
+  contents: VideoPager,
+  videoCount: number,
 ): PlatformPlaylistDetails => {
   return new PlatformPlaylistDetails({
     url: sourceCollection?.xid
@@ -156,10 +157,10 @@ export const SourceCollectionToGrayjayPlaylistDetails = (
           sourceCollection?.creator,
         )
       : {},
-    name: sourceCollection.name,
+    name: sourceCollection?.name ?? '',
     thumbnail: sourceCollection?.thumbnail?.url,
-    videoCount: videos.length ?? 0,
-    contents: new VideoPager(videos),
+    videoCount,
+    contents,
   });
 };
 

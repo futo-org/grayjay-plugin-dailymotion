@@ -39,7 +39,7 @@ export const REGEX_VIDEO_CHANNEL_URL =
  /^https:\/\/(?:www\.)?dailymotion\.com\/[a-z0-9][a-z0-9._-]{2,26}(?:\?[a-zA-Z0-9=&._-]*)?$/i;
   
 export const REGEX_VIDEO_PLAYLIST_URL =
-  /^https:\/\/(?:www\.)?dailymotion\.com\/playlist\/[a-zA-Z0-9]+(?:[?&][a-zA-Z0-9_\-=&%]*)?$/i;
+  /^https:\/\/(?:www\.)?dailymotion\.com\/playlist\/([a-zA-Z0-9]+)(?:[?&][a-zA-Z0-9_\-=&%]*)?$/i;
 
 export const REGEX_INITIAL_DATA_API_AUTH_1 =
   /(?<=window\.__LOADABLE_LOADED_CHUNKS__=.*)\b[a-f0-9]{20}\b|\b[a-f0-9]{40}\b/g;
@@ -160,6 +160,8 @@ export const SEARCH_CAPABILITIES = {
     },
   ],
 };
+
+export const PLAYLIST_VIDEOS_PER_PAGE = 100;
 
 // Used to on source.getUserPlaylists to specify if the playlist is private or not. This is read by source.getPlaylist to enable the authentication context.
 export const PRIVATE_PLAYLIST_QUERY_PARAM_FLAGGER = '&private=1';
