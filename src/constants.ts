@@ -175,6 +175,7 @@ export const DEFAULT_HEADERS:Record<string, string> = {
 
 export const IS_DESKTOP = bridge.buildPlatform === "desktop";
 
-export const IMPERSONATION_TARGET = IS_DESKTOP ? 'chrome136' : 'chrome131_android';
+// The chrome136 TLS profile gets a 403 (E005) from the HLS origin on desktop; Android is unaffected for now.
+export const IMPERSONATION_TARGET = IS_DESKTOP ? 'firefox133' : 'chrome131_android';
 
 export const IS_IMPERSONATION_AVAILABLE = (typeof httpimp !== 'undefined');
