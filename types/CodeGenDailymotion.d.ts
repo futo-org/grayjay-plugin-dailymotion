@@ -184,6 +184,69 @@ export type AddWatchedInput = {
   id: Scalars['ID']['input'];
 };
 
+/** A registered domain, with the ad inventory served from it. */
+export type AdsTxtDomain = Node & {
+  __typename?: 'AdsTxtDomain';
+  /** When the domain's ads.txt file was last fetched. */
+  adsTxtLastCheckedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** State of the domain's ads.txt file as of the last fetch. */
+  adsTxtStatus?: Maybe<Scalars['String']['output']>;
+  /** The channel the domain is registered on. */
+  channel?: Maybe<Channel>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /**
+   * Ad inventory served from this domain over the period, including its
+   *   subdomains.
+   */
+  inventory?: Maybe<Scalars['Float']['output']>;
+  /** The domain name, as the partner registered it. */
+  name?: Maybe<Scalars['String']['output']>;
+  /**
+   * Share of the organization's measured inventory served from this domain,
+   *   from 0 to 100. Null when nothing was measured.
+   */
+  sharePercentage?: Maybe<Scalars['Float']['output']>;
+  /**
+   * Share of measured inventory this domain would unlock if its ads.txt
+   *   carried every required line, from 0 to 100: its sharePercentage while its
+   *   current status is to fix, 0 once it is not. Null when nothing was
+   *   measured.
+   */
+  unlockPercentage?: Maybe<Scalars['Float']['output']>;
+};
+
+/**
+ * How an organization's ad inventory is spread across its domains, and what
+ * updating each ads.txt file would unlock.
+ */
+export type AdsTxtImpact = Node & {
+  __typename?: 'AdsTxtImpact';
+  /**
+   * Every registered domain, those carrying measured inventory first and
+   *   ranked by how much they carry, then the rest. A domain with no measured
+   *   inventory has null percentages rather than zeroes, and all of them do when
+   *   the analytics service is unavailable.
+   */
+  domains: Array<AdsTxtDomain>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /**
+   * Inventory measured over the period, on the organization's registered
+   *   domains. App inventory belongs to app-ads.txt and on-site traffic is not a
+   *   partner domain, so neither is counted.
+   */
+  measuredInventory?: Maybe<Scalars['Float']['output']>;
+  /**
+   * Share of measured inventory on domains whose ads.txt, as last checked,
+   *   carries every required line, from 0 to 100. Based on each domain's current
+   *   status, so fixing a file moves it on the next check rather than over the
+   *   period. Adds up to 100 with the domains' unlockPercentage. Null when nothing
+   *   was measured.
+   */
+  score?: Maybe<Scalars['Float']['output']>;
+};
+
 /** Represents an algorithm. */
 export type Algorithm = {
   /** The version of the algorithm. */
@@ -194,6 +257,8 @@ export type Algorithm = {
 export enum AlgorithmName {
   /** An algorithm to discover content based on similar content viewed. */
   Discover = 'DISCOVER',
+  /** An algorithm to discover content when no search query is typed yet. */
+  EmptySearch = 'EMPTY_SEARCH',
   /** An algorithm to explore content based on location. */
   Explore = 'EXPLORE',
   /** An algorithm that considers what content to feature. */
@@ -217,17 +282,35 @@ export type AlgorithmNameOperator = {
 /** Represents the various forms of analytics. */
 export type Analytics = Node & {
   __typename?: 'Analytics';
+  /** The outstanding finance balance of the organization. */
+  balance?: Maybe<Balance>;
+  /** The earnings of the organization. */
+  earnings?: Maybe<Earnings>;
   /** The ID of the object. */
   id: Scalars['ID']['output'];
   /** Analytics for a key performance indicator metric. */
   kpi: AnalyticsFlatPayload;
   kpiForList: AnalyticsFlatPayload;
+  /** The pre-statements of the organization's earnings. */
+  preStatements: Array<PreStatement>;
   /** The share URLs of the analytics. */
   shareUrls?: Maybe<AnalyticsShareUrls>;
   /** A selection of analytics aggregated over time. */
   timeSeries: AnalyticsPayload;
   /** A selection of top values of analytics aggregated over some dimensions. */
   topValues: AnalyticsPayload;
+};
+
+
+/** Represents the various forms of analytics. */
+export type AnalyticsBalanceArgs = {
+  metric?: InputMaybe<FinanceBalanceMetric>;
+};
+
+
+/** Represents the various forms of analytics. */
+export type AnalyticsEarningsArgs = {
+  metric?: InputMaybe<FinanceEarningsMetric>;
 };
 
 
@@ -247,7 +330,13 @@ export type AnalyticsKpiForListArgs = {
   items: PayloadItemsInput;
   limit: Scalars['Int']['input'];
   metrics: Array<AnalyticsMetric>;
-  timePeriod: AnalyticsTimePeriod;
+  timePeriod?: InputMaybe<AnalyticsTimePeriod>;
+};
+
+
+/** Represents the various forms of analytics. */
+export type AnalyticsPreStatementsArgs = {
+  metric?: InputMaybe<FinancePreStatementMetric>;
 };
 
 
@@ -748,6 +837,17 @@ export enum AvatarHeight {
   Square_720 = 'SQUARE_720'
 }
 
+/** The outstanding finance balance of an organization. */
+export type Balance = {
+  __typename?: 'Balance';
+  /** The last month of the period the balance covers (e.g. "2024-03"). */
+  periodEndMonth: Scalars['String']['output'];
+  /** The first month of the period the balance covers (e.g. "2024-01"). */
+  periodStartMonth: Scalars['String']['output'];
+  /** The balance amount for the selected metric. */
+  value: Scalars['Float']['output'];
+};
+
 /** The available height for an Banner. */
 export enum BannerHeight {
   /** A portrait image with 100px */
@@ -1092,6 +1192,16 @@ export type BoosterSort = {
   createDate?: InputMaybe<OrderDirection>;
 };
 
+export type CannySsoTokenPayload = {
+  __typename?: 'CannySSOTokenPayload';
+  /** SSO token for Canny. */
+  accessToken: Scalars['String']['output'];
+  /** Lifetime in seconds before the token expires. */
+  expiresIn: Scalars['Int']['output'];
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
 /** Represents a caption in a transcript. */
 export type Caption = Node & {
   __typename?: 'Caption';
@@ -1209,6 +1319,8 @@ export type Channel = Node & {
   accountType?: Maybe<Scalars['String']['output']>;
   /** The required updates the channel must perform. */
   alerts?: Maybe<ChannelAlertConnection>;
+  /** The analytics of the channel. */
+  analytics?: Maybe<Analytics>;
   /** The URL of the avatar image. */
   avatar?: Maybe<Image>;
   /** The URL of the banner image. */
@@ -1230,6 +1342,12 @@ export type Channel = Node & {
   collections?: Maybe<CollectionConnection>;
   /** The comments created by the channel. */
   comments?: Maybe<CommentConnection>;
+  /** The community centered around the channel. */
+  community?: Maybe<Community>;
+  /** The community members. */
+  communityMembers?: Maybe<CommunityMembershipConnection>;
+  /** The community memberships. */
+  communityMemberships?: Maybe<CommunityMembershipConnection>;
   /** The country of the channel. */
   country?: Maybe<Country>;
   /**
@@ -1252,6 +1370,8 @@ export type Channel = Node & {
   followerEngagement?: Maybe<FollowerEngagement>;
   /** The users that are following the channel. */
   followers?: Maybe<FollowerConnection>;
+  /** The following engagement information of the channel. */
+  followingEngagement?: Maybe<FollowingEngagement>;
   /** The users the channel is following. */
   followings?: Maybe<FollowingConnection>;
   /** The history of the posts interacted by the channel. */
@@ -1265,6 +1385,8 @@ export type Channel = Node & {
    * @deprecated Use `user.channel`.
    */
   isAvailable?: Maybe<Scalars['Boolean']['output']>;
+  /** Indicates whether the channel was disabled due to a Terms of Use violation. */
+  isDisabledByModeration?: Maybe<Scalars['Boolean']['output']>;
   /**
    * Indicates whether the channel is followed by the user connected. Returns `False` if no user is connected.
    * @deprecated Use `channel.followerEngagement` field.
@@ -1277,6 +1399,14 @@ export type Channel = Node & {
   isNotificationEnabled?: Maybe<Scalars['Boolean']['output']>;
   /** The language of the channel. */
   language?: Maybe<Language>;
+  /**
+   *
+   *   Indicates whether the channel is allowed to create live streams (live or simulcast).
+   *   Returns `null` when the capability cannot be determined (e.g. for search-sourced
+   *   channels or when the underlying capability flag is not readable).
+   *
+   */
+  liveStreamingEnabled?: Maybe<Scalars['Boolean']['output']>;
   /** The lives of the channel. */
   lives?: Maybe<LiveConnection>;
   /** The date and time (ISO 8601 format) when the channel last logged in. */
@@ -1399,6 +1529,23 @@ export type ChannelCommentsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   orderBy?: InputMaybe<CommentSort>;
   page?: InputMaybe<Scalars['Int']['input']>;
+  rootId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+/** A channel manages medias and collections. */
+export type ChannelCommunityMembersArgs = {
+  filter?: InputMaybe<CommunityMembershipFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/** A channel manages medias and collections. */
+export type ChannelCommunityMembershipsArgs = {
+  filter?: InputMaybe<CommunityMembershipFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -1410,6 +1557,7 @@ export type ChannelCoverUrlArgs = {
 
 /** A channel manages medias and collections. */
 export type ChannelFollowersArgs = {
+  filter?: InputMaybe<FollowerFilter>;
   first?: InputMaybe<Scalars['Int']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -1605,6 +1753,10 @@ export type ChannelEngagementMetrics = Node & {
   bookmarks?: Maybe<BookmarkMetricConnection>;
   /** The collection metrics of the channel. */
   collections?: Maybe<CollectionMetricConnection>;
+  /** The community member metrics of the channel. */
+  communityMembers?: Maybe<CommunityMemberMetricConnection>;
+  /** The community membership metrics of the channel. */
+  communityMemberships?: Maybe<CommunityMembershipMetricConnection>;
   /** The follower metrics of the channel. */
   followers?: Maybe<FollowerMetricConnection>;
   /** The following metrics of the channel. */
@@ -1631,6 +1783,18 @@ export type ChannelEngagementMetricsBookmarksArgs = {
 /** The engagement metrics of a Channel. */
 export type ChannelEngagementMetricsCollectionsArgs = {
   filter?: InputMaybe<CollectionFilter>;
+};
+
+
+/** The engagement metrics of a Channel. */
+export type ChannelEngagementMetricsCommunityMembersArgs = {
+  filter?: InputMaybe<CommunityMembershipFilter>;
+};
+
+
+/** The engagement metrics of a Channel. */
+export type ChannelEngagementMetricsFollowersArgs = {
+  filter?: InputMaybe<FollowerFilter>;
 };
 
 
@@ -1754,6 +1918,8 @@ export enum ChannelPermissionLevel {
 /** Information about the settings of a Channel. */
 export type ChannelSettings = Node & {
   __typename?: 'ChannelSettings';
+  /** Indicates whether sensitive content must be hidden for the owner of the Channel. Defaults to `true` when the preference can't be read. */
+  hideSensitiveContent: Scalars['Boolean']['output'];
   /** The ID of the object. */
   id: Scalars['ID']['output'];
   /** The notifications settings of the Channel. */
@@ -1766,6 +1932,8 @@ export type ChannelSettings = Node & {
 
 /** The settings on a Channel. */
 export type ChannelSettingsInput = {
+  /** Indicate whether sensitive content must be hidden for the owner of the Channel. */
+  hideSensitiveContent?: InputMaybe<Scalars['Boolean']['input']>;
   /** The notification settings of the Channel. */
   notifications?: InputMaybe<NotificationSettingsInput>;
   /** The default settings when creating a video. */
@@ -1910,6 +2078,201 @@ export type ChapterEdge = {
   node?: Maybe<Chapter>;
 };
 
+/** A conversation in which participants exchange messages. */
+export type ChatConversation = {
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The date and time of the last approved message. Null when there is none. */
+  lastMessageDate?: Maybe<Scalars['DateTime']['output']>;
+  /** A message of the conversation. Pending and rejected messages are only found by their author. */
+  message?: Maybe<ChatConversationMessage>;
+  /** The messages of the conversation. Approved and deleted messages are listed, and pending and rejected ones only to their author. */
+  messages?: Maybe<ChatConversationMessageConnection>;
+  /** The metrics of the conversation. */
+  metrics?: Maybe<ChatConversationMetrics>;
+  /** The viewer's participation in the conversation. */
+  participantEngagement?: Maybe<ChatConversationParticipantEngagement>;
+  /** The channels that wrote approved messages in the conversation. Use `first` to get the top participants. */
+  participants?: Maybe<ChatConversationParticipantConnection>;
+};
+
+
+/** A conversation in which participants exchange messages. */
+export type ChatConversationMessageArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+/** A conversation in which participants exchange messages. */
+export type ChatConversationMessagesArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<ChatConversationMessageSort>;
+};
+
+
+/** A conversation in which participants exchange messages. */
+export type ChatConversationParticipantsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<ChatConversationParticipantSort>;
+};
+
+/** The engagement metrics of a chat conversation, or of a participant in it. */
+export type ChatConversationEngagementMetrics = Node & {
+  __typename?: 'ChatConversationEngagementMetrics';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The approved messages, deleted ones included. */
+  messages?: Maybe<ChatConversationMetricConnection>;
+};
+
+/** A message posted by a channel in a chat conversation. */
+export type ChatConversationMessage = Node & {
+  __typename?: 'ChatConversationMessage';
+  /** The channel that posted the message. Null when the channel is no longer available. */
+  author?: Maybe<Channel>;
+  /** The text of the message. Null when not available, e.g. once deleted by its author. */
+  body?: Maybe<Scalars['String']['output']>;
+  /** The date and time the message was created. */
+  createDate: Scalars['DateTime']['output'];
+  /** Whether the message was deleted. A deleted message should be displayed as a tombstone. */
+  deleted: Scalars['Boolean']['output'];
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** Whether the message is deleted and the viewer can restore it, i.e. a community owner deleted it and the viewer is a community owner. */
+  restorable: Scalars['Boolean']['output'];
+  /** The moderation status of the message. */
+  status: ChatConversationMessageStatus;
+};
+
+/** The connection type for ChatConversationMessage. */
+export type ChatConversationMessageConnection = {
+  __typename?: 'ChatConversationMessageConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<ChatConversationMessageEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. `endCursor` is always set, even on the last page, so it can be reused to poll for new messages: use `hasNextPage` to know whether to keep iterating. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type ChatConversationMessageEdge = {
+  __typename?: 'ChatConversationMessageEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<ChatConversationMessage>;
+};
+
+/** The possible orderings of chat conversation messages. */
+export type ChatConversationMessageSort = {
+  /** Sort by when the message was created. */
+  createDate?: InputMaybe<OrderDirection>;
+};
+
+/** The moderation statuses of a chat conversation message. */
+export enum ChatConversationMessageStatus {
+  /** Approved by moderation, and visible to the community. */
+  Approved = 'APPROVED',
+  /** Waiting for moderation, and only visible to its author. */
+  Pending = 'PENDING',
+  /** Rejected by moderation, and only visible to its author. */
+  Rejected = 'REJECTED'
+}
+
+/** The node at the end of a ChatConversationMetricEdge. */
+export type ChatConversationMetric = Metric & Node & {
+  __typename?: 'ChatConversationMetric';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The total count of the metric. A null value indicates that it is hidden or not available. */
+  total?: Maybe<Scalars['Int']['output']>;
+};
+
+/** The connection type for a ChatConversationMetric. */
+export type ChatConversationMetricConnection = {
+  __typename?: 'ChatConversationMetricConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<ChatConversationMetricEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type ChatConversationMetricEdge = {
+  __typename?: 'ChatConversationMetricEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<ChatConversationMetric>;
+};
+
+/** The metrics of a chat conversation, or of a participant in it. */
+export type ChatConversationMetrics = Node & {
+  __typename?: 'ChatConversationMetrics';
+  /** The engagement metrics. */
+  engagement?: Maybe<ChatConversationEngagementMetrics>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+};
+
+/** A channel that wrote approved messages in a chat conversation. */
+export type ChatConversationParticipant = Node & {
+  __typename?: 'ChatConversationParticipant';
+  /** The channel that wrote in the conversation. Null when the channel is no longer available. */
+  creator?: Maybe<Channel>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The metrics of the participant in the conversation. */
+  metrics?: Maybe<ChatConversationMetrics>;
+};
+
+/** The connection type for ChatConversationParticipant. */
+export type ChatConversationParticipantConnection = {
+  __typename?: 'ChatConversationParticipantConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<ChatConversationParticipantEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type ChatConversationParticipantEdge = {
+  __typename?: 'ChatConversationParticipantEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<ChatConversationParticipant>;
+};
+
+/** Information about the viewer's participation in a chat conversation. */
+export type ChatConversationParticipantEngagement = {
+  __typename?: 'ChatConversationParticipantEngagement';
+  /** Whether the viewer is subscribed to the conversation, and so notified of its new messages. */
+  subscription: ChatConversationSubscription;
+};
+
+/** The possible orderings of chat conversation participants. */
+export type ChatConversationParticipantSort = {
+  /** Sort by the number of approved messages, deleted ones included. */
+  messageCount?: InputMaybe<OrderDirection>;
+};
+
+/** The subscription of a participant to a chat conversation. Participants who never decided get the default of the conversation type: subscribed to announcements only. */
+export type ChatConversationSubscription = {
+  __typename?: 'ChatConversationSubscription';
+  /** The date and time the participant last subscribed or unsubscribed. Null when they never did and the default applies. */
+  lastUpdateDate?: Maybe<Scalars['DateTime']['output']>;
+  /** Whether the participant is subscribed to the conversation. */
+  subscribed: Scalars['Boolean']['output'];
+};
+
 /** Information about a comment. */
 export type Chatroom = Node & {
   __typename?: 'Chatroom';
@@ -1917,6 +2280,8 @@ export type Chatroom = Node & {
   createDate: Scalars['DateTime']['output'];
   /** The global ID of the object. */
   id: Scalars['ID']['output'];
+  /** The list of members. */
+  members?: Maybe<ChatroomMemberConnection>;
   /** The metrics of the chatroom. */
   metrics?: Maybe<ChatroomMetrics>;
   /** The ID of the chatroom. */
@@ -1925,6 +2290,14 @@ export type Chatroom = Node & {
   status: ChatroomStatus;
   /** The viewer engagement information of the chatroom. */
   viewerEngagement: ChatroomViewerEngagement;
+};
+
+
+/** Information about a comment. */
+export type ChatroomMembersArgs = {
+  first?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  sort?: InputMaybe<ChatroomMembersSort>;
 };
 
 /** The engagement metrics of a Chatroom. */
@@ -1937,6 +2310,43 @@ export type ChatroomEngagementMetrics = Node & {
   /** The message metrics of the chatroom. */
   messages?: Maybe<ChatroomMetricConnection>;
 };
+
+/** Represents information about a chatroom member. */
+export type ChatroomMember = Node & {
+  __typename?: 'ChatroomMember';
+  /** The creator that is a member of the chatroom. */
+  creator?: Maybe<Channel>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+};
+
+/** The connection type for a ChatroomMember. */
+export type ChatroomMemberConnection = {
+  __typename?: 'ChatroomMemberConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<ChatroomMemberEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type ChatroomMemberEdge = {
+  __typename?: 'ChatroomMemberEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<ChatroomMember>;
+};
+
+/** The possible sorting algorithms for chatroom members. */
+export enum ChatroomMembersSort {
+  /** By number of approved messages. */
+  ApprovedMessages = 'APPROVED_MESSAGES',
+  /** By number of total messages. */
+  TotalMessages = 'TOTAL_MESSAGES'
+}
 
 /** The node at the end of a ChatroomMetricEdge. */
 export type ChatroomMetric = Metric & Node & {
@@ -2312,20 +2722,42 @@ export type Comment = Content & Node & Thread & {
   createDate: Scalars['DateTime']['output'];
   /** The creator of the comment. */
   creator?: Maybe<Channel>;
+  /** The depth of the comment in the threading hierarchy. */
+  depth: Scalars['Int']['output'];
   /** The ID of the object. */
   id: Scalars['ID']['output'];
+  /** Whether this comment mirrors the story's prompt (conversation opener). It anchors the prompt's reply thread and cannot be edited, deleted or reported through the comment API. */
+  isPrompt: Scalars['Boolean']['output'];
+  /** The kind of comment in the threading context. */
+  kind: CommentKind;
   /** The metrics of the comment. */
   metrics?: Maybe<CommentMetrics>;
   /** The commented story. */
   opener?: Maybe<Story>;
   /** Indicates whether the creator of the story has liked the comment. */
   openerCreatorLiked: Scalars['Boolean']['output'];
+  /** The ID of the parent comment in the threading context. */
+  parentId?: Maybe<Scalars['ID']['output']>;
+  /** The number of replies to this comment. */
+  replyCount: Scalars['Int']['output'];
+  /** The ID of the comment this comment replies to, if any. */
+  replyToCommentId?: Maybe<Scalars['ID']['output']>;
+  /** When this comment is a reply, preview of the comment being replied to. */
+  replyToContext?: Maybe<CommentReplyToContext>;
+  /** The ID of the root comment in the threading context. */
+  rootId?: Maybe<Scalars['ID']['output']>;
+  /** Optional ranking score. */
+  score?: Maybe<Scalars['Float']['output']>;
   /** The share URLs of the comment. */
   shareUrls?: Maybe<CommentShareUrls>;
   /** The human-readable unique ID of the comment. */
   slug: Scalars['String']['output'];
   /** The content of the comment. */
   text: Scalars['String']['output'];
+  /** Video playback timestamps detected in the comment text. */
+  timestamps: Array<CommentTimestamp>;
+  /** The thread's most active repliers, ordered by reply activity. The root comment's creator is never included (it is served by `creator`). At most 2 entries; empty on replies and on threads without replies. */
+  topRepliers: Array<Channel>;
   /** The last update date (DateTime ISO8601) of the comment. */
   updateDate: Scalars['DateTime']['output'];
   /** The viewer engagement information of the comment. */
@@ -2369,11 +2801,23 @@ export type CommentEngagementMetricsBookmarksArgs = {
   filter?: InputMaybe<BookmarkFilter>;
 };
 
+/** The kind of comment in the threading context. */
+export enum CommentKind {
+  /** Indicates the reply comment in the threading context. */
+  Reply = 'REPLY',
+  /** Indicates the top level comment in the threading context. */
+  Top = 'TOP'
+}
+
 /** The node at the end of a CommentMetricEdge. */
 export type CommentMetric = Metric & Node & {
   __typename?: 'CommentMetric';
   /** The ID of the object. */
   id: Scalars['ID']['output'];
+  /** Number of reply comments (non top-level). */
+  replies?: Maybe<Scalars['Int']['output']>;
+  /** Number of top-level comment threads (same source as core-comment summary). */
+  topLevel?: Maybe<Scalars['Int']['output']>;
   /** The total count of the comment metric. A null value indicates that it is hidden or not available. */
   total?: Maybe<Scalars['Int']['output']>;
 };
@@ -2407,6 +2851,32 @@ export type CommentMetrics = Node & {
   id: Scalars['ID']['output'];
 };
 
+/** The payload of a comment-reply notification. */
+export type CommentReplyPayload = {
+  __typename?: 'CommentReplyPayload';
+  /** The user who posted the reply. */
+  actor: NotificationActor;
+  /** A preview of the reply that triggered the notification. */
+  commentPreview: Scalars['String']['output'];
+  /** The comment that was replied to. */
+  repliedTo: NotificationComment;
+  /** The root comment of the thread the reply belongs to, if known. */
+  threadRoot?: Maybe<NotificationComment>;
+  /** The video the reply was posted on. */
+  video: NotificationVideo;
+};
+
+/** Preview of the comment a reply refers to (from core-comment ``reply_to_context``). */
+export type CommentReplyToContext = {
+  __typename?: 'CommentReplyToContext';
+  /** Display name of the author of the parent comment. */
+  authorDisplayName?: Maybe<Scalars['String']['output']>;
+  /** Whether the parent comment was deleted. */
+  deleted: Scalars['Boolean']['output'];
+  /** Short preview of the parent comment text. */
+  textPreview?: Maybe<Scalars['String']['output']>;
+};
+
 /** Information about the share urls of a Comment. */
 export type CommentShareUrls = Node & ShareUrls & {
   __typename?: 'CommentShareUrls';
@@ -2420,6 +2890,21 @@ export type CommentShareUrls = Node & ShareUrls & {
 export type CommentSort = {
   /** Sort by when the comment was created. */
   createDate?: InputMaybe<OrderDirection>;
+  /** Sort by ranking score. */
+  score?: InputMaybe<OrderDirection>;
+};
+
+/** A video playback timestamp detected in comment text. */
+export type CommentTimestamp = {
+  __typename?: 'CommentTimestamp';
+  /** Normalized display string (e.g. 00:02:27). */
+  display: Scalars['String']['output'];
+  /** Length of the matched timestamp substring. */
+  length: Scalars['Int']['output'];
+  /** Playback position in seconds. */
+  seconds: Scalars['Int']['output'];
+  /** Start index of the timestamp in the comment text. */
+  start: Scalars['Int']['output'];
 };
 
 /** Information about the viewer engagement of a Comment. */
@@ -2431,6 +2916,8 @@ export type CommentViewerEngagement = Node & ViewerEngagement & {
   likeRating?: Maybe<LikeRating>;
   /** Indicates whether the viewer has liked the comment. Returns False if the viewer is not connected. */
   liked?: Maybe<Scalars['Boolean']['output']>;
+  /** Indicates the viewer's notification state for the comment thread. Returns null if the viewer is not connected or does not participate in the thread. */
+  threadNotifications?: Maybe<ThreadNotificationsState>;
 };
 
 /** The violation reasons to report the `Comment`. */
@@ -2462,6 +2949,487 @@ export enum CommentViolation {
   /** Content that contains violence. */
   Violence = 'VIOLENCE'
 }
+
+/** Top-level comment with a preloaded first page of thread replies. */
+export type CommentWithFirstReplies = {
+  __typename?: 'CommentWithFirstReplies';
+  /** The root (top-level) comment. */
+  comment: Comment;
+  /**
+   *
+   *   First page of replies for this thread (oldest-first, same order as
+   *   ``Video.comments(rootId: ...)``). Further reply pages are loaded by the client
+   *   via the existing threaded-comments flow.
+   *
+   */
+  replies: CommentConnection;
+};
+
+/** Connection of top-level comments each bundled with first-page replies. */
+export type CommentWithFirstRepliesConnection = {
+  __typename?: 'CommentWithFirstRepliesConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<CommentWithFirstRepliesEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of top-level comments on the post (when available). */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a CommentWithFirstReplies connection. */
+export type CommentWithFirstRepliesEdge = {
+  __typename?: 'CommentWithFirstRepliesEdge';
+  /** The item at the end of the edge. */
+  node: CommentWithFirstReplies;
+};
+
+/** Information about a community. */
+export type Community = Node & {
+  __typename?: 'Community';
+  /** Channel at the center of the community. */
+  center: Channel;
+  /** A chat conversation of the community. Only accessible to the community owners and approved members. */
+  chatConversation?: Maybe<CommunityChatConversation>;
+  /** The chat conversations of the community, in the order set by the community owners. Only accessible to the community owners and approved members. */
+  chatConversations?: Maybe<CommunityChatConversationConnection>;
+  /** The name given by the channel owner to the community members, in plural form (e.g. "carflyers"). Null when not set. */
+  demonymPlural?: Maybe<Scalars['String']['output']>;
+  /** Identifier of the community. */
+  id: Scalars['ID']['output'];
+  /** The message shown to new members when they join the community. Raw text: placeholders are not resolved. Null when not set. */
+  welcomeMessage?: Maybe<Scalars['String']['output']>;
+};
+
+
+/** Information about a community. */
+export type CommunityChatConversationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+/** Information about a community. */
+export type CommunityChatConversationsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** A chat conversation in a community, only accessible to its owners and approved members. */
+export type CommunityChatConversation = ChatConversation & Node & {
+  __typename?: 'CommunityChatConversation';
+  /** The community the conversation belongs to. */
+  community: Community;
+  /** The date and time the conversation was created. */
+  createDate: Scalars['DateTime']['output'];
+  /** The description of the conversation. Null when not set. */
+  description?: Maybe<Scalars['String']['output']>;
+  /** The name of the conversation. */
+  displayName: Scalars['String']['output'];
+  /** The icon of the conversation, as a single emoji. */
+  emoji: Scalars['String']['output'];
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The date and time of the last approved message. Null when there is none. */
+  lastMessageDate?: Maybe<Scalars['DateTime']['output']>;
+  /** A message of the conversation. Pending and rejected messages are only found by their author. */
+  message?: Maybe<ChatConversationMessage>;
+  /** The messages of the conversation. Approved and deleted messages are listed, and pending and rejected ones only to their author. */
+  messages?: Maybe<ChatConversationMessageConnection>;
+  /** The metrics of the conversation. */
+  metrics?: Maybe<ChatConversationMetrics>;
+  /** The position of the conversation in the community, as set by the community owners. */
+  order: Scalars['Int']['output'];
+  /** The viewer's participation in the conversation. */
+  participantEngagement?: Maybe<ChatConversationParticipantEngagement>;
+  /** The channels that wrote approved messages in the conversation, whether or not they are still in the community. Use `first` to get the top participants. */
+  participants?: Maybe<ChatConversationParticipantConnection>;
+  /** The type of the conversation. */
+  type: CommunityChatConversationType;
+};
+
+
+/** A chat conversation in a community, only accessible to its owners and approved members. */
+export type CommunityChatConversationMessageArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+/** A chat conversation in a community, only accessible to its owners and approved members. */
+export type CommunityChatConversationMessagesArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<ChatConversationMessageSort>;
+};
+
+
+/** A chat conversation in a community, only accessible to its owners and approved members. */
+export type CommunityChatConversationParticipantsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<ChatConversationParticipantSort>;
+};
+
+/** The connection type for CommunityChatConversation. */
+export type CommunityChatConversationConnection = {
+  __typename?: 'CommunityChatConversationConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<CommunityChatConversationEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** The input fields to delete a chat conversation on a community. */
+export type CommunityChatConversationDeleteInput = {
+  /** The ID of the community. */
+  communityId: Scalars['ID']['input'];
+  /** The ID of the conversation. */
+  id: Scalars['ID']['input'];
+};
+
+/** The return fields from deleting a community chat conversation. */
+export type CommunityChatConversationDeletePayload = {
+  __typename?: 'CommunityChatConversationDeletePayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
+/** An edge in a connection. */
+export type CommunityChatConversationEdge = {
+  __typename?: 'CommunityChatConversationEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<CommunityChatConversation>;
+};
+
+/** The input fields to create a chat conversation on a community. */
+export type CommunityChatConversationInput = {
+  /** The ID of the community. */
+  communityId: Scalars['ID']['input'];
+  /** The description of the conversation. */
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** The name of the conversation. */
+  displayName: Scalars['String']['input'];
+  /** The icon of the conversation, as a single emoji. */
+  emoji: Scalars['String']['input'];
+  /** The position of the conversation among the community conversations. Not required to be unique; the order between conversations of the same position is undetermined. Defaults to after the existing conversations. */
+  order?: InputMaybe<Scalars['Int']['input']>;
+  /** The type of the conversation. */
+  type?: CommunityChatConversationType;
+};
+
+/** The input fields to delete a message in a community chat conversation. */
+export type CommunityChatConversationMessageDeleteInput = {
+  /** The ID of the community. */
+  communityId: Scalars['ID']['input'];
+  /** The ID of the conversation. */
+  conversationId: Scalars['ID']['input'];
+  /** The ID of the message. */
+  id: Scalars['ID']['input'];
+};
+
+/** The return fields from deleting a message in a community chat conversation. */
+export type CommunityChatConversationMessageDeletePayload = {
+  __typename?: 'CommunityChatConversationMessageDeletePayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
+/** The input fields to post a message in a community chat conversation. */
+export type CommunityChatConversationMessageInput = {
+  /** The text of the message. */
+  body: Scalars['String']['input'];
+  /** The ID of the community. */
+  communityId: Scalars['ID']['input'];
+  /** The ID of the conversation. */
+  conversationId: Scalars['ID']['input'];
+};
+
+/** The return fields from posting or restoring a message in a community chat conversation. */
+export type CommunityChatConversationMessagePayload = {
+  __typename?: 'CommunityChatConversationMessagePayload';
+  /** The posted or restored message. */
+  message?: Maybe<ChatConversationMessage>;
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
+/** The input fields to restore a message in a community chat conversation. */
+export type CommunityChatConversationMessageRestoreInput = {
+  /** The ID of the community. */
+  communityId: Scalars['ID']['input'];
+  /** The ID of the conversation. */
+  conversationId: Scalars['ID']['input'];
+  /** The ID of the message. */
+  id: Scalars['ID']['input'];
+};
+
+/** The return fields from creating or updating a community chat conversation. */
+export type CommunityChatConversationPayload = {
+  __typename?: 'CommunityChatConversationPayload';
+  /** The created or updated conversation. */
+  chatConversation?: Maybe<CommunityChatConversation>;
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
+/** The input fields to create the default chat conversations on a community. */
+export type CommunityChatConversationPrepareInput = {
+  /** The ID of the community. */
+  communityId: Scalars['ID']['input'];
+};
+
+/** The return fields from subscribing to a community chat conversation or unsubscribing from it. */
+export type CommunityChatConversationSubscriptionPayload = {
+  __typename?: 'CommunityChatConversationSubscriptionPayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+  /** The subscription, as now decided. */
+  subscription?: Maybe<ChatConversationSubscription>;
+};
+
+/** The input fields to subscribe to a chat conversation on a community or unsubscribe from it. */
+export type CommunityChatConversationSubscriptionUpdateInput = {
+  /** The ID of the community. */
+  communityId: Scalars['ID']['input'];
+  /** The ID of the conversation. */
+  conversationId: Scalars['ID']['input'];
+  /** Whether to subscribe to the conversation. */
+  subscribed: Scalars['Boolean']['input'];
+};
+
+/** The types of community chat conversation, which set who can post and how notifications work. */
+export enum CommunityChatConversationType {
+  /** Only community owners can post. All members are notified and cannot unsubscribe. */
+  Announcements = 'ANNOUNCEMENTS',
+  /** Community owners and approved members can post. Members can subscribe to notifications and unsubscribe. */
+  Basic = 'BASIC'
+}
+
+/** The input fields to update several chat conversations on a community at once. */
+export type CommunityChatConversationUpdateBulkInput = {
+  /** The ID of the community. */
+  communityId: Scalars['ID']['input'];
+  /** The updates of the conversations, at most one per conversation. */
+  conversations: Array<CommunityChatConversationUpdateBulkItemInput>;
+};
+
+/** The input fields to update one chat conversation among several. An omitted field is left unchanged. */
+export type CommunityChatConversationUpdateBulkItemInput = {
+  /** The new description of the conversation. `null` removes it. */
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** The new name of the conversation. */
+  displayName?: InputMaybe<Scalars['String']['input']>;
+  /** The new icon of the conversation, as a single emoji. */
+  emoji?: InputMaybe<Scalars['String']['input']>;
+  /** The ID of the conversation. */
+  id: Scalars['ID']['input'];
+  /** The new position of the conversation among the community conversations. */
+  order?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** The input fields to update a chat conversation on a community. An omitted field is left unchanged. */
+export type CommunityChatConversationUpdateInput = {
+  /** The ID of the community. */
+  communityId: Scalars['ID']['input'];
+  /** The new description of the conversation. `null` removes it. */
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** The new name of the conversation. */
+  displayName?: InputMaybe<Scalars['String']['input']>;
+  /** The new icon of the conversation, as a single emoji. */
+  emoji?: InputMaybe<Scalars['String']['input']>;
+  /** The ID of the conversation. */
+  id: Scalars['ID']['input'];
+  /** The new position of the conversation among the community conversations. */
+  order?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** The return fields from creating or updating several community chat conversations. */
+export type CommunityChatConversationsPayload = {
+  __typename?: 'CommunityChatConversationsPayload';
+  /** The created or updated conversations. */
+  chatConversations?: Maybe<Array<CommunityChatConversation>>;
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
+/** The connection type for Community. */
+export type CommunityConnection = {
+  __typename?: 'CommunityConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<CommunityEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type CommunityEdge = {
+  __typename?: 'CommunityEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<Community>;
+};
+
+/** The community member metric for a community. */
+export type CommunityMemberMetric = Metric & Node & {
+  __typename?: 'CommunityMemberMetric';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The total count. A null value indicates that it is hidden or not available. */
+  total?: Maybe<Scalars['Int']['output']>;
+};
+
+/** The connection type for a CommunityMemberMetric. */
+export type CommunityMemberMetricConnection = {
+  __typename?: 'CommunityMemberMetricConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<CommunityMemberMetricEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type CommunityMemberMetricEdge = {
+  __typename?: 'CommunityMemberMetricEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<CommunityMemberMetric>;
+};
+
+/** Information about a community membership. */
+export type CommunityMembership = {
+  __typename?: 'CommunityMembership';
+  /** Community. */
+  community: Community;
+  /** Identifier for the membership. */
+  id: Scalars['ID']['output'];
+  /** Member of the community. */
+  member: Channel;
+  /** Current status of the member in the community. */
+  status: CommunityMembershipStatus;
+  /** Date and time at which the status was achieved. */
+  statusDate: Scalars['DateTime']['output'];
+};
+
+/** The connection type for CommunityMembership. */
+export type CommunityMembershipConnection = {
+  __typename?: 'CommunityMembershipConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<CommunityMembershipEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type CommunityMembershipEdge = {
+  __typename?: 'CommunityMembershipEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<CommunityMembership>;
+};
+
+/** The available input fields of a CommunityMembership filter. */
+export type CommunityMembershipFilter = {
+  /** Filter community memberships by status. */
+  status?: InputMaybe<CommunityMembershipStatusOperator>;
+};
+
+/** The input fields to apply to or unapply from / quit a community. */
+export type CommunityMembershipInput = {
+  /** The ID of the community. */
+  communityId: Scalars['ID']['input'];
+};
+
+/** The community membership metric for a channel. */
+export type CommunityMembershipMetric = Metric & Node & {
+  __typename?: 'CommunityMembershipMetric';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The total count. A null value indicates that it is hidden or not available. */
+  total?: Maybe<Scalars['Int']['output']>;
+};
+
+/** The connection type for a CommunityMemberMetric. */
+export type CommunityMembershipMetricConnection = {
+  __typename?: 'CommunityMembershipMetricConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<CommunityMembershipMetricEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type CommunityMembershipMetricEdge = {
+  __typename?: 'CommunityMembershipMetricEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<CommunityMembershipMetric>;
+};
+
+/** The return fields from applying to or unapplying from / quitting a community. */
+export type CommunityMembershipPayload = {
+  __typename?: 'CommunityMembershipPayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
+/** The possible statuses for a community membership. */
+export enum CommunityMembershipStatus {
+  /** The membership has been approved. */
+  Approved = 'APPROVED',
+  /** The membership is pending approval or rejection. */
+  Pending = 'PENDING',
+  /** The membership has been rejected. */
+  Rejected = 'REJECTED',
+  /** The membership has been revoked. */
+  Revoked = 'REVOKED'
+}
+
+/** The available input fields of a community membership operator. */
+export type CommunityMembershipStatusOperator = {
+  /** Short for equal, must match the given data exactly. */
+  eq?: InputMaybe<CommunityMembershipStatus>;
+};
+
+/** The input fields to update a community membership. */
+export type CommunityMembershipUpdateInput = {
+  /** The ID of the member. */
+  memberId: Scalars['ID']['input'];
+  /** The status to set to the community membership. */
+  status?: InputMaybe<CommunityMembershipStatus>;
+};
+
+/** The input fields to bulk approve or reject community memberships. */
+export type CommunityMembershipsUpdateInput = {
+  /** The maximum number of community memberships to update. */
+  limit?: Scalars['Int']['input'];
+  /** The new status to set the matched community memberships to. */
+  newStatus: CommunityMembershipStatus;
+  /** The current status of the community memberships to update. */
+  status?: CommunityMembershipStatus;
+};
+
+/** The return fields from bulk approving or rejecting community memberships. */
+export type CommunityMembershipsUpdatePayload = {
+  __typename?: 'CommunityMembershipsUpdatePayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
 
 /** Types that can be a Component. */
 export type Component = Channel | Collection | Live | Poll | Reaction | ReactionVideo | Topic | Video;
@@ -2582,13 +3550,29 @@ export type ConversationConnection = {
 export type ConversationContext = {
   /** The action gesture performed by the user. */
   actionGesture?: InputMaybe<ActionGesture>;
+  /** When provided, is used instead of the request-derived device in recommender params for recommendation targeting. */
+  device?: InputMaybe<ConversationContextDevice>;
   /** Indicate whether the user wants to opt out of personalized content. Defaults to true. */
   personalizationOptOut?: InputMaybe<Scalars['Boolean']['input']>;
   /** The ID generated by the player (each time it loads a recording). */
   viewId?: InputMaybe<Scalars['String']['input']>;
   /** The conversation context of the viewer. */
   viewer?: InputMaybe<ViewerContext>;
+  /** Context about the last watch session for the referenced video. */
+  watchContext?: InputMaybe<WatchContext>;
 };
+
+/** The device type for conversation context (recommender targeting). */
+export enum ConversationContextDevice {
+  /** Desktop device. */
+  Desktop = 'DESKTOP',
+  /** Mobile device. */
+  Mobile = 'MOBILE',
+  /** Tablet device. */
+  Tablet = 'TABLET',
+  /** TV device. */
+  Tv = 'TV'
+}
 
 /** An edge in a connection. */
 export type ConversationEdge = {
@@ -2597,7 +3581,7 @@ export type ConversationEdge = {
   node?: Maybe<Conversation>;
 };
 
-/** The available input fields of a Poll filter. */
+/** The available input fields of a conversation filter. */
 export type ConversationFilter = {
   /** Filter conversations by algorithm name. */
   algorithm?: InputMaybe<AlgorithmNameOperator>;
@@ -2660,6 +3644,132 @@ export enum CopyrightedWorkType {
   /** Represents a visual art -- Artwork, Illustrations, Jewelry, Fabric, Architecture. */
   VisualArt = 'VISUAL_ART'
 }
+
+/** The collections making up a Corner page. */
+export type Corner = {
+  __typename?: 'Corner';
+  /** The creators featured on the hub. */
+  channels?: Maybe<ChannelConnection>;
+  /** The page configuration of the hub: its labels, its root page and its subcategories. Null when the hub or the language is unknown. */
+  config?: Maybe<CornerConfig>;
+  /** The videos of the hub, or of one of its sub-topics. */
+  videos?: Maybe<VideoConnection>;
+};
+
+
+/** The collections making up a Corner page. */
+export type CornerChannelsArgs = {
+  first?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/** The collections making up a Corner page. */
+export type CornerVideosArgs = {
+  first?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  subcategory?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** What a Corner page displays, as published by the recommender. */
+export type CornerConfig = {
+  __typename?: 'CornerConfig';
+  /** The hub and navigation titles. */
+  labels: CornerLabels;
+  /** The page of the hub itself. */
+  root: CornerRootPage;
+  /** The subcategories, in the order to display them. */
+  subcategories?: Maybe<Array<CornerSubcategory>>;
+};
+
+/** A question and its answer. */
+export type CornerFaqItem = {
+  __typename?: 'CornerFaqItem';
+  /** The answer. */
+  answer: Scalars['String']['output'];
+  /** The question. */
+  question: Scalars['String']['output'];
+};
+
+/** A selling point of a Corner hub. */
+export type CornerFeature = {
+  __typename?: 'CornerFeature';
+  /** The subtitle of the selling point. */
+  subtitle: Scalars['String']['output'];
+  /** The title of the selling point. */
+  title: Scalars['String']['output'];
+};
+
+/** The introduction of a Corner page. */
+export type CornerHero = {
+  __typename?: 'CornerHero';
+  /** The rest of the first paragraph, which starts with a space. */
+  body: Scalars['String']['output'];
+  /** The highlighted beginning of the introduction. */
+  lead: Scalars['String']['output'];
+  /** The paragraphs shown when the introduction is expanded. */
+  more?: Maybe<Array<Scalars['String']['output']>>;
+};
+
+/** The fixed texts of a Corner hub. */
+export type CornerLabels = {
+  __typename?: 'CornerLabels';
+  /** The first element of the breadcrumb. */
+  breadcrumbHome: Scalars['String']['output'];
+  /** The title of the creators block. */
+  creatorsTitle: Scalars['String']['output'];
+  /** The title of the FAQ. */
+  faqTitle: Scalars['String']['output'];
+  /** The selling points shown in the hero of the hub page. */
+  features?: Maybe<Array<CornerFeature>>;
+  /** The title of the hero. */
+  heroTitle: Scalars['String']['output'];
+  /** The name of the hub, used in the breadcrumb. */
+  hubName: Scalars['String']['output'];
+  /** The title of the subcategory navigation. */
+  navTitle: Scalars['String']['output'];
+};
+
+/** The page of a Corner hub, without any subcategory. */
+export type CornerRootPage = {
+  __typename?: 'CornerRootPage';
+  /** The frequently asked questions of the page. */
+  faq?: Maybe<Array<CornerFaqItem>>;
+  /** The introduction of the page. */
+  hero?: Maybe<CornerHero>;
+  /** The label of the page in the navigation. */
+  label: Scalars['String']['output'];
+  /** The title and description of the page. */
+  seo?: Maybe<CornerSeo>;
+};
+
+/** The title and description of a Corner page. */
+export type CornerSeo = {
+  __typename?: 'CornerSeo';
+  /** The meta description of the page. */
+  description: Scalars['String']['output'];
+  /** The title of the page. */
+  title: Scalars['String']['output'];
+};
+
+/** A subcategory of a Corner hub. */
+export type CornerSubcategory = {
+  __typename?: 'CornerSubcategory';
+  /** The frequently asked questions of the page. */
+  faq?: Maybe<Array<CornerFaqItem>>;
+  /** The introduction of the page. */
+  hero?: Maybe<CornerHero>;
+  /** The identifier of the subcategory for the recommender. */
+  key: Scalars['String']['output'];
+  /** The label of the subcategory in the navigation. */
+  label: Scalars['String']['output'];
+  /** The title and description of the page. */
+  seo?: Maybe<CornerSeo>;
+  /** The slug of the subcategory in the URL. */
+  slug: Scalars['String']['output'];
+  /** The kind of subcategory (permanent). */
+  type?: Maybe<Scalars['String']['output']>;
+};
 
 /** Information about a country. */
 export type Country = Node & {
@@ -2780,6 +3890,8 @@ export type CreateCommentInput = {
   id?: InputMaybe<Scalars['ID']['input']>;
   /** @deprecated(reason: "Use `id` input arg.") - The ID of the post that the comment is created for. */
   postId?: InputMaybe<Scalars['ID']['input']>;
+  /** The ID of the comment or prompt being replied to. */
+  replyToCommentId?: InputMaybe<Scalars['ID']['input']>;
   /** @deprecated(reason: "Use `id` input arg.") - The ID of the story that the comment is created for. */
   storyId?: InputMaybe<Scalars['ID']['input']>;
   /** The text on the comment. */
@@ -2881,10 +3993,16 @@ export type CreateVideoInput = {
   password?: InputMaybe<Scalars['String']['input']>;
   /** @deprecated(reason: "Use `settings.visibility` input arg.") - Indicates whether the video is private. */
   private?: InputMaybe<Scalars['Boolean']['input']>;
+  /** The prompt to set to the video. */
+  prompt?: InputMaybe<Scalars['String']['input']>;
   /** Indicates whether the video is published. */
   published?: InputMaybe<Scalars['Boolean']['input']>;
   /** The default settings when creating a video. */
   settings?: InputMaybe<VideoSettingsInput>;
+  /** ID of the video the video is a stitch for. */
+  stitchSource?: InputMaybe<Scalars['ID']['input']>;
+  /** Indicates whether the video can be used in stitches. */
+  stitchable?: InputMaybe<Scalars['Boolean']['input']>;
   /** The list of tags to associate to the video. */
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   /** The URL of the thumbnail image. */
@@ -2893,6 +4011,8 @@ export type CreateVideoInput = {
   title?: InputMaybe<Scalars['String']['input']>;
   /** The URL of the video. */
   url?: InputMaybe<Scalars['String']['input']>;
+  /** The URL of the vertical thumbnail image. */
+  verticalThumbnailURL?: InputMaybe<Scalars['String']['input']>;
   /** @deprecated(reason: "Use `settings.visibility` input arg.") - The visibility of the Video. */
   visibility?: InputMaybe<Visibility>;
 };
@@ -3077,6 +4197,17 @@ export enum DeviceAuthorizationConsent {
   Pending = 'PENDING'
 }
 
+/** The earnings of an organization. */
+export type Earnings = {
+  __typename?: 'Earnings';
+  /** The last month of the period the earnings cover (e.g. "2024-03"). */
+  periodEndMonth: Scalars['String']['output'];
+  /** The first month of the period the earnings cover (e.g. "2024-01"). */
+  periodStartMonth: Scalars['String']['output'];
+  /** The earnings amount for the selected metric. */
+  value: Scalars['Float']['output'];
+};
+
 /** Information about the email change request of the user. */
 export type EmailChangeRequest = Node & {
   __typename?: 'EmailChangeRequest';
@@ -3238,6 +4369,17 @@ export type EnrichedElementsForSentences = {
   globalContextElements: EnrichedElementsForContext;
   /** The sentences with enriched elements */
   sentences: Array<Maybe<SentenceWithEnrichedElements>>;
+};
+
+/** An active entitlement of a user, i.e. a feature unlocked by a subscription (e.g. ad_free). */
+export type Entitlement = {
+  __typename?: 'Entitlement';
+  /** The end date (DateTime ISO8601) of the user's access, unless a subscription renews. Null when the access has no end date. Can be in the past during a grace period. */
+  activeUntil?: Maybe<Scalars['DateTime']['output']>;
+  /** The lookup key of the entitlement (e.g. ad_free). */
+  entitlementId: Scalars['String']['output'];
+  /** Whether the access is kept while a payment issue is being resolved. */
+  inGracePeriod: Scalars['Boolean']['output'];
 };
 
 /** Represents an experiment (A/B testing) matched/enabled for a client. */
@@ -3511,6 +4653,34 @@ export type FileUpload = Node & {
   uploadURL?: Maybe<Scalars['String']['output']>;
 };
 
+/** The metric used to query organization balance from the analytics service. */
+export enum FinanceBalanceMetric {
+  /** The balance amount denominated in EUR. */
+  BalanceEur = 'BALANCE_EUR',
+  /** The balance amount denominated in USD. */
+  BalanceUsd = 'BALANCE_USD'
+}
+
+/** The metric used to query organization earnings from the analytics service. */
+export enum FinanceEarningsMetric {
+  /** The total earnings amount denominated in EUR. */
+  TotalEarningsEur = 'TOTAL_EARNINGS_EUR',
+  /** The total earnings amount denominated in USD. */
+  TotalEarningsUsd = 'TOTAL_EARNINGS_USD',
+  /** The year-to-date earnings amount denominated in EUR. */
+  YtdEarningsEur = 'YTD_EARNINGS_EUR',
+  /** The year-to-date earnings amount denominated in USD. */
+  YtdEarningsUsd = 'YTD_EARNINGS_USD'
+}
+
+/** The metric used to query organization pre-statements from the analytics service. */
+export enum FinancePreStatementMetric {
+  /** The pre-statement amount denominated in EUR. */
+  PreStatementAmountEur = 'PRE_STATEMENT_AMOUNT_EUR',
+  /** The pre-statement amount denominated in USD. */
+  PreStatementAmountUsd = 'PRE_STATEMENT_AMOUNT_USD'
+}
+
 /** The input fields to follow a channel for the connected user. */
 export type FollowChannelInput = {
   /** The Dailymotion ID of the channel. */
@@ -3690,6 +4860,8 @@ export enum FollowedTopicsSort {
 /** Information about a user that is following the requested user */
 export type Follower = Node & {
   __typename?: 'Follower';
+  /** Whether the follower is a community member. */
+  communityMember?: Maybe<Scalars['Boolean']['output']>;
   /** The Channel information about the follower. */
   creator?: Maybe<Channel>;
   /** The ID of the object. */
@@ -3722,6 +4894,10 @@ export type FollowerEdge = {
 /** Information about the follower engagement on a Channel. */
 export type FollowerEngagement = Node & {
   __typename?: 'FollowerEngagement';
+  /** Indicates whether the follower is a community member. */
+  communityMember?: Maybe<Scalars['Boolean']['output']>;
+  /** The connected user's own community membership towards the Channel. */
+  communityMembership?: Maybe<CommunityMembership>;
   /** The datetime the follower started following the Channel. */
   followDate?: Maybe<Scalars['DateTime']['output']>;
   /** The ID of the object. */
@@ -3737,6 +4913,12 @@ export type FollowerEngagementNotifications = Node & {
   id: Scalars['ID']['output'];
   /** Indicates whether the follower wants to received notifications when the channel uploads content. */
   uploads: Scalars['Boolean']['output'];
+};
+
+/** The available input fields of a Follower filter. */
+export type FollowerFilter = {
+  /** Filter followers by whether they are also a community member. */
+  communityMember?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 /** The node at the end of a FollowerMetricEdge. */
@@ -3771,6 +4953,8 @@ export type FollowerMetricEdge = {
 /** Information about a user, who the requested user is following. */
 export type Following = Node & {
   __typename?: 'Following';
+  /** Whether the follower is a community member. */
+  communityMember?: Maybe<Scalars['Boolean']['output']>;
   /**
    * The Channel information of the user the requested user follows.
    * @deprecated Use `story` field.
@@ -3830,8 +5014,23 @@ export type FollowingEdge = {
   node?: Maybe<Following>;
 };
 
+/** Information about the following engagement on a Channel. */
+export type FollowingEngagement = Node & {
+  __typename?: 'FollowingEngagement';
+  /** Indicates whether the channel is an approved community member of the current subject's channel. */
+  communityMember?: Maybe<Scalars['Boolean']['output']>;
+  /** The channel's community membership towards the current subject's channel. */
+  communityMembership?: Maybe<CommunityMembership>;
+  /** The datetime the channel started following the current subject's channel. */
+  followDate?: Maybe<Scalars['DateTime']['output']>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+};
+
 /** The available input fields of a Following filter. */
 export type FollowingFilter = {
+  /** Filter followings by whether they are also a community member. */
+  communityMember?: InputMaybe<Scalars['Boolean']['input']>;
   /** Filter followings by story. Defaults to `channel`. */
   story?: InputMaybe<StoryOperator>;
 };
@@ -3944,6 +5143,21 @@ export type GenerateVerifyEmailTokenPayload = {
   status?: Maybe<Status>;
   /** The token generated to send a code to verify the email. */
   token: Scalars['String']['output'];
+};
+
+/** The input fields to generate subtitles on a video. */
+export type GenerateVideoSubtitlesInput = {
+  /** Languages for which to generate subtitles. */
+  languages: Array<Scalars['String']['input']>;
+  /** The Dailymotion ID of the video to generate subtitles for. */
+  xid: Scalars['String']['input'];
+};
+
+/** The return fields from generating subtitles on a video. */
+export type GenerateVideoSubtitlesPayload = {
+  __typename?: 'GenerateVideoSubtitlesPayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
 };
 
 /** The geoblocked countries of a media. */
@@ -4657,6 +5871,8 @@ export type Live = Content & Node & Recording & {
   subtitles?: Maybe<SubtitleConnection>;
   /** The tags of the live. */
   tags?: Maybe<MediaTagConnection>;
+  /** The threads the live has elicited. */
+  threads?: Maybe<ThreadConnection>;
   /** The URL of the thumbnail image. */
   thumbnail?: Maybe<Image>;
   /**
@@ -4771,6 +5987,14 @@ export type LiveSubtitlesArgs = {
 export type LiveTagsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/** A live represents a media that is streamed. */
+export type LiveThreadsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<OpenerThreadFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -5062,6 +6286,27 @@ export type LocalizationMe = Node & {
   subdivision?: Maybe<Subdivision>;
 };
 
+/** The input fields to mark notifications as read. */
+export type MarkNotificationsReadInput = {
+  /** Mark all of the authenticated user's notifications as read. Mutually exclusive with `ids`. */
+  all?: InputMaybe<Scalars['Boolean']['input']>;
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: InputMaybe<Scalars['String']['input']>;
+  /** The IDs of the notifications to mark as read. Mutually exclusive with `all`. */
+  ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+/** The return fields from marking notifications as read. */
+export type MarkNotificationsReadPayload = {
+  __typename?: 'MarkNotificationsReadPayload';
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: Maybe<Scalars['String']['output']>;
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+  /** The number of notifications whose read state changed. */
+  updatedCount?: Maybe<Scalars['Int']['output']>;
+};
+
 /** Types that can be a Media. */
 export type Media = Live | Video;
 
@@ -5152,24 +6397,64 @@ export enum MediaQuality {
   Hd720P = 'HD720P',
   /** HD 720p60 quality. */
   Hd720P60 = 'HD720P60',
+  /** HD 720p60 (AV1) quality. */
+  Hd720P60Av1 = 'HD720P60_AV1',
+  /** HD 720p60 (HEVC) quality. */
+  Hd720P60Hevc = 'HD720P60_HEVC',
+  /** HD 720p (AV1) quality. */
+  Hd720PAv1 = 'HD720P_AV1',
+  /** HD 720p (HEVC) quality. */
+  Hd720PHevc = 'HD720P_HEVC',
   /** HD 1080p quality. */
   Hd1080P = 'HD1080P',
   /** HD 1080p60 quality. */
   Hd1080P60 = 'HD1080P60',
+  /** HD 1080p60 (AV1) quality. */
+  Hd1080P60Av1 = 'HD1080P60_AV1',
+  /** HD 1080p60 (HEVC) quality. */
+  Hd1080P60Hevc = 'HD1080P60_HEVC',
+  /** HD 1080p (AV1) quality. */
+  Hd1080PAv1 = 'HD1080P_AV1',
+  /** HD 1080p (HEVC) quality. */
+  Hd1080PHevc = 'HD1080P_HEVC',
   /** HQ 480p quality. */
   Hq480P = 'HQ480P',
+  /** HQ 480p (AV1) quality. */
+  Hq480PAv1 = 'HQ480P_AV1',
+  /** HQ 480p (HEVC) quality. */
+  Hq480PHevc = 'HQ480P_HEVC',
   /** LD 240p quality. */
   Ld240P = 'LD240P',
   /** SD 384p quality. */
   Sd384P = 'SD384P',
+  /** SD 384p (AV1) quality. */
+  Sd384PAv1 = 'SD384P_AV1',
+  /** SD 384p (HEVC) quality. */
+  Sd384PHevc = 'SD384P_HEVC',
   /** UHD 1440p quality. */
   Uhd1440P = 'UHD1440P',
   /** UHD 1440p60 quality. */
   Uhd1440P60 = 'UHD1440P60',
+  /** UHD 1440p60 (AV1) quality. */
+  Uhd1440P60Av1 = 'UHD1440P60_AV1',
+  /** UHD 1440p60 (HEVC) quality. */
+  Uhd1440P60Hevc = 'UHD1440P60_HEVC',
+  /** UHD 1440p (AV1) quality. */
+  Uhd1440PAv1 = 'UHD1440P_AV1',
+  /** UHD 1440p (HEVC) quality. */
+  Uhd1440PHevc = 'UHD1440P_HEVC',
   /** UHD 2160p quality. */
   Uhd2160P = 'UHD2160P',
   /** UHD 2160p60 quality. */
-  Uhd2160P60 = 'UHD2160P60'
+  Uhd2160P60 = 'UHD2160P60',
+  /** UHD 2160p60 (AV1) quality. */
+  Uhd2160P60Av1 = 'UHD2160P60_AV1',
+  /** UHD 2160p60 (HEVC) quality. */
+  Uhd2160P60Hevc = 'UHD2160P60_HEVC',
+  /** UHD 2160p (AV1) quality. */
+  Uhd2160PAv1 = 'UHD2160P_AV1',
+  /** UHD 2160p (HEVC) quality. */
+  Uhd2160PHevc = 'UHD2160P_HEVC'
 }
 
 /** Types that can be a MediaStreams. */
@@ -5365,6 +6650,8 @@ export type Mutation = {
    * @deprecated Use mutation `addSave`.
    */
   addCollectionVideo?: Maybe<AddCollectionVideoPayload>;
+  /** Apply to a community. */
+  addCommunityMembership?: Maybe<CommunityMembershipPayload>;
   /** Add a `Favorite` to the favorites list of the connected user. */
   addFavorite?: Maybe<FavoritePayload>;
   /** Follow a story for the connected creator. */
@@ -5429,6 +6716,10 @@ export type Mutation = {
   createCollection?: Maybe<CreateCollectionPayload>;
   /** Create a comment. */
   createComment?: Maybe<CreateCommentPayload>;
+  /** Create a chat conversation on a community you own. */
+  createCommunityChatConversation?: Maybe<CommunityChatConversationPayload>;
+  /** Post a message in a community chat conversation. Owners and approved members post in basic conversations, only owners in announcements. The message is pending until moderation approves it. */
+  createCommunityChatConversationMessage?: Maybe<CommunityChatConversationMessagePayload>;
   /** Create a reaction in a recording format to respond to a story. */
   createReaction?: Maybe<ReactionPayload>;
   /** Creates a user. */
@@ -5441,6 +6732,10 @@ export type Mutation = {
   deleteCollection?: Maybe<CollectionPayload>;
   /** Delete a comment. */
   deleteComment?: Maybe<DeleteCommentPayload>;
+  /** Delete a chat conversation on a community you own. */
+  deleteCommunityChatConversation?: Maybe<CommunityChatConversationDeletePayload>;
+  /** Delete a message in a community chat conversation, as its author or as a community owner. */
+  deleteCommunityChatConversationMessage?: Maybe<CommunityChatConversationMessageDeletePayload>;
   /** Delete a reaction. */
   deleteReaction?: Maybe<DeleteReactionPayload>;
   /** Delete a user. */
@@ -5477,6 +6772,8 @@ export type Mutation = {
    * @deprecated No longer supported.
    */
   followedUserRemove?: Maybe<UnfollowUserPayload>;
+  /** Generate a Canny SSO token. */
+  generateCannySSOToken: CannySsoTokenPayload;
   /** Generate a new username for the channel. */
   generateChannelUsername?: Maybe<GenerateChannelUsernamePayload>;
   /** Generate an access token for a chatroom. */
@@ -5485,11 +6782,15 @@ export type Mutation = {
   generateFileUploadUrl?: Maybe<GenerateFileUploadUrlPayload>;
   /** Generate a token to request a code to verify the email. */
   generateVerifyEmailToken?: Maybe<GenerateVerifyEmailTokenPayload>;
+  /** Generate subtitles on a video. */
+  generateVideoSubtitles?: Maybe<GenerateVideoSubtitlesPayload>;
   /**
    * Like a video for the connected user.
    * @deprecated Use mutation `addLike`.
    */
   likeVideo?: Maybe<LikeVideoPayload>;
+  /** Mark notifications as read, either by ID or all at once. */
+  markNotificationsRead: MarkNotificationsReadPayload;
   /**
    *
    *   Submit an appeal.
@@ -5502,10 +6803,14 @@ export type Mutation = {
    *
    */
   moderationActionAppeal?: Maybe<ModerationActionAppealPayload>;
+  /** Mute notifications matching one target for the authenticated user. */
+  muteNotifications: MuteNotificationsPayload;
   /** Update the push notification settings on a followed channel of the connected user. */
   notificationFollowedChannelUpdate?: Maybe<NotificationFollowedChannelUpdatePayload>;
   /** Manage poll answer for the connected user. */
   pollAnswer?: Maybe<PollAnswerPayload>;
+  /** Create the default chat conversations on a community you own or are an approved member of. A community is only prepared once, while it has no conversation. */
+  prepareCommunityChatConversations?: Maybe<CommunityChatConversationsPayload>;
   /** Rate a recommendation. */
   rateRecommendation?: Maybe<RateRecommendationPayload>;
   /**
@@ -5537,6 +6842,8 @@ export type Mutation = {
    * @deprecated Use mutation `removeSave`.
    */
   removeCollectionVideo?: Maybe<RemoveCollectionVideoPayload>;
+  /** Unapply from or quit a community. */
+  removeCommunityMembership?: Maybe<CommunityMembershipPayload>;
   /** Remove a `Favorite` from the favorites list of the connected user. */
   removeFavorite?: Maybe<FavoritePayload>;
   /** Unfollow a story for the connected creator. */
@@ -5589,6 +6896,8 @@ export type Mutation = {
   requestActivationCode?: Maybe<RequestActivationCodePayload>;
   /** Change the password of the user after requesting recover password. */
   resetPassword?: Maybe<ResetPasswordPayload>;
+  /** Restore a message a community owner deleted in a community chat conversation. Reserved to community owners; see `ChatConversationMessage.restorable`. */
+  restoreCommunityChatConversationMessage?: Maybe<CommunityChatConversationMessagePayload>;
   /** Request a new email confirmation code. */
   sendConfirmEmailCode?: Maybe<SendConfirmEmailCodePayload>;
   /** Send a message. */
@@ -5597,6 +6906,10 @@ export type Mutation = {
   sendTransactionalEmail?: Maybe<SendTransactionalEmailPayload>;
   /** Request a code to be sent to verify the email. */
   sendVerifyEmailCode?: Maybe<SendVerifyEmailCodePayload>;
+  /** Set the read state of a single notification. */
+  setNotificationReadState: SetNotificationReadStatePayload;
+  /** Submit choices for onboarding categories. */
+  submitOnboardingCategoryChoice: SubmitOnboardingCategoryChoicePayload;
   /**
    * Unfollow a channel for the connected user.
    * @deprecated Use mutation `removeFollowing`.
@@ -5612,6 +6925,8 @@ export type Mutation = {
    * @deprecated Use mutation `removeLike`.
    */
   unlikeVideo?: Maybe<UnlikeVideoPayload>;
+  /** Remove one of the authenticated user's notification mutes. */
+  unmuteNotifications: UnmuteNotificationsPayload;
   /** Update a rule used for feature flipping or AB experiments. */
   updateBehaviorRule?: Maybe<UpdateBehaviorRulePayload>;
   /** Update a channel. */
@@ -5620,6 +6935,18 @@ export type Mutation = {
   updateChannelSettings?: Maybe<ChannelSettingsPayload>;
   /** Update a collection. */
   updateCollection?: Maybe<UpdateCollectionPayload>;
+  /** Update the welcome message and demonym of a community. */
+  updateCommunity?: Maybe<UpdateCommunityPayload>;
+  /** Update a chat conversation on a community you own. */
+  updateCommunityChatConversation?: Maybe<CommunityChatConversationPayload>;
+  /** Subscribe to a chat conversation on a community you own or are an approved member of, or unsubscribe from it. */
+  updateCommunityChatConversationSubscription?: Maybe<CommunityChatConversationSubscriptionPayload>;
+  /** Update several chat conversations on a community you own at once, e.g. to reorder them. Either all updates are applied or none. */
+  updateCommunityChatConversations?: Maybe<CommunityChatConversationsPayload>;
+  /** Update a community membership. */
+  updateCommunityMembership?: Maybe<CommunityMembershipPayload>;
+  /** Bulk approve or reject the first community members of the connected user's community currently in a given status. */
+  updateCommunityMemberships?: Maybe<CommunityMembershipsUpdatePayload>;
   /**
    * Update the email notification settings of the connected user.
    * @deprecated Use mutation `updateChannelSettings` and input arg `notifications`.
@@ -5630,6 +6957,8 @@ export type Mutation = {
    * @deprecated Use mutation `updateChannelSettings` and input arg `notifications`.
    */
   updateNotificationSettingsPush?: Maybe<UpdateNotificationSettingsPushPayload>;
+  /** Update the Tipalti payee idap linked to an organization. */
+  updateOrganizationIdap?: Maybe<UpdateOrganizationIdapPayload>;
   /** Update a reaction. */
   updateReaction?: Maybe<ReactionPayload>;
   /** Update information about the current user connected. */
@@ -5672,11 +7001,6 @@ export type Mutation = {
    */
   userInterestsUpdate?: Maybe<UserInterestsUpdatePayload>;
   /**
-   * Request a code B from OpenWeb.
-   * @deprecated No longer supported.
-   */
-  userOpenWebCodeBRequest?: Maybe<UserOpenWebCodeBRequestPayload>;
-  /**
    * Add a video to the `Watched` list of the connected user.
    * @deprecated Use mutation `addWatched`.
    */
@@ -5705,6 +7029,12 @@ export type MutationAddBoostArgs = {
 /** The mutation root of Dailymotion's GraphQL API. */
 export type MutationAddCollectionVideoArgs = {
   input: AddCollectionVideoInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationAddCommunityMembershipArgs = {
+  input: CommunityMembershipInput;
 };
 
 
@@ -5841,6 +7171,18 @@ export type MutationCreateCommentArgs = {
 
 
 /** The mutation root of Dailymotion's GraphQL API. */
+export type MutationCreateCommunityChatConversationArgs = {
+  input: CommunityChatConversationInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationCreateCommunityChatConversationMessageArgs = {
+  input: CommunityChatConversationMessageInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
 export type MutationCreateReactionArgs = {
   input: CreateReactionInput;
 };
@@ -5873,6 +7215,18 @@ export type MutationDeleteCollectionArgs = {
 /** The mutation root of Dailymotion's GraphQL API. */
 export type MutationDeleteCommentArgs = {
   input: DeleteCommentInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationDeleteCommunityChatConversationArgs = {
+  input: CommunityChatConversationDeleteInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationDeleteCommunityChatConversationMessageArgs = {
+  input: CommunityChatConversationMessageDeleteInput;
 };
 
 
@@ -5949,14 +7303,32 @@ export type MutationGenerateVerifyEmailTokenArgs = {
 
 
 /** The mutation root of Dailymotion's GraphQL API. */
+export type MutationGenerateVideoSubtitlesArgs = {
+  input: GenerateVideoSubtitlesInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
 export type MutationLikeVideoArgs = {
   input: LikeVideoInput;
 };
 
 
 /** The mutation root of Dailymotion's GraphQL API. */
+export type MutationMarkNotificationsReadArgs = {
+  input: MarkNotificationsReadInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
 export type MutationModerationActionAppealArgs = {
   input: ModerationActionAppealInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationMuteNotificationsArgs = {
+  input: MuteNotificationsInput;
 };
 
 
@@ -5969,6 +7341,12 @@ export type MutationNotificationFollowedChannelUpdateArgs = {
 /** The mutation root of Dailymotion's GraphQL API. */
 export type MutationPollAnswerArgs = {
   input: PollAnswerInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationPrepareCommunityChatConversationsArgs = {
+  input: CommunityChatConversationPrepareInput;
 };
 
 
@@ -6017,6 +7395,12 @@ export type MutationRemoveCollectionArgs = {
 /** The mutation root of Dailymotion's GraphQL API. */
 export type MutationRemoveCollectionVideoArgs = {
   input: RemoveCollectionVideoInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationRemoveCommunityMembershipArgs = {
+  input: CommunityMembershipInput;
 };
 
 
@@ -6123,6 +7507,12 @@ export type MutationResetPasswordArgs = {
 
 
 /** The mutation root of Dailymotion's GraphQL API. */
+export type MutationRestoreCommunityChatConversationMessageArgs = {
+  input: CommunityChatConversationMessageRestoreInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
 export type MutationSendMessageArgs = {
   input: SendMessageInput;
 };
@@ -6141,6 +7531,18 @@ export type MutationSendVerifyEmailCodeArgs = {
 
 
 /** The mutation root of Dailymotion's GraphQL API. */
+export type MutationSetNotificationReadStateArgs = {
+  input: SetNotificationReadStateInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationSubmitOnboardingCategoryChoiceArgs = {
+  input: SubmitOnboardingCategoryChoiceInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
 export type MutationUnfollowChannelArgs = {
   input: UnfollowChannelInput;
 };
@@ -6155,6 +7557,12 @@ export type MutationUnfollowTopicArgs = {
 /** The mutation root of Dailymotion's GraphQL API. */
 export type MutationUnlikeVideoArgs = {
   input: UnlikeVideoInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationUnmuteNotificationsArgs = {
+  input: UnmuteNotificationsInput;
 };
 
 
@@ -6183,6 +7591,42 @@ export type MutationUpdateCollectionArgs = {
 
 
 /** The mutation root of Dailymotion's GraphQL API. */
+export type MutationUpdateCommunityArgs = {
+  input: UpdateCommunityInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationUpdateCommunityChatConversationArgs = {
+  input: CommunityChatConversationUpdateInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationUpdateCommunityChatConversationSubscriptionArgs = {
+  input: CommunityChatConversationSubscriptionUpdateInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationUpdateCommunityChatConversationsArgs = {
+  input: CommunityChatConversationUpdateBulkInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationUpdateCommunityMembershipArgs = {
+  input: CommunityMembershipUpdateInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationUpdateCommunityMembershipsArgs = {
+  input: CommunityMembershipsUpdateInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
 export type MutationUpdateNotificationSettingsEmailArgs = {
   input: UpdateNotificationSettingsEmailInput;
 };
@@ -6191,6 +7635,12 @@ export type MutationUpdateNotificationSettingsEmailArgs = {
 /** The mutation root of Dailymotion's GraphQL API. */
 export type MutationUpdateNotificationSettingsPushArgs = {
   input: UpdateNotificationSettingsPushInput;
+};
+
+
+/** The mutation root of Dailymotion's GraphQL API. */
+export type MutationUpdateOrganizationIdapArgs = {
+  input: UpdateOrganizationIdapInput;
 };
 
 
@@ -6255,25 +7705,43 @@ export type MutationUserInterestsUpdateArgs = {
 
 
 /** The mutation root of Dailymotion's GraphQL API. */
-export type MutationUserOpenWebCodeBRequestArgs = {
-  input: UserOpenWebCodeBRequestInput;
-};
-
-
-/** The mutation root of Dailymotion's GraphQL API. */
 export type MutationWatchedVideoAddArgs = {
   input: WatchedVideoAddInput;
+};
+
+/** The input fields to mute notifications. Provide exactly one of `type`, `threadId` or `videoId`. */
+export type MuteNotificationsInput = {
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: InputMaybe<Scalars['String']['input']>;
+  /** The ID of the thread-root comment whose replies to mute. Mutually exclusive with `type` and `videoId`. */
+  threadId?: InputMaybe<Scalars['ID']['input']>;
+  /** The notification type to mute. Mutually exclusive with `threadId` and `videoId`. */
+  type?: InputMaybe<NotificationType>;
+  /** The ID of the video whose top-level comment notifications to mute. Mutually exclusive with `type` and `threadId`. */
+  videoId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+/** The return fields from muting notifications. */
+export type MuteNotificationsPayload = {
+  __typename?: 'MuteNotificationsPayload';
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: Maybe<Scalars['String']['output']>;
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
 };
 
 /** The neon object represents the view of NEON apps. */
 export type Neon = Node & {
   __typename?: 'Neon';
   android?: Maybe<Android>;
+  /** A Corner page, for a given hub and language. */
+  corner?: Maybe<Corner>;
   /** The ID of the object. */
   id: Scalars['ID']['output'];
   ios?: Maybe<Ios>;
   /** The sections in the neon view. */
   sections?: Maybe<SectionConnection>;
+  tvos?: Maybe<Tvos>;
   /** Information about the URI passed as argument. */
   web?: Maybe<Web>;
 };
@@ -6282,6 +7750,13 @@ export type Neon = Node & {
 /** The neon object represents the view of NEON apps. */
 export type NeonAndroidArgs = {
   version: Scalars['String']['input'];
+};
+
+
+/** The neon object represents the view of NEON apps. */
+export type NeonCornerArgs = {
+  corner: Scalars['String']['input'];
+  lang: Scalars['String']['input'];
 };
 
 
@@ -6306,6 +7781,12 @@ export type NeonSectionsArgs = {
 
 
 /** The neon object represents the view of NEON apps. */
+export type NeonTvosArgs = {
+  version: Scalars['String']['input'];
+};
+
+
+/** The neon object represents the view of NEON apps. */
 export type NeonWebArgs = {
   uri: Scalars['String']['input'];
 };
@@ -6322,6 +7803,69 @@ export enum NetworkChannelsSort {
 export type Node = {
   /** The ID of the object. */
   id: Scalars['ID']['output'];
+};
+
+/** A notification in the authenticated user's inbox. */
+export type Notification = Node & {
+  __typename?: 'Notification';
+  /** The creation date (DateTime ISO8601) of the notification. */
+  createdAt: Scalars['DateTime']['output'];
+  /** An in-app deep link to the content the notification is about, if any. */
+  deepLink?: Maybe<Scalars['String']['output']>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The display payload of the notification. */
+  payload: NotificationPayload;
+  /** Indicates whether the notification has been read. */
+  read: Scalars['Boolean']['output'];
+  /** The date (DateTime ISO8601) the notification was read, if any. */
+  readAt?: Maybe<Scalars['DateTime']['output']>;
+  /** The type of the notification. */
+  type: NotificationType;
+};
+
+/** The user whose action triggered a notification, as they appeared when it was created. */
+export type NotificationActor = {
+  __typename?: 'NotificationActor';
+  /** The avatar URL of the actor. */
+  avatarURL: Scalars['String']['output'];
+  /** The display name of the actor. */
+  displayName: Scalars['String']['output'];
+  /** Indicates whether the actor's account is verified. */
+  verified: Scalars['Boolean']['output'];
+};
+
+/** A comment referenced by a notification, as it appeared when the notification was created. */
+export type NotificationComment = {
+  __typename?: 'NotificationComment';
+  /** The avatar URL of the comment's author, if known. */
+  authorAvatarURL?: Maybe<Scalars['String']['output']>;
+  /** The display name of the comment's author. */
+  authorDisplayName: Scalars['String']['output'];
+  /** The ID of the comment. */
+  id: Scalars['ID']['output'];
+  /** A preview of the text of the comment. */
+  textPreview: Scalars['String']['output'];
+};
+
+/** The connection type for Notification. */
+export type NotificationConnection = {
+  __typename?: 'NotificationConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<NotificationEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type NotificationEdge = {
+  __typename?: 'NotificationEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<Notification>;
 };
 
 /** The input fields to update the push notification settings on a followed channel of the connected user. */
@@ -6342,6 +7886,54 @@ export type NotificationFollowedChannelUpdatePayload = {
   /** The status of the mutation. */
   status?: Maybe<Status>;
 };
+
+/** A notification mute of the authenticated user: one muted target. */
+export type NotificationMute = {
+  __typename?: 'NotificationMute';
+  /** The creation date (DateTime ISO8601) of the mute. */
+  createdAt: Scalars['DateTime']['output'];
+  /** The dimension the mute applies to. */
+  scope: NotificationMuteScope;
+  /** The ID of the thread-root comment whose replies are muted. Set when `scope` is `THREAD`. */
+  threadId?: Maybe<Scalars['ID']['output']>;
+  /** The muted notification type. Set when `scope` is `TYPE`. */
+  type?: Maybe<NotificationType>;
+  /** The ID of the video whose top-level comment notifications are muted. Set when `scope` is `VIDEO`. */
+  videoId?: Maybe<Scalars['ID']['output']>;
+};
+
+/** The connection type for NotificationMute. */
+export type NotificationMuteConnection = {
+  __typename?: 'NotificationMuteConnection';
+  /** A list of edges. */
+  edges: Array<Maybe<NotificationMuteEdge>>;
+  /** The metadata of the connection. */
+  metadata: Metadata;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** The total number of items. A null value indicates that the information is unavailable for the connection. */
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type NotificationMuteEdge = {
+  __typename?: 'NotificationMuteEdge';
+  /** The item at the end of the edge. */
+  node?: Maybe<NotificationMute>;
+};
+
+/** The dimensions notifications can be muted on. */
+export enum NotificationMuteScope {
+  /** Mutes replies in one comment thread. */
+  Thread = 'THREAD',
+  /** Mutes every notification of one type. */
+  Type = 'TYPE',
+  /** Mutes top-level comment notifications for one video. Replies to the user's own comments still arrive; mute those per thread or by type. */
+  Video = 'VIDEO'
+}
+
+/** Types that can be a NotificationPayload. */
+export type NotificationPayload = CommentReplyPayload | TopCommentPayload;
 
 /** The notification settings. */
 export type NotificationSettings = Node & {
@@ -6399,6 +7991,51 @@ export type NotificationSettingsInput = {
   push?: InputMaybe<PushNotificationSettingsInput>;
 };
 
+/** The type of a notification. */
+export enum NotificationType {
+  /** A reply to one of the authenticated user's comments. */
+  CommentReply = 'COMMENT_REPLY',
+  /** A top-level comment on one of the authenticated user's videos. */
+  TopComment = 'TOP_COMMENT'
+}
+
+/** The video a notification relates to, as it appeared when the notification was created. */
+export type NotificationVideo = {
+  __typename?: 'NotificationVideo';
+  /** The ID of the video. */
+  id: Scalars['ID']['output'];
+  /** The thumbnail URL of the video, if known. */
+  thumbnailURL?: Maybe<Scalars['String']['output']>;
+  /** The title of the video. */
+  title: Scalars['String']['output'];
+};
+
+/** Onboarding category collection. */
+export type OnboardingCategories = Node & {
+  __typename?: 'OnboardingCategories';
+  /** The categories in the collection. */
+  categories: Array<OnboardingCategory>;
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+};
+
+/** Onboarding category. */
+export type OnboardingCategory = Node & {
+  __typename?: 'OnboardingCategory';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The human-readable label. */
+  label: Scalars['String']['output'];
+};
+
+/** The available input fields of a Thread filter in the context of an opener. */
+export type OpenerThreadFilter = {
+  /** Filter threads by the id. */
+  id?: InputMaybe<IdOperator>;
+  /** Filter threads by thread typename. */
+  thread?: InputMaybe<ThreadOperator>;
+};
+
 /** The possible order direction that a `order by` sql can use. */
 export enum OrderDirection {
   /** Order ascending. */
@@ -6410,6 +8047,11 @@ export enum OrderDirection {
 /** An organization manages users and channels. */
 export type Organization = Node & {
   __typename?: 'Organization';
+  /**
+   * How the organization's ad inventory is spread across its domains, and
+   *   what updating each ads.txt file would unlock.
+   */
+  adsTxtImpact?: Maybe<AdsTxtImpact>;
   /** The analytics of the organization. */
   analysis?: Maybe<OrganizationAnalysis>;
   /** The analytics of the organization. */
@@ -6424,12 +8066,21 @@ export type Organization = Node & {
   name?: Maybe<Scalars['String']['output']>;
   /** The owner of this organization. */
   owner?: Maybe<User>;
+  /** Whether the organization is a premium creator. */
+  premiumCreator: Scalars['Boolean']['output'];
   /** The stats of the organization. */
   stats?: Maybe<OrganizationStats>;
   /** The maximum number of users allowed to manage the organization (not including the owner). */
   userLimit?: Maybe<Scalars['Int']['output']>;
   /** The Dailymotion ID of an organization. */
   xid: Scalars['String']['output'];
+};
+
+
+/** An organization manages users and channels. */
+export type OrganizationAdsTxtImpactArgs = {
+  channelXid?: InputMaybe<Scalars['String']['input']>;
+  days?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -6599,6 +8250,8 @@ export enum PartnerReportDimension {
   Hour = 'HOUR',
   /** Aggregate data report by one of these three positions  Pre-roll, Mid-roll, Post-roll. */
   InventoryPosition = 'INVENTORY_POSITION',
+  /** Aggregate data report by inventory position index dimension (Preroll 1, Preroll 2, and Others). */
+  InventoryPositionIndex = 'INVENTORY_POSITION_INDEX',
   /** Aggregate data report by media type dimension. */
   MediaType = 'MEDIA_TYPE',
   /** Aggregate data report by minute dimension. */
@@ -6635,6 +8288,8 @@ export enum PartnerReportDimension {
   PlaylistTitle = 'PLAYLIST_TITLE',
   /** Aggregate data report by playlist type dimension. */
   PlaylistType = 'PLAYLIST_TYPE',
+  /** Aggregate data report by DRM protection level dimension. */
+  ProtectionLevel = 'PROTECTION_LEVEL',
   /** Aggregate data report by publisher channel dimension. */
   PublisherChannel = 'PUBLISHER_CHANNEL',
   /** Aggregate data report by publisher id dimension. */
@@ -6742,6 +8397,8 @@ export enum PartnerReportMetric {
   AdViewNotCompleted = 'AD_VIEW_NOT_COMPLETED',
   /** Use AI used credits metric as report measurement. */
   AiUsedCredits = 'AI_USED_CREDITS',
+  /** Use average watch time (seconds) metric as report measurement. */
+  AverageWatchTimeSec = 'AVERAGE_WATCH_TIME_SEC',
   /** Use bandwidth used live bytes metric as report mesurement. */
   BandwidthUsedLiveBytes = 'BANDWIDTH_USED_LIVE_BYTES',
   /** Use bandwidth used live seconds metric as report mesurement. */
@@ -6754,6 +8411,8 @@ export enum PartnerReportMetric {
   BandwidthUsedVodBytes = 'BANDWIDTH_USED_VOD_BYTES',
   /** Use bandwidth used vod seconds metric as report measurement. */
   BandwidthUsedVodSeconds = 'BANDWIDTH_USED_VOD_SECONDS',
+  /** Use DRM credits metric as report measurement. */
+  DrmCredits = 'DRM_CREDITS',
   /** Use ecpm eur metric as report measurement. */
   EcpmEur = 'ECPM_EUR',
   /** Use ecpm usd metric as report measurement. */
@@ -6798,10 +8457,14 @@ export enum PartnerReportMetric {
   LiveViewers = 'LIVE_VIEWERS',
   /** Use low viewable impressions as report measurement. */
   LowViewableImpressions = 'LOW_VIEWABLE_IMPRESSIONS',
+  /** Use nb boosts metric as report measurement. */
+  NbBoosts = 'NB_BOOSTS',
   /** Use impressions metric as report measurement. */
   NbImpression = 'NB_IMPRESSION',
   /** Use nb inventory gdpr missing full consent metric as report measurement. */
   NbInventoryGdprMissingFullConsent = 'NB_INVENTORY_GDPR_MISSING_FULL_CONSENT',
+  /** Use nb likes metric as report measurement. */
+  NbLikes = 'NB_LIKES',
   /** Use number of missed impression metric as report measurement. */
   NbMissedImpression = 'NB_MISSED_IMPRESSION',
   /** Use P1 impressions metric as report measurement. */
@@ -6842,6 +8505,8 @@ export enum PartnerReportMetric {
   TimeWatchedSeconds = 'TIME_WATCHED_SECONDS',
   /** Use total inventory metric as report measurement. */
   TotalInventory = 'TOTAL_INVENTORY',
+  /** Use total ratings metric as report measurement. */
+  TotalRatings = 'TOTAL_RATINGS',
   /** Use transcoding used live media count metric as report measurement. */
   TranscodingUsedLiveMediaCount = 'TRANSCODING_USED_LIVE_MEDIA_COUNT',
   /** Use transcoding used live seconds metric as report measurement. */
@@ -7245,6 +8910,33 @@ export enum PostTypename {
   Video = 'VIDEO'
 }
 
+/** A pre-statement summarizing an organization's earnings for a period. */
+export type PreStatement = {
+  __typename?: 'PreStatement';
+  /** The last month of the period the pre-statement covers (e.g. "2024-03"). */
+  periodEndMonth: Scalars['String']['output'];
+  /** The first month of the period the pre-statement covers (e.g. "2024-01"). */
+  periodStartMonth: Scalars['String']['output'];
+  /** The unique identifier of the pre-statement. */
+  preStatementId: Scalars['String']['output'];
+  /** The current status of the pre-statement. */
+  status: PreStatementStatus;
+  /** The pre-statement amount. */
+  value: Scalars['Float']['output'];
+};
+
+/** The possible values of a pre-statement status. */
+export enum PreStatementStatus {
+  /** The pre-statement has been paid. */
+  Paid = 'PAID',
+  /** The pre-statement is awaiting processing. */
+  Pending = 'PENDING',
+  /** The pre-statement has been received by the partner. */
+  Received = 'RECEIVED',
+  /** The pre-statement has been sent to the partner. */
+  Sent = 'SENT'
+}
+
 /** Product updates notification settings. */
 export type ProductUpdates = Node & {
   __typename?: 'ProductUpdates';
@@ -7265,16 +8957,35 @@ export type Prompt = Node & Thread & {
   __typename?: 'Prompt';
   /** The chatroom associated with the Prompt. */
   chatroom?: Maybe<Chatroom>;
+  /** The comment backing this prompt's reply thread. Null until the first reply creates it. */
+  comment?: Maybe<Comment>;
   /** The creation date (DateTime ISO8601) of the Prompt. */
   createDate: Scalars['DateTime']['output'];
   /** The ID of the object. */
   id: Scalars['ID']['output'];
   /** The story that elicited the Prompt. */
   opener?: Maybe<Story>;
+  /** Indicates whether the creator of the story has liked the comment. */
+  openerCreatorLiked: Scalars['Boolean']['output'];
+  /** Optional ranking score. */
+  score?: Maybe<Scalars['Float']['output']>;
+  /** The share URLs of the prompt. */
+  shareUrls?: Maybe<PromptShareUrls>;
+  /** The human-readable unique ID of the prompt. */
+  slug: Scalars['String']['output'];
   /** The content of the Prompt. */
   text: Scalars['String']['output'];
   /** The viewer engagement information of the Prompt. */
   viewerEngagement?: Maybe<PromptViewerEngagement>;
+};
+
+/** Information about the share urls of a Prompt. */
+export type PromptShareUrls = Node & ShareUrls & {
+  __typename?: 'PromptShareUrls';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The permalink share url of the prompt. */
+  permalink: Scalars['String']['output'];
 };
 
 /** Information about the viewer engagement of a Prompt. */
@@ -7357,6 +9068,16 @@ export type Query = {
   collection?: Maybe<Collection>;
   /** A list of collections. */
   collections?: Maybe<CollectionConnection>;
+  /** A list of suggested communities. */
+  communities?: Maybe<CommunityConnection>;
+  /** A chat conversation of a community. Only accessible to the community owners and approved members. */
+  communityChatConversation?: Maybe<CommunityChatConversation>;
+  /** A message of a community chat conversation. Pending and rejected messages are only found by their author. */
+  communityChatConversationMessage?: Maybe<ChatConversationMessage>;
+  /** The messages of a community chat conversation. Approved and deleted messages are listed, and pending and rejected ones only to their author. */
+  communityChatConversationMessages?: Maybe<ChatConversationMessageConnection>;
+  /** The chat conversations of a community, in the order set by the community owners. Only accessible to the community owners and approved members. */
+  communityChatConversations?: Maybe<CommunityChatConversationConnection>;
   /**
    * A content feed manages Posts.
    * @deprecated Use conversations with filter algorithm - HASHTAG or PERSPECTIVE.
@@ -7408,6 +9129,8 @@ export type Query = {
   mojoKit: MojoKitQueries;
   /** Represents a node with an ID. */
   node?: Maybe<Node>;
+  /** Access to onboarding categories. */
+  onboardingCategories: OnboardingCategories;
   /** Access to advanced partner features. */
   partner?: Maybe<PartnerSpace>;
   /** Information about the player. */
@@ -7427,6 +9150,8 @@ export type Query = {
   recording?: Maybe<Recording>;
   /** Perform a search. */
   search?: Maybe<Search>;
+  /** The stitches for a given video. */
+  stitches?: Maybe<VideoConnection>;
   /**
    * The list of countries that are supported.
    * @deprecated Use `localization.supportedCountries`.
@@ -7465,6 +9190,8 @@ export type Query = {
    * @deprecated Use `conversations` with filter algorithm.
    */
   views?: Maybe<Views>;
+  /** A list of watching feed conversations. */
+  webwatchingFeed?: Maybe<ConversationConnection>;
 };
 
 
@@ -7511,6 +9238,45 @@ export type QueryCollectionsArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   verifiedChannelOnly?: InputMaybe<Scalars['Boolean']['input']>;
   videoXid?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+/** The query root of Dailymotion's GraphQL API. */
+export type QueryCommunitiesArgs = {
+  first?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/** The query root of Dailymotion's GraphQL API. */
+export type QueryCommunityChatConversationArgs = {
+  communityId: Scalars['ID']['input'];
+  conversationId: Scalars['ID']['input'];
+};
+
+
+/** The query root of Dailymotion's GraphQL API. */
+export type QueryCommunityChatConversationMessageArgs = {
+  communityId: Scalars['ID']['input'];
+  conversationId: Scalars['ID']['input'];
+  messageId: Scalars['ID']['input'];
+};
+
+
+/** The query root of Dailymotion's GraphQL API. */
+export type QueryCommunityChatConversationMessagesArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  communityId: Scalars['ID']['input'];
+  conversationId: Scalars['ID']['input'];
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<ChatConversationMessageSort>;
+};
+
+
+/** The query root of Dailymotion's GraphQL API. */
+export type QueryCommunityChatConversationsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  communityId: Scalars['ID']['input'];
+  first?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -7662,10 +9428,19 @@ export type QuerySearchArgs = {
 
 
 /** The query root of Dailymotion's GraphQL API. */
+export type QueryStitchesArgs = {
+  first?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  videoId: Scalars['ID']['input'];
+};
+
+
+/** The query root of Dailymotion's GraphQL API. */
 export type QueryThreadsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<ThreadFilter>;
   first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<ThreadSort>;
 };
 
 
@@ -7728,6 +9503,13 @@ export type QueryVideosArgs = {
   sort?: InputMaybe<Scalars['String']['input']>;
   topicXids?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   videoXids?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+};
+
+
+/** The query root of Dailymotion's GraphQL API. */
+export type QueryWebwatchingFeedArgs = {
+  context?: InputMaybe<ConversationContext>;
+  country?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** The input fields to rate a recommendation. */
@@ -7808,6 +9590,8 @@ export type Reaction = Content & Node & Recording & Thread & {
    * @deprecated No longer supported.
    */
   reactions?: Maybe<ReactionConnection>;
+  /** Optional ranking score. */
+  score?: Maybe<Scalars['Float']['output']>;
   /** The share urls of the reaction. */
   shareUrls?: Maybe<ReactionShareUrls>;
   /** The slug of the reaction. */
@@ -8923,6 +10707,8 @@ export enum RolePermission {
   ManageAnalyticReports = 'MANAGE_ANALYTIC_REPORTS',
   /** A permission on the role to manage behavior rules. */
   ManageBehaviorRules = 'MANAGE_BEHAVIOR_RULES',
+  /** A permission on the role to update organization Tipalti idap values. */
+  ManageOrganizationIdap = 'MANAGE_ORGANIZATION_IDAP',
   /** An authorization role that represents an owner. */
   SendTransactionalMail = 'SEND_TRANSACTIONAL_MAIL'
 }
@@ -9294,6 +11080,27 @@ export type SentenceWithSegments = {
   words: Array<Maybe<TextWithTimings>>;
 };
 
+/** The input fields to set the read state of a single notification. */
+export type SetNotificationReadStateInput = {
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: InputMaybe<Scalars['String']['input']>;
+  /** The ID of the notification. */
+  id: Scalars['ID']['input'];
+  /** The read state to set. */
+  read: Scalars['Boolean']['input'];
+};
+
+/** The return fields from setting the read state of a notification. */
+export type SetNotificationReadStatePayload = {
+  __typename?: 'SetNotificationReadStatePayload';
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: Maybe<Scalars['String']['output']>;
+  /** The updated notification. */
+  notification?: Maybe<Notification>;
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
 /** Information about the share urls. */
 export type ShareUrls = {
   /** The ID of the object. */
@@ -9520,6 +11327,21 @@ export type Subdivision = Node & {
   id: Scalars['ID']['output'];
 };
 
+/** The input fields to submit an onboarding category choice. */
+export type SubmitOnboardingCategoryChoiceInput = {
+  /** The category choice. */
+  categoryIds: Array<Scalars['ID']['input']>;
+  /** The onboarding categories the choice is based on. */
+  id: Scalars['ID']['input'];
+};
+
+/** The return fields from submitting an onboarding category choice. */
+export type SubmitOnboardingCategoryChoicePayload = {
+  __typename?: 'SubmitOnboardingCategoryChoicePayload';
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
 /** Information about the subtitle of a media. */
 export type Subtitle = Node & {
   __typename?: 'Subtitle';
@@ -9551,6 +11373,17 @@ export type SubtitleEdge = {
   __typename?: 'SubtitleEdge';
   /** The item at the end of the edge. */
   node?: Maybe<Subtitle>;
+};
+
+/** Represents the status for subtitle generation. */
+export type SubtitleGenerationStatus = Node & {
+  __typename?: 'SubtitleGenerationStatus';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The language for subtitle generation. */
+  language: Scalars['String']['output'];
+  /** The current status for subtitle generation. */
+  status: Scalars['String']['output'];
 };
 
 /** Information about the suggestion. */
@@ -9651,6 +11484,15 @@ export type SupportedLanguageEdge = {
   node?: Maybe<SupportedLanguage>;
 };
 
+/** Information about an Apple tvOS app. */
+export type Tvos = Node & {
+  __typename?: 'TVOS';
+  /** The ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The current minimum version. */
+  minimum_version: Scalars['String']['output'];
+};
+
 /** Represents a text with timings in the context of a speech to text audio */
 export type TextWithTimings = {
   __typename?: 'TextWithTimings';
@@ -9690,6 +11532,10 @@ export type ThreadEdge = {
 
 /** The available input fields of a Thread filter. */
 export type ThreadFilter = {
+  /** Filter threads by communities current channel is a member of. */
+  communityMember?: InputMaybe<BooleanOperator>;
+  /** Filter by the creator. */
+  creator?: InputMaybe<IdOperator>;
   /** Filter threads by the id. */
   id?: InputMaybe<IdOperator>;
   /** Filter threads by the openerId. */
@@ -9727,10 +11573,26 @@ export type ThreadMetricEdge = {
   node?: Maybe<ThreadMetric>;
 };
 
+/** The viewer's notification state for a comment thread. */
+export enum ThreadNotificationsState {
+  /** Indicates the viewer receives notifications for replies in the thread. */
+  Active = 'ACTIVE',
+  /** Indicates the viewer has muted notifications for the thread. */
+  Muted = 'MUTED'
+}
+
 /** The available input fields of a story operator. */
 export type ThreadOperator = {
   /** Short for in array, must be an element of the array. */
   in?: InputMaybe<Array<ThreadTypename>>;
+};
+
+/** How to merge and order items returned by ``Query.threads``. */
+export type ThreadSort = {
+  /** Merge by creation time (legacy behavior): interleave by recency. */
+  createDate?: InputMaybe<OrderDirection>;
+  /** Merge and interleave by score. */
+  score?: InputMaybe<OrderDirection>;
 };
 
 /** The possible types for a thread. */
@@ -9794,6 +11656,8 @@ export type Title = Node & Thread & {
   __typename?: 'Title';
   /** The chatroom associated with the Title. */
   chatroom?: Maybe<Chatroom>;
+  /** The creation date (DateTime ISO8601) of the Title. */
+  createDate: Scalars['DateTime']['output'];
   /** The ID of the object. */
   id: Scalars['ID']['output'];
   /** The metrics of the Title. */
@@ -9841,6 +11705,17 @@ export type TitleViewerEngagement = Node & ViewerEngagement & {
   likeRating?: Maybe<LikeRating>;
   /** Indicates whether the viewer has liked the Title. Returns False if the viewer is not connected. */
   liked?: Maybe<Scalars['Boolean']['output']>;
+};
+
+/** The payload of a top-level comment notification. */
+export type TopCommentPayload = {
+  __typename?: 'TopCommentPayload';
+  /** The user who posted the comment. */
+  actor: NotificationActor;
+  /** A preview of the comment that triggered the notification. */
+  commentPreview: Scalars['String']['output'];
+  /** The video the comment was posted on. */
+  video: NotificationVideo;
 };
 
 /** A topic represents a keyword that is associated to a media. */
@@ -10102,6 +11977,27 @@ export type UnlikeVideoPayload = {
   status?: Maybe<Status>;
 };
 
+/** The input fields to remove a notification mute. Provide exactly one of `type`, `threadId` or `videoId`. */
+export type UnmuteNotificationsInput = {
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: InputMaybe<Scalars['String']['input']>;
+  /** The ID of the thread-root comment whose replies to unmute. Mutually exclusive with `type` and `videoId`. */
+  threadId?: InputMaybe<Scalars['ID']['input']>;
+  /** The notification type to unmute. Mutually exclusive with `threadId` and `videoId`. */
+  type?: InputMaybe<NotificationType>;
+  /** The ID of the video whose top-level comment notifications to unmute. Mutually exclusive with `type` and `threadId`. */
+  videoId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+/** The return fields from removing a notification mute. */
+export type UnmuteNotificationsPayload = {
+  __typename?: 'UnmuteNotificationsPayload';
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: Maybe<Scalars['String']['output']>;
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
 /** The input fields to update a behavior rule. */
 export type UpdateBehaviorRuleInput = {
   /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
@@ -10205,6 +12101,25 @@ export type UpdateCollectionPayload = {
   status?: Maybe<Status>;
 };
 
+/** The input fields to update a community. An omitted field is left unchanged, `null` clears it. */
+export type UpdateCommunityInput = {
+  /** The ID of the community. */
+  communityId: Scalars['ID']['input'];
+  /** The name given by the channel owner to the community members, in plural form (e.g. "carflyers"). */
+  demonymPlural?: InputMaybe<Scalars['String']['input']>;
+  /** The message shown to new members when they join the community. */
+  welcomeMessage?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** The return fields from updating a community. */
+export type UpdateCommunityPayload = {
+  __typename?: 'UpdateCommunityPayload';
+  /** The updated community. */
+  community?: Maybe<Community>;
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
 /** The input fields to update the email notification settings of the connected user. */
 export type UpdateNotificationSettingsEmailInput = {
   /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
@@ -10257,6 +12172,29 @@ export type UpdateNotificationSettingsPushPayload = {
   clientMutationId?: Maybe<Scalars['String']['output']>;
   /** The updated push notification settings. */
   notificationSettings?: Maybe<NotificationSettings>;
+  /** The status of the mutation. */
+  status?: Maybe<Status>;
+};
+
+/** The input fields to update an organization Tipalti idap. */
+export type UpdateOrganizationIdapInput = {
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
+  clientMutationId?: InputMaybe<Scalars['String']['input']>;
+  /** The Tipalti payee identifier (idap) to link to the organization. */
+  idap: Scalars['String']['input'];
+  /** The Dailymotion ID of the organization to update. */
+  organizationXid: Scalars['String']['input'];
+};
+
+/** The return fields from updating an organization Tipalti idap. */
+export type UpdateOrganizationIdapPayload = {
+  __typename?: 'UpdateOrganizationIdapPayload';
+  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
+  clientMutationId?: Maybe<Scalars['String']['output']>;
+  /** The Tipalti payee identifier (idap) now linked to the organization. */
+  idap: Scalars['String']['output'];
+  /** The Dailymotion ID of the updated organization. */
+  organizationXid: Scalars['String']['output'];
   /** The status of the mutation. */
   status?: Maybe<Status>;
 };
@@ -10355,16 +12293,26 @@ export type UpdateVideoInput = {
   password?: InputMaybe<Scalars['String']['input']>;
   /** @deprecated(reason: "Use `settings.visibility` input arg.") - Indicates whether the video is private. */
   private?: InputMaybe<Scalars['Boolean']['input']>;
+  /** The prompt to set to the video. */
+  prompt?: InputMaybe<Scalars['String']['input']>;
   /** Indicates whether the video is published. */
   published?: InputMaybe<Scalars['Boolean']['input']>;
   /** The settings of the video. */
   settings?: InputMaybe<VideoSettingsInput>;
+  /** ID of the video the video is a stitch for. */
+  stitchSource?: InputMaybe<Scalars['ID']['input']>;
+  /** Indicates whether the video can be used in stitches. */
+  stitchable?: InputMaybe<Scalars['Boolean']['input']>;
   /** The list of tags to associate to the video. */
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** The URL of the thumbnail image. */
+  thumbnailURL?: InputMaybe<Scalars['String']['input']>;
   /** The title of the video. */
   title?: InputMaybe<Scalars['String']['input']>;
   /** The URL of the video. */
   url?: InputMaybe<Scalars['String']['input']>;
+  /** The URL of the vertical thumbnail image. */
+  verticalThumbnailURL?: InputMaybe<Scalars['String']['input']>;
   /** @deprecated(reason: "Use `settings.visibility` input arg.")  - The visibility of the Video. */
   visibility?: InputMaybe<Visibility>;
   /** The Dailymotion ID of the video to update. */
@@ -10451,6 +12399,8 @@ export type User = Node & {
   emailChangeRequest?: Maybe<EmailChangeRequest>;
   /** Indicates whether the email of the user is verified. */
   emailVerified: Scalars['Boolean']['output'];
+  /** The active entitlements of the authenticated user. Empty when the user has none. */
+  entitlements?: Maybe<Array<Entitlement>>;
   /** The Facebook ID of the user. */
   facebookID?: Maybe<Scalars['String']['output']>;
   /** The first name of the user. */
@@ -10547,11 +12497,17 @@ export type User = Node & {
    * @deprecated Use `channel.name`
    */
   nickname?: Maybe<Scalars['String']['output']>;
+  /** The authenticated user's notification mutes, oldest first. */
+  notificationMutes?: Maybe<NotificationMuteConnection>;
   /**
    * The notification settings of the user.
    * @deprecated Use `me.channel.settings.notifications`.
    */
   notificationSettings?: Maybe<NotificationSettings>;
+  /** The authenticated user's notifications, newest first. */
+  notifications?: Maybe<NotificationConnection>;
+  /** The number of unread notifications for the authenticated user. */
+  notificationsUnreadCount: Scalars['Int']['output'];
   /** The organizations created by the user. */
   organizations?: Maybe<OrganizationConnection>;
   /**
@@ -10711,6 +12667,23 @@ export type UserLikedMediasArgs = {
 export type UserLikedVideosArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/** A user object contains information about a Dailymotion user. */
+export type UserNotificationMutesArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  scope?: InputMaybe<NotificationMuteScope>;
+};
+
+
+/** A user object contains information about a Dailymotion user. */
+export type UserNotificationsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  read?: InputMaybe<Scalars['Boolean']['input']>;
+  type?: InputMaybe<NotificationType>;
 };
 
 
@@ -10969,25 +12942,6 @@ export type UserInterestsUpdatePayload = {
   status?: Maybe<Status>;
 };
 
-/** The input fields to request a code B of OpenWeb service. */
-export type UserOpenWebCodeBRequestInput = {
-  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
-  clientMutationId?: InputMaybe<Scalars['String']['input']>;
-  /** The session ID received from client side. */
-  codeA: Scalars['String']['input'];
-};
-
-/** The return fields from confirming an email change. */
-export type UserOpenWebCodeBRequestPayload = {
-  __typename?: 'UserOpenWebCodeBRequestPayload';
-  /** @deprecated(reason: "No longer supported.") - The ID generated for the client performing the mutation. */
-  clientMutationId?: Maybe<Scalars['String']['output']>;
-  /** The code B provided by OpenWeb service. */
-  codeB: Scalars['String']['output'];
-  /** The status of the mutation. */
-  status?: Maybe<Status>;
-};
-
 /** A user's voting information for a poll. */
 export type UserPollAnswer = Node & {
   __typename?: 'UserPollAnswer';
@@ -11166,6 +13120,14 @@ export type Video = Content & Node & Recording & {
   collections?: Maybe<CollectionConnection>;
   /** The comments of the video. */
   comments?: Maybe<CommentConnection>;
+  /**
+   *
+   *   Top-level comments with the first page of each thread's replies in one gateway
+   *   round-trip (core-comment list + ``/replies/bulk``). Deeper reply pagination
+   *   uses the existing ``comments(rootId: ...)`` field on the client.
+   *
+   */
+  commentsWithFirstReplies?: Maybe<CommentWithFirstRepliesConnection>;
   /** The date and time (ISO 8601 format) when the video was created. */
   createDate: Scalars['DateTime']['output'];
   /**
@@ -11212,6 +13174,8 @@ export type Video = Content & Node & Recording & {
   hasFingerprint?: Maybe<Scalars['Boolean']['output']>;
   /** Indicates whether the video has perspective videos associated with it. */
   hasPerspective?: Maybe<Scalars['Boolean']['output']>;
+  /** Indicates whether the video has a vertical (9:16) thumbnail. */
+  hasVerticalThumbnail?: Maybe<Scalars['Boolean']['output']>;
   /** The hashtags of the video. */
   hashtags?: Maybe<HashtagConnection>;
   /** The height of the video (px). */
@@ -11265,6 +13229,13 @@ export type Video = Content & Node & Recording & {
    */
   isCreatedForKids?: Maybe<Scalars['Boolean']['output']>;
   /**
+   *
+   *   Indicates whether the video is flagged as a DayOne original, i.e. made with Dailymotion.
+   *   The flag is set internally by the content team and cannot be changed through this API.
+   *
+   */
+  isDayOneOriginal?: Maybe<Scalars['Boolean']['output']>;
+  /**
    * Indicates whether the video can be downloaded.
    * @deprecated Use `settings.downloadable` field.
    */
@@ -11307,6 +13278,8 @@ export type Video = Content & Node & Recording & {
    * @deprecated Use `settings.threadsDisabled` field.
    */
   isReactionVideosEnabled?: Maybe<Scalars['Boolean']['output']>;
+  /** Indicates whether the video is suggestible, based on its suggestivity score. */
+  isSuggestive?: Maybe<Scalars['Boolean']['output']>;
   /**
    * Indicates whether the current user has started watching the video.
    * @deprecated Use `viewerEngagement.watchStarted` field.
@@ -11330,6 +13303,8 @@ export type Video = Content & Node & Recording & {
   nextVideos?: Maybe<VideoConnection>;
   /** Indicates whether the video has paid partnership. */
   paidPartnership?: Maybe<Scalars['Boolean']['output']>;
+  /** The prompt for the video. */
+  prompt?: Maybe<Prompt>;
   /** The resolution quality of the the video. */
   quality?: Maybe<Quality>;
   /**
@@ -11366,12 +13341,24 @@ export type Video = Content & Node & Recording & {
   stats?: Maybe<VideoStats>;
   /** The current status of the video. */
   status?: Maybe<VideoStatus>;
+  /** The stitch source, if the video is a stitch. */
+  stitchSource?: Maybe<Video>;
+  /** The stitch source ID, available even if the source video is deleted. */
+  stitchSourceId?: Maybe<Scalars['ID']['output']>;
+  /** Indicates whether the content can be stitched. */
+  stitchable?: Maybe<Scalars['Boolean']['output']>;
+  /** The stitches. */
+  stitches?: Maybe<VideoConnection>;
   /** The stream urls of the video. */
   streamUrls?: Maybe<VideoStreamUrls>;
   /** The subtitles of the video. */
   subtitles?: Maybe<SubtitleConnection>;
+  /** The status of the subtitle generation. */
+  subtitlesGenerationStatus: Array<Maybe<SubtitleGenerationStatus>>;
   /** The tags of the video. */
   tags?: Maybe<MediaTagConnection>;
+  /** The threads the video has elicited. */
+  threads?: Maybe<ThreadConnection>;
   /** The URL of the thumbnail image. */
   thumbnail?: Maybe<Image>;
   /**
@@ -11407,6 +13394,8 @@ export type Video = Content & Node & Recording & {
    * @deprecated Use `shareUrls.permalink` field.
    */
   url?: Maybe<Scalars['String']['output']>;
+  /** The URL of the vertical (9:16) thumbnail image. */
+  verticalThumbnailURL?: Maybe<Scalars['String']['output']>;
   /**
    * The total number of views of the video.
    * @deprecated Use `stats.views.total` field.
@@ -11448,6 +13437,16 @@ export type VideoCommentsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   orderBy?: InputMaybe<CommentSort>;
   page?: InputMaybe<Scalars['Int']['input']>;
+  rootId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+/** Information about a video. */
+export type VideoCommentsWithFirstRepliesArgs = {
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<CommentSort>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  repliesFirst?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -11543,6 +13542,13 @@ export type VideoSharingUrLsArgs = {
 
 
 /** Information about a video. */
+export type VideoStitchesArgs = {
+  first?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/** Information about a video. */
 export type VideoSubtitlesArgs = {
   auto?: Scalars['Boolean']['input'];
   autoGenerated?: InputMaybe<Scalars['Boolean']['input']>;
@@ -11555,6 +13561,14 @@ export type VideoSubtitlesArgs = {
 export type VideoTagsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/** Information about a video. */
+export type VideoThreadsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<OpenerThreadFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -11582,6 +13596,12 @@ export type VideoTopicsArgs = {
 export type VideoTranscriptArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/** Information about a video. */
+export type VideoVerticalThumbnailUrlArgs = {
+  height: ThumbnailHeight;
 };
 
 /** The connection type for Video. */
@@ -12082,6 +14102,16 @@ export type Watch = History & Node & {
   id: Scalars['ID']['output'];
   /** The post watched by the channel. */
   post: Post;
+};
+
+/** Watch session context for a video. */
+export type WatchContext = {
+  /** The date and time at which the user was last watching the video. */
+  watchedAt: Scalars['DateTime']['input'];
+  /** Duration watched in seconds. */
+  watchedDuration: Scalars['Int']['input'];
+  /** The xid of the video that was watched. */
+  watchedVideoXid?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** The return fields from performing an action on the watched list of the connected user. */
