@@ -1123,3 +1123,22 @@ query GetHomeFeed(
 	}
 }
 `
+
+export const VIDEO_CHAPTERS_QUERY = `
+query VIDEO_CHAPTERS_QUERY($xid: String!, $page: Int!) {
+	video(xid: $xid) {
+		duration
+		chapters(first: 100, page: $page) {
+			pageInfo {
+				hasNextPage
+			}
+			edges {
+				node {
+					timecode
+					title
+				}
+			}
+		}
+	}
+}
+`

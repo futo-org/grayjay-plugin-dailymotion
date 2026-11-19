@@ -59,6 +59,7 @@ import {
   DISCOVERY_QUEUE_QUERY,
   playerVideosDataQuery,
   GET_SHORTS_FEED_QUERY,
+  VIDEO_CHAPTERS_QUERY,
 } from './gqlQueries';
 
 import {
@@ -71,6 +72,7 @@ import {
 
 import {
   Channel,
+  Chapter,
   Collection,
   CollectionConnection,
   Live,
@@ -98,6 +100,7 @@ import {
   SourceCollectionToGrayjayPlaylistDetails,
   SourceVideoToGrayjayVideo,
   SourceVideoToPlatformVideoDetailsDef,
+  SourceChaptersToGrayjayChapters,
 } from './Mappers';
 
 import {
@@ -476,6 +479,47 @@ source.isContentDetailsUrl = function (url) {
 
 source.getContentDetails = function (url) {
   return getSavedVideo(url, false);
+};
+
+source.getContentChapters = function (url: string): IPlatformChapter[] {
+  const xid = url.split('/').pop();
+  const chapters: Chapter[] = [];
+  let videoDuration = 0;
+  let page = 1;
+  let hasNextPage = true;
+
+  while (hasNextPage) {
+    const [error, gqlResponse] = executeGqlQuery(http, {
+      operationName: 'VIDEO_CHAPTERS_QUERY',
+      variables: { xid, page },
+      query: VIDEO_CHAPTERS_QUERY,
+      usePlatformAuth: false,
+    });
+
+    if (error) {
+      log(`Failed to get chapters: [${error.code}] ${error.status} (${error.operationName})`);
+      break;
+    }
+
+    const video = gqlResponse?.data?.video as Maybe<Video>;
+
+    if (!video?.chapters) {
+      break;
+    }
+
+    videoDuration = video.duration ?? 0;
+
+    for (const edge of video.chapters.edges) {
+      if (edge?.node) {
+        chapters.push(edge.node);
+      }
+    }
+
+    hasNextPage = video.chapters.pageInfo.hasNextPage;
+    page++;
+  }
+
+  return SourceChaptersToGrayjayChapters(chapters, videoDuration);
 };
 
 source.saveState = () => {
