@@ -113,3 +113,34 @@ export class SearchPlaylistPager extends PlaylistPager {
     return this.cb(opts);
   }
 }
+
+export class PlaylistVideoPager extends VideoPager {
+  cb: Function;
+  constructor(
+    results: PlatformVideo[],
+    hasMore: boolean,
+    params: any,
+    cb: Function,
+  ) {
+    super(results, hasMore, { ...params });
+    this.cb = cb;
+  }
+
+  nextPage() {
+    const nextPageNumber = this.context.page + 1;
+
+    const pager = this.cb(
+      this.context.xid,
+      nextPageNumber,
+      this.context.usePlatformAuth,
+    );
+
+    // Advance only when the page actually returned videos, so a failed or empty
+    // fetch cannot make a retry skip ahead and drop videos.
+    if (pager?.results?.length) {
+      this.context.page = nextPageNumber;
+    }
+
+    return pager;
+  }
+}

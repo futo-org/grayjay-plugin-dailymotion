@@ -1,7 +1,8 @@
 const REGEX_API_CLIENT_ID = /get apiClientId\(\)\{return"([a-f0-9]{20})"\}/;
 const REGEX_API_CLIENT_SECRET = /get apiClientSecret\(\)\{return"([a-f0-9]{40})"\}/;
 const REGEX_APP_JS_URL = /static\/app\.[a-f0-9]+\.js/;
-const REGEX_API_ENDPOINT = /API_ENDPOINT:\s*'(https:\/\/[^']+)'/;
+const REGEX_API_ENDPOINT = /(?:^|[^A-Z_])API_ENDPOINT:\s*'(https:\/\/[^']+)'/;
+const REGEX_AUTH_ENDPOINT = /(?:^|[^A-Z_])AUTH_ENDPOINT:\s*'(https:\/\/[^']+)'/;
 
 const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0';
@@ -21,7 +22,7 @@ const commonHeaders = {
 };
 
 // Extract API credentials and endpoint from Dailymotion's website
-async function extractCredentials(): Promise<{ clientId: string; clientSecret: string; apiEndpoint: string }> {
+async function extractCredentials(): Promise<{ clientId: string; clientSecret: string; apiEndpoint: string; authEndpoint: string }> {
   console.log('Fetching Dailymotion homepage...');
   const homepageResponse = await fetch('https://www.dailymotion.com', {
     headers: { 'User-Agent': USER_AGENT },
@@ -37,6 +38,10 @@ async function extractCredentials(): Promise<{ clientId: string; clientSecret: s
   const apiEndpointMatch = homepageHtml.match(REGEX_API_ENDPOINT);
   const apiEndpoint = apiEndpointMatch ? apiEndpointMatch[1] : 'https://graphql.api.dailymotion.com';
   console.log(`Extracted API endpoint: ${apiEndpoint}`);
+
+  const authEndpointMatch = homepageHtml.match(REGEX_AUTH_ENDPOINT);
+  const authEndpoint = authEndpointMatch ? authEndpointMatch[1] : 'https://graphql.api.dailymotion.com/oauth/token';
+  console.log(`Extracted auth endpoint: ${authEndpoint}`);
 
   // Find the app.js URL
   const appJsMatch = homepageHtml.match(REGEX_APP_JS_URL);
@@ -71,21 +76,20 @@ async function extractCredentials(): Promise<{ clientId: string; clientSecret: s
   console.log(`Extracted client_id: ${clientId}`);
   console.log(`Extracted client_secret: ${clientSecret.substring(0, 8)}...`);
 
-  return { clientId, clientSecret, apiEndpoint };
+  return { clientId, clientSecret, apiEndpoint, authEndpoint };
 }
 
 // Function to fetch OAuth token
-async function fetchToken(clientId: string, clientSecret: string, apiEndpoint: string): Promise<string> {
+async function fetchToken(clientId: string, clientSecret: string, authEndpoint: string): Promise<string> {
   const body = new URLSearchParams({
     client_id: clientId,
     client_secret: clientSecret,
     grant_type: 'client_credentials',
   });
 
-  const tokenUrl = `${apiEndpoint}/oauth/token`;
-  console.log(`Fetching token from ${tokenUrl}...`);
+  console.log(`Fetching token from ${authEndpoint}...`);
 
-  const response = await fetch(tokenUrl, {
+  const response = await fetch(authEndpoint, {
     method: 'POST',
     headers: {
       ...commonHeaders,
@@ -105,8 +109,8 @@ async function fetchToken(clientId: string, clientSecret: string, apiEndpoint: s
 
 // Main function to setup GraphQL Codegen config
 async function setupCodegenConfig() {
-  const { clientId, clientSecret, apiEndpoint } = await extractCredentials();
-  const token = await fetchToken(clientId, clientSecret, apiEndpoint);
+  const { clientId, clientSecret, apiEndpoint, authEndpoint } = await extractCredentials();
+  const token = await fetchToken(clientId, clientSecret, authEndpoint);
 
   console.log(`Using API endpoint for schema: ${apiEndpoint}`);
 

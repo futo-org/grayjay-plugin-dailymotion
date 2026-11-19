@@ -1,18 +1,26 @@
 stages:
   - deploy
 
+variables:
+  PLUGIN_NAME: Dailymotion
+  ICON_FILE: build/DailymotionIcon.png
+  SCRIPT_FILE: build/DailymotionScript.js
+  CONFIG_FILE: build/DailymotionConfig.json
+
 deploy-master:
   stage: deploy
+  variables:
+    PRE_RELEASE: "false"
   script:
-    - export PRE_RELEASE=false
     - sh deploy.sh
   only:
     - master
 
 deploy-dev:
   stage: deploy
+  variables:
+    PRE_RELEASE: "true"
   script:
-    - export PRE_RELEASE=true
     - sh deploy.sh
   only:
     - dev

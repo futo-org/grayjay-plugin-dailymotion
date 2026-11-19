@@ -39,7 +39,7 @@ export const REGEX_VIDEO_CHANNEL_URL =
  /^https:\/\/(?:www\.)?dailymotion\.com\/[a-z0-9][a-z0-9._-]{2,26}(?:\?[a-zA-Z0-9=&._-]*)?$/i;
   
 export const REGEX_VIDEO_PLAYLIST_URL =
-  /^https:\/\/(?:www\.)?dailymotion\.com\/playlist\/[a-zA-Z0-9]+(?:[?&][a-zA-Z0-9_\-=&%]*)?$/i;
+  /^https:\/\/(?:www\.)?dailymotion\.com\/playlist\/([a-zA-Z0-9]+)(?:[?&][a-zA-Z0-9_\-=&%]*)?$/i;
 
 export const REGEX_INITIAL_DATA_API_AUTH_1 =
   /(?<=window\.__LOADABLE_LOADED_CHUNKS__=.*)\b[a-f0-9]{20}\b|\b[a-f0-9]{40}\b/g;
@@ -161,6 +161,8 @@ export const SEARCH_CAPABILITIES = {
   ],
 };
 
+export const PLAYLIST_VIDEOS_PER_PAGE = 100;
+
 // Used to on source.getUserPlaylists to specify if the playlist is private or not. This is read by source.getPlaylist to enable the authentication context.
 export const PRIVATE_PLAYLIST_QUERY_PARAM_FLAGGER = '&private=1';
 
@@ -173,6 +175,7 @@ export const DEFAULT_HEADERS:Record<string, string> = {
 
 export const IS_DESKTOP = bridge.buildPlatform === "desktop";
 
-export const IMPERSONATION_TARGET = IS_DESKTOP ? 'chrome136' : 'chrome131_android';
+// The chrome136 TLS profile gets a 403 (E005) from the HLS origin on desktop; Android is unaffected for now.
+export const IMPERSONATION_TARGET = IS_DESKTOP ? 'firefox133' : 'chrome131_android';
 
 export const IS_IMPERSONATION_AVAILABLE = (typeof httpimp !== 'undefined');

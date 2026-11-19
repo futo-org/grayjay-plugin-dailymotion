@@ -576,7 +576,7 @@ query SEARCH_QUERY($query: String!, $page: Int, $limit: Int, $avatar_size: Avata
 }`;
 
 export const PLAYLIST_DETAILS_QUERY = `
-query PLAYLIST_VIDEO_QUERY($xid: String!, $numberOfVideos: Int = 100, $avatar_size: AvatarHeight!, $thumbnail_resolution: ThumbnailHeight!) {
+query PLAYLIST_VIDEO_QUERY($xid: String!, $numberOfVideos: Int!, $page: Int!, $avatar_size: AvatarHeight!, $thumbnail_resolution: ThumbnailHeight!) {
 	collection(xid: $xid) {
 		id
 		xid
@@ -615,7 +615,11 @@ query PLAYLIST_VIDEO_QUERY($xid: String!, $numberOfVideos: Int = 100, $avatar_si
 				}
 			}
 		}
-		videos(first: $numberOfVideos) {
+		videos(first: $numberOfVideos, page: $page) {
+			totalCount
+			pageInfo {
+				hasNextPage
+			}
 			edges {
 				node {
 					id
@@ -1117,6 +1121,25 @@ query GetHomeFeed(
 				story {
 					__typename
 					...FeedVideoFields
+				}
+			}
+		}
+	}
+}
+`
+
+export const VIDEO_CHAPTERS_QUERY = `
+query VIDEO_CHAPTERS_QUERY($xid: String!, $page: Int!) {
+	video(xid: $xid) {
+		duration
+		chapters(first: 100, page: $page) {
+			pageInfo {
+				hasNextPage
+			}
+			edges {
+				node {
+					timecode
+					title
 				}
 			}
 		}

@@ -1093,6 +1093,13 @@ let plugin = {
   settings: {},
 };
 
+interface IPlatformChapter {
+  name: string;
+  type: number;
+  timeStart: number;
+  timeEnd: number;
+}
+
 // Plugin configuration
 // To override by plugin
 interface Source {
@@ -1167,6 +1174,8 @@ interface Source {
   searchChannels(query: string): ChannelPager;
 
   getContentDetails(url: string): PlatformVideoDetails;
+
+  getContentChapters(url: string): IPlatformChapter[];
 
   getComments(url: string): CommentPager;
 

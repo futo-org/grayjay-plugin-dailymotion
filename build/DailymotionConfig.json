@@ -3,11 +3,11 @@
   "platformUrl": "https://dailymotion.com",
   "description": "The latest news, sports, music and entertainment videos on Dailymotion",
   "author": "FUTO",
-  "authorUrl": "https://futo.org",
+  "authorUrl": "https://futo.tech",
   "sourceUrl": "https://plugins.grayjay.app/Dailymotion/DailymotionConfig.json",
   "scriptUrl": "./DailymotionScript.js",
   "repositoryUrl": "https://gitlab.futo.org/videostreaming/plugins/dailymotion",
-  "version": 38,
+  "version": 39,
   "iconUrl": "./DailymotionIcon.png",
   "id": "9c87e8db-e75d-48f4-afe5-2d203d4b95c5",
   "scriptSignature": "",
@@ -407,6 +407,13 @@
     ],
     "38": [
       "Fix: Token extraction;"
+    ],
+    "39": [
+      "Fix: Videos on desktop sometimes failing to play with error 403;",
+      "Fix: Playlists no longer stop at the first 100 videos;",
+      "Fix: Playlist video count now reports the real total;",
+      "Fix: Playlists with thousands of videos no longer show a count of 0;",
+      "Improvement: Show chapters on videos that have them;"
     ]
   }
 }

@@ -1,5 +1,6 @@
 import {
   Channel,
+  Chapter,
   Collection,
   Live,
   Maybe,
@@ -137,7 +138,8 @@ export const SourceVideoToGrayjayVideo = (
 export const SourceCollectionToGrayjayPlaylistDetails = (
   pluginId: string,
   sourceCollection: Collection,
-  videos: PlatformVideo[] = [],
+  contents: VideoPager,
+  videoCount: number,
 ): PlatformPlaylistDetails => {
   return new PlatformPlaylistDetails({
     url: sourceCollection?.xid
@@ -155,10 +157,10 @@ export const SourceCollectionToGrayjayPlaylistDetails = (
           sourceCollection?.creator,
         )
       : {},
-    name: sourceCollection.name,
+    name: sourceCollection?.name ?? '',
     thumbnail: sourceCollection?.thumbnail?.url,
-    videoCount: videos.length ?? 0,
-    contents: new VideoPager(videos),
+    videoCount,
+    contents,
   });
 };
 
@@ -356,4 +358,29 @@ export const convertSRTtoVTT = (srt) => {
 
   // Join the VTT array into a single string and return it
   return vtt.join('');
+};
+
+// Dailymotion chapter timecodes look like "00:01:21.080".
+const timecodeToSeconds = (timecode: string): number => {
+  return timecode
+    .split(':')
+    .reduce((total, part) => total * 60 + parseFloat(part), 0);
+};
+
+export const SourceChaptersToGrayjayChapters = (
+  chapters: Chapter[],
+  videoDuration: number,
+): IPlatformChapter[] => {
+  return chapters.map((chapter, index) => {
+    const nextChapter = chapters[index + 1];
+
+    return {
+      name: chapter.title,
+      type: Type.Chapter.NORMAL,
+      timeStart: timecodeToSeconds(chapter.timecode),
+      timeEnd: nextChapter
+        ? timecodeToSeconds(nextChapter.timecode)
+        : videoDuration,
+    };
+  });
 };

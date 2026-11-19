@@ -18,7 +18,7 @@ const REGEX_VIDEO_URL = /^https:\/\/(?:www\.)?dailymotion\.com\/video\/[a-zA-Z0-
 const REGEX_VIDEO_URL_1 = /^https:\/\/dai\.ly\/[a-zA-Z0-9]+$/i;
 const REGEX_VIDEO_URL_EMBED = /^https:\/\/(?:www\.)?dailymotion\.com\/embed\/video\/[a-zA-Z0-9]+(\?.*)?$/i;
 const REGEX_VIDEO_CHANNEL_URL = /^https:\/\/(?:www\.)?dailymotion\.com\/[a-z0-9][a-z0-9._-]{2,26}(?:\?[a-zA-Z0-9=&._-]*)?$/i;
-const REGEX_VIDEO_PLAYLIST_URL = /^https:\/\/(?:www\.)?dailymotion\.com\/playlist\/[a-zA-Z0-9]+(?:[?&][a-zA-Z0-9_\-=&%]*)?$/i;
+const REGEX_VIDEO_PLAYLIST_URL = /^https:\/\/(?:www\.)?dailymotion\.com\/playlist\/([a-zA-Z0-9]+)(?:[?&][a-zA-Z0-9_\-=&%]*)?$/i;
 const REGEX_INITIAL_DATA_API_AUTH_1 = /(?<=window\.__LOADABLE_LOADED_CHUNKS__=.*)\b[a-f0-9]{20}\b|\b[a-f0-9]{40}\b/g;
 const REGEX_API_CLIENT_ID = /get apiClientId\(\)\{return"([a-f0-9]{20})"\}/;
 const REGEX_API_CLIENT_SECRET = /get apiClientSecret\(\)\{return"([a-f0-9]{40})"\}/;
@@ -114,6 +114,7 @@ const SEARCH_CAPABILITIES = {
         },
     ],
 };
+const PLAYLIST_VIDEOS_PER_PAGE = 100;
 // Used to on source.getUserPlaylists to specify if the playlist is private or not. This is read by source.getPlaylist to enable the authentication context.
 const PRIVATE_PLAYLIST_QUERY_PARAM_FLAGGER = '&private=1';
 const DEFAULT_HEADERS = {
@@ -123,7 +124,8 @@ const DEFAULT_HEADERS = {
     'Referer': 'https://www.dailymotion.com/'
 };
 const IS_DESKTOP = bridge.buildPlatform === "desktop";
-const IMPERSONATION_TARGET = IS_DESKTOP ? 'chrome136' : 'chrome131_android';
+// The chrome136 TLS profile gets a 403 (E005) from the HLS origin on desktop; Android is unaffected for now.
+const IMPERSONATION_TARGET = IS_DESKTOP ? 'firefox133' : 'chrome131_android';
 const IS_IMPERSONATION_AVAILABLE = (typeof httpimp !== 'undefined');
 
 const AUTOCOMPLETE_QUERY = `
@@ -697,7 +699,7 @@ query SEARCH_QUERY($query: String!, $page: Int, $limit: Int, $avatar_size: Avata
 	}
 }`;
 const PLAYLIST_DETAILS_QUERY = `
-query PLAYLIST_VIDEO_QUERY($xid: String!, $numberOfVideos: Int = 100, $avatar_size: AvatarHeight!, $thumbnail_resolution: ThumbnailHeight!) {
+query PLAYLIST_VIDEO_QUERY($xid: String!, $numberOfVideos: Int!, $page: Int!, $avatar_size: AvatarHeight!, $thumbnail_resolution: ThumbnailHeight!) {
 	collection(xid: $xid) {
 		id
 		xid
@@ -736,7 +738,11 @@ query PLAYLIST_VIDEO_QUERY($xid: String!, $numberOfVideos: Int = 100, $avatar_si
 				}
 			}
 		}
-		videos(first: $numberOfVideos) {
+		videos(first: $numberOfVideos, page: $page) {
+			totalCount
+			pageInfo {
+				hasNextPage
+			}
 			edges {
 				node {
 					id
@@ -1234,6 +1240,24 @@ query GetHomeFeed(
 	}
 }
 `;
+const VIDEO_CHAPTERS_QUERY = `
+query VIDEO_CHAPTERS_QUERY($xid: String!, $page: Int!) {
+	video(xid: $xid) {
+		duration
+		chapters(first: 100, page: $page) {
+			pageInfo {
+				hasNextPage
+			}
+			edges {
+				node {
+					timecode
+					title
+				}
+			}
+		}
+	}
+}
+`;
 
 const objectToUrlEncodedString = (obj) => {
     const encodedParams = [];
@@ -1407,6 +1431,23 @@ class SearchPlaylistPager extends PlaylistPager {
         return this.cb(opts);
     }
 }
+class PlaylistVideoPager extends VideoPager {
+    cb;
+    constructor(results, hasMore, params, cb) {
+        super(results, hasMore, { ...params });
+        this.cb = cb;
+    }
+    nextPage() {
+        const nextPageNumber = this.context.page + 1;
+        const pager = this.cb(this.context.xid, nextPageNumber, this.context.usePlatformAuth);
+        // Advance only when the page actually returned videos, so a failed or empty
+        // fetch cannot make a retry skip ahead and drop videos.
+        if (pager?.results?.length) {
+            this.context.page = nextPageNumber;
+        }
+        return pager;
+    }
+}
 
 // TODO: createDate requires authentication, so we fallback to deprecated createdAt for unauthenticated requests
 const toUnixTimestamp = (dateStr) => {
@@ -1474,7 +1515,7 @@ const SourceVideoToGrayjayVideo = (pluginId, sourceVideo) => {
     };
     return new PlatformVideo(video);
 };
-const SourceCollectionToGrayjayPlaylistDetails = (pluginId, sourceCollection, videos = []) => {
+const SourceCollectionToGrayjayPlaylistDetails = (pluginId, sourceCollection, contents, videoCount) => {
     return new PlatformPlaylistDetails({
         url: sourceCollection?.xid
             ? `${BASE_URL_PLAYLIST}/${sourceCollection?.xid}`
@@ -1483,10 +1524,10 @@ const SourceCollectionToGrayjayPlaylistDetails = (pluginId, sourceCollection, vi
         author: sourceCollection?.creator
             ? SourceAuthorToGrayjayPlatformAuthorLink(pluginId, sourceCollection?.creator)
             : {},
-        name: sourceCollection.name,
+        name: sourceCollection?.name ?? '',
         thumbnail: sourceCollection?.thumbnail?.url,
-        videoCount: videos.length ?? 0,
-        contents: new VideoPager(videos),
+        videoCount,
+        contents,
     });
 };
 const SourceCollectionToGrayjayPlaylist = (pluginId, sourceCollection) => {
@@ -1636,6 +1677,25 @@ const convertSRTtoVTT = (srt) => {
     });
     // Join the VTT array into a single string and return it
     return vtt.join('');
+};
+// Dailymotion chapter timecodes look like "00:01:21.080".
+const timecodeToSeconds = (timecode) => {
+    return timecode
+        .split(':')
+        .reduce((total, part) => total * 60 + parseFloat(part), 0);
+};
+const SourceChaptersToGrayjayChapters = (chapters, videoDuration) => {
+    return chapters.map((chapter, index) => {
+        const nextChapter = chapters[index + 1];
+        return {
+            name: chapter.title,
+            type: Type.Chapter.NORMAL,
+            timeStart: timecodeToSeconds(chapter.timecode),
+            timeEnd: nextChapter
+                ? timecodeToSeconds(nextChapter.timecode)
+                : videoDuration,
+        };
+    });
 };
 
 function oauthClientCredentialsRequest(httpClient, url, clientId, secret, visitorId, throwOnInvalid = false) {
@@ -2108,6 +2168,38 @@ source.isContentDetailsUrl = function (url) {
 source.getContentDetails = function (url) {
     return getSavedVideo(url, false);
 };
+source.getContentChapters = function (url) {
+    const xid = url.split('/').pop();
+    const chapters = [];
+    let videoDuration = 0;
+    let page = 1;
+    let hasNextPage = true;
+    while (hasNextPage) {
+        const [error, gqlResponse] = executeGqlQuery(http, {
+            operationName: 'VIDEO_CHAPTERS_QUERY',
+            variables: { xid, page },
+            query: VIDEO_CHAPTERS_QUERY,
+            usePlatformAuth: false,
+        });
+        if (error) {
+            log(`Failed to get chapters: [${error.code}] ${error.status} (${error.operationName})`);
+            break;
+        }
+        const video = gqlResponse?.data?.video;
+        if (!video?.chapters) {
+            break;
+        }
+        videoDuration = video.duration ?? 0;
+        for (const edge of video.chapters.edges) {
+            if (edge?.node) {
+                chapters.push(edge.node);
+            }
+        }
+        hasNextPage = video.chapters.pageInfo.hasNextPage;
+        page++;
+    }
+    return SourceChaptersToGrayjayChapters(chapters, videoDuration);
+};
 source.saveState = () => {
     return JSON.stringify(state);
 };
@@ -2205,20 +2297,61 @@ source.getPlaylist = (url) => {
     if (isPrivatePlaylist) {
         url = url.replace(PRIVATE_PLAYLIST_QUERY_PARAM_FLAGGER, ''); //remove the private flag
     }
-    const xid = url.split('/').pop();
-    const variables = {
-        xid,
-        avatar_size: CREATOR_AVATAR_HEIGHT[_settings.avatarSizeOptionIndex],
-        thumbnail_resolution: THUMBNAIL_HEIGHT[thumbnailResolutionIndex],
-    };
+    // The xid must come from the regex capture group, never from the last path
+    // segment, so query strings and non-playlist URLs cannot leak into the xid.
+    const playlistXid = REGEX_VIDEO_PLAYLIST_URL.exec(url)?.[1];
+    if (!playlistXid) {
+        throw new ScriptException(`Not a valid Dailymotion playlist URL: ${url}`);
+    }
+    const contents = getPlaylistVideosPager(playlistXid, 1, isPrivatePlaylist);
+    const collection = contents.context.collection;
+    if (!collection) {
+        throw new UnavailableException('The playlist was not found. It may have been deleted, made private, or the URL is incorrect.');
+    }
+    // totalCount is the listable total but comes back as 0 on very large playlists,
+    // where the engagement metric holds the real figure; it can overcount elsewhere.
+    const listableVideoCount = collection?.videos?.totalCount ?? 0;
+    const metricsVideoCount = collection?.metrics?.engagement?.videos?.edges?.[0]?.node?.total ?? 0;
+    let videoCount = collection?.videos?.edges?.length ?? 0;
+    if (listableVideoCount > 0) {
+        videoCount = listableVideoCount;
+    }
+    else if (metricsVideoCount > 0) {
+        videoCount = metricsVideoCount;
+    }
+    return SourceCollectionToGrayjayPlaylistDetails(config.id, collection, contents, videoCount);
+};
+/**
+ * Fetches one page of a playlist's videos and wraps it in a pager that continues
+ * on the following page. Also used as the nextPage callback of PlaylistVideoPager.
+ * The playlist metadata of the fetched page is exposed on the pager context as
+ * `collection`, so the first call can build the playlist details without a second request.
+ * @param xid Dailymotion collection id of the playlist
+ * @param page 1-based page number to fetch
+ * @param usePlatformAuth Whether the playlist requires the logged-in user context
+ * @returns Pager over the videos of the requested page
+ * @throws {UnavailableException} When the playlist cannot be loaded
+ */
+function getPlaylistVideosPager(xid, page, usePlatformAuth) {
     const [error, gqlResponse] = executeGqlQuery(http, {
         operationName: 'PLAYLIST_VIDEO_QUERY',
-        variables,
+        variables: {
+            xid,
+            page,
+            numberOfVideos: PLAYLIST_VIDEOS_PER_PAGE,
+            avatar_size: CREATOR_AVATAR_HEIGHT[_settings.avatarSizeOptionIndex],
+            thumbnail_resolution: THUMBNAIL_HEIGHT[_settings.thumbnailResolutionOptionIndex],
+        },
         query: PLAYLIST_DETAILS_QUERY,
-        usePlatformAuth: isPrivatePlaylist,
+        usePlatformAuth,
     });
     if (error) {
-        log(`Failed to get playlist: [${error.code}] (${error.operationName})`);
+        log(`Failed to get playlist: [${error.code}] (${error.operationName}) ${error.status}`);
+        // Only the first page may abort the playlist. A later page failing must not
+        // discard the results the user is already looking at.
+        if (page > 1) {
+            return new PlaylistVideoPager([], false, { xid, page: page - 1, usePlatformAuth, collection: null }, getPlaylistVideosPager);
+        }
         // Check if the error is a "not_found" type
         if (error.code === 'GQL_ERROR' && error.errors) {
             const notFoundError = error.errors.find((e) => e.type === 'not_found');
@@ -2226,13 +2359,14 @@ source.getPlaylist = (url) => {
                 throw new UnavailableException('The playlist was not found. It may have been deleted, made private, or the URL is incorrect.');
             }
         }
-        throw new UnavailableException(`Failed to get playlist - ${error.code}`);
+        throw new UnavailableException(`Failed to get playlist - ${error.code}: ${error.status}`);
     }
-    const videos = gqlResponse?.data?.collection?.videos?.edges.map((edge) => {
-        return SourceVideoToGrayjayVideo(config.id, edge.node);
-    });
-    return SourceCollectionToGrayjayPlaylistDetails(config.id, gqlResponse?.data?.collection, videos);
-};
+    const collection = gqlResponse?.data?.collection;
+    const videos = collection?.videos?.edges?.map((edge) => {
+        return SourceVideoToGrayjayVideo(config.id, edge?.node);
+    }) ?? [];
+    return new PlaylistVideoPager(videos, collection?.videos?.pageInfo?.hasNextPage ?? false, { xid, page, usePlatformAuth, collection }, getPlaylistVideosPager);
+}
 source.getUserSubscriptions = () => {
     if (!bridge.isLoggedIn()) {
         log('Failed to retrieve subscriptions page because not logged in.');
@@ -2982,7 +3116,8 @@ function getPlatformSystemPlaylist(opts) {
         name: opts.playlistName,
         creator: {},
     };
-    return SourceCollectionToGrayjayPlaylistDetails(opts.pluginId, collection, videos);
+    // getPages above already drained every page, so the fetched videos are the full playlist.
+    return SourceCollectionToGrayjayPlaylistDetails(opts.pluginId, collection, new VideoPager(videos), videos.length);
 }
 function getPreferredCountry(preferredCountryIndex) {
     const country = COUNTRY_NAMES_TO_CODE[preferredCountryIndex];
