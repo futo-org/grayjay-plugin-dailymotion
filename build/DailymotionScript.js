@@ -124,7 +124,7 @@ const DEFAULT_HEADERS = {
     'Referer': 'https://www.dailymotion.com/'
 };
 const IS_DESKTOP = bridge.buildPlatform === "desktop";
-// The chrome136 TLS profile gets a 403 (E005) from the HLS origin on desktop; Android is unaffected.
+// The chrome136 TLS profile gets a 403 (E005) from the HLS origin on desktop; Android is unaffected for now.
 const IMPERSONATION_TARGET = IS_DESKTOP ? 'firefox133' : 'chrome131_android';
 const IS_IMPERSONATION_AVAILABLE = (typeof httpimp !== 'undefined');
 
@@ -2308,10 +2308,17 @@ source.getPlaylist = (url) => {
     if (!collection) {
         throw new UnavailableException('The playlist was not found. It may have been deleted, made private, or the URL is incorrect.');
     }
-    const videoCount = collection?.videos?.totalCount ??
-        collection?.metrics?.engagement?.videos?.edges?.[0]?.node?.total ??
-        collection?.videos?.edges?.length ??
-        0;
+    // totalCount is the listable total but comes back as 0 on very large playlists,
+    // where the engagement metric holds the real figure; it can overcount elsewhere.
+    const listableVideoCount = collection?.videos?.totalCount ?? 0;
+    const metricsVideoCount = collection?.metrics?.engagement?.videos?.edges?.[0]?.node?.total ?? 0;
+    let videoCount = collection?.videos?.edges?.length ?? 0;
+    if (listableVideoCount > 0) {
+        videoCount = listableVideoCount;
+    }
+    else if (metricsVideoCount > 0) {
+        videoCount = metricsVideoCount;
+    }
     return SourceCollectionToGrayjayPlaylistDetails(config.id, collection, contents, videoCount);
 };
 /**

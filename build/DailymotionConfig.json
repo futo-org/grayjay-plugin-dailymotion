@@ -412,6 +412,7 @@
       "Fix: Videos on desktop sometimes failing to play with error 403;",
       "Fix: Playlists no longer stop at the first 100 videos;",
       "Fix: Playlist video count now reports the real total;",
+      "Fix: Playlists with thousands of videos no longer show a count of 0;",
       "Improvement: Show chapters on videos that have them;"
     ]
   }

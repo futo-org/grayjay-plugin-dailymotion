@@ -704,11 +704,19 @@ source.getPlaylist = (url: string): PlatformPlaylistDetails => {
     );
   }
 
-  const videoCount =
-    collection?.videos?.totalCount ??
-    collection?.metrics?.engagement?.videos?.edges?.[0]?.node?.total ??
-    collection?.videos?.edges?.length ??
-    0;
+  // totalCount is the listable total but comes back as 0 on very large playlists,
+  // where the engagement metric holds the real figure; it can overcount elsewhere.
+  const listableVideoCount = collection?.videos?.totalCount ?? 0;
+  const metricsVideoCount =
+    collection?.metrics?.engagement?.videos?.edges?.[0]?.node?.total ?? 0;
+
+  let videoCount = collection?.videos?.edges?.length ?? 0;
+
+  if (listableVideoCount > 0) {
+    videoCount = listableVideoCount;
+  } else if (metricsVideoCount > 0) {
+    videoCount = metricsVideoCount;
+  }
 
   return SourceCollectionToGrayjayPlaylistDetails(
     config.id,
