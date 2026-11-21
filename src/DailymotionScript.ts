@@ -1042,11 +1042,23 @@ function searchPlaylists(contextQuery) {
   const playlistConnection = gqlResponse?.data?.search
     ?.playlists as CollectionConnection;
 
-  const searchResults = playlistConnection?.edges?.map((edge) => {
-    return SourceCollectionToGrayjayPlaylist(config.id, edge?.node);
-  });
+  // Search also returns deleted collections: no name, no videos, and getPlaylist answers "not found".
+  const searchResults = playlistConnection?.edges
+    ?.filter(
+      (edge) =>
+        edge?.node?.name &&
+        edge?.node?.metrics?.engagement?.videos?.edges?.[0]?.node?.total,
+    )
+    .map((edge) => {
+      return SourceCollectionToGrayjayPlaylist(config.id, edge?.node);
+    });
 
   const hasMore = playlistConnection?.pageInfo?.hasNextPage;
+
+  // A whole page can be deleted collections; an empty page would end the search early.
+  if (searchResults?.length === 0 && hasMore) {
+    return searchPlaylists({ ...contextQuery, page: context.page + 1 });
+  }
 
   if (!searchResults || searchResults.length === 0) {
     return new PlaylistPager([]);
